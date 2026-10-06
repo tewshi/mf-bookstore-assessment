@@ -313,3 +313,40 @@ main > .hero {
   font-size: 0.9rem;
   opacity: 0.8;
 }
+
+/* ==========================================================
+   RESPONSIVE
+   Mobile first: everything above is the phone layout.
+   ========================================================== */
+
+/* Tablet */
+@media (min-width: 40rem) {
+  .hero h1 {
+    font-size: 2.75rem;
+  }
+
+  .book-grid,
+  .book-grid--picks {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .event {
+    flex-direction: row;
+    gap: var(--space-l);
+  }
+
+  .event time {
+    flex: 0 0 10rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 64rem) {
+  .book-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .book-grid--picks {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
