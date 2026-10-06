@@ -48,6 +48,16 @@ body {
   line-height: 1.6;
   color: var(--color-text);
   background-color: var(--color-bg);
+
+  /* Sticky footer: the page is at least as tall as the screen,
+     and main grows to push the footer to the bottom. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
 }
 
 h1,
