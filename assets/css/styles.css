@@ -26,6 +26,7 @@
   --space-xl: 4rem;
   --max-width: 70rem;
   --cover-height: 12rem;
+  --cover-fit: contain; /* use "cover" to fill the box edge to edge (crops) */
 }
 
 /* ==========================================================
@@ -210,12 +211,18 @@ main > .hero {
   grid-template-columns: 1fr;
 }
 
+/* No padding on the card itself, so the cover touches the top and
+   side edges. overflow: hidden clips it to the rounded corners. */
 .book {
   height: 100%;
-  padding: var(--space-m);
+  overflow: hidden;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
+}
+
+.book-body {
+  padding: var(--space-m);
 }
 
 .book h3 {
@@ -234,6 +241,7 @@ main > .hero {
 
 .price {
   font-weight: bold;
+  color: var(--color-accent);
 }
 
 .note {
@@ -252,17 +260,15 @@ main > .hero {
 }
 
 /* Book covers
-   Every cover sits in a box of the same height. object-fit: contain
-   scales the image to fit inside the box without cropping or
-   stretching it, whatever shape the image file is. */
+   Every cover sits in a box of the same height. object-fit decides
+   how the image fills that box without being stretched:
+   contain = whole image visible, cover = fills the box but crops. */
 .cover {
   display: block;
   width: 100%;
   height: var(--cover-height);
-  margin-bottom: var(--space-m);
-  object-fit: contain;
+  object-fit: var(--cover-fit);
   background-color: var(--color-bg);
-  border-radius: var(--radius);
 }
 
 /* ==========================================================
