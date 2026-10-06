@@ -282,3 +282,34 @@ main > .hero {
   margin-bottom: 0;
   color: var(--color-muted);
 }
+
+/* ==========================================================
+   FOOTER (Flexbox)
+   ========================================================== */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-m) var(--space-xl);
+  padding-block: var(--space-l);
+  background-color: var(--color-text);
+  color: var(--color-bg);
+}
+
+.site-footer h2 {
+  font-size: 1.1rem;
+}
+
+.site-footer address {
+  font-style: normal;
+}
+
+.site-footer p {
+  margin-bottom: 0;
+}
+
+/* Copyright line always sits on its own row */
+.copyright {
+  flex-basis: 100%;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
