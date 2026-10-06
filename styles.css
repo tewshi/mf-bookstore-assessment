@@ -85,3 +85,56 @@ section[id],
 footer[id] {
   scroll-margin-top: var(--space-l);
 }
+
+/* ==========================================================
+   PAGE WIDTH
+   Side padding is at least --space-m. On wide screens it grows
+   so the content stays in a centred column of --max-width.
+   ========================================================== */
+.site-header,
+main > section,
+.site-footer {
+  padding-inline: max(var(--space-m), (100% - var(--max-width)) / 2);
+}
+
+main > section {
+  padding-block: var(--space-l);
+}
+
+/* ==========================================================
+   HEADER AND NAV (Flexbox)
+   ========================================================== */
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s) var(--space-l);
+  padding-block: var(--space-m);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.logo {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s) var(--space-m);
+}
+
+.nav-list a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.nav-list a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
