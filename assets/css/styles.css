@@ -214,6 +214,7 @@ main > .hero {
 /* No padding on the card itself, so the cover touches the top and
    side edges. overflow: hidden clips it to the rounded corners. */
 .book {
+  position: relative;
   height: 100%;
   overflow: hidden;
   background-color: var(--color-surface);
@@ -227,6 +228,22 @@ main > .hero {
 
 .book h3 {
   font-size: 1rem;
+}
+
+.book h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Stretch the title link over the whole card, so the card is clickable */
+.book h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.book:hover {
+  border-color: var(--color-accent);
 }
 
 .book p {
@@ -274,6 +291,51 @@ main > .hero {
   height: var(--cover-height);
   object-fit: var(--cover-fit);
   background-color: var(--color-bg);
+}
+
+/* ==========================================================
+   BOOK DETAILS PAGE (Grid)
+   book.html holds one article per book. A card links to
+   book.html#its-id, and that article is the :target.
+   ========================================================== */
+.book-detail {
+  display: grid;
+  gap: var(--space-l);
+  padding-block: var(--space-l);
+  border-top: 1px solid var(--color-border);
+  scroll-margin-top: var(--space-l);
+}
+
+/* When the URL points at one book, hide all the others */
+main:has(:target) .book-detail:not(:target) {
+  display: none;
+}
+
+.book-detail img {
+  width: 100%;
+  max-width: 16rem;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+.book-detail .price {
+  font-size: 1.25rem;
+}
+
+/* Label and value side by side */
+.specs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-s) var(--space-l);
+  margin: 0 0 var(--space-m);
+}
+
+.specs dt {
+  color: var(--color-muted);
+}
+
+.specs dd {
+  margin: 0;
 }
 
 /* ==========================================================
@@ -364,6 +426,10 @@ main > .hero {
   .book-grid,
   .book-grid--picks {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .book-detail {
+    grid-template-columns: 16rem 1fr;
   }
 
   .event {
