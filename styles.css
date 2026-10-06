@@ -235,3 +235,20 @@ main > .hero {
 .picked-by::before {
   content: "Picked by ";
 }
+
+/* Book covers: coloured blocks, no image files needed */
+.cover {
+  aspect-ratio: 2 / 3;
+  margin-bottom: var(--space-m);
+  border-radius: var(--radius);
+}
+
+.cover-1 { background-color: var(--cover-1); }
+.cover-2 { background-color: var(--cover-2); }
+.cover-3 { background-color: var(--cover-3); }
+.cover-4 { background-color: var(--cover-4); }
+
+/* Staff pick covers are smaller so the note has room */
+.book-grid--picks .cover {
+  max-width: 8rem;
+}
