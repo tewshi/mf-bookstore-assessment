@@ -239,6 +239,11 @@ main > .hero {
   font-size: 0.9rem;
 }
 
+.isbn {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
 .price {
   font-weight: bold;
   color: var(--color-accent);
