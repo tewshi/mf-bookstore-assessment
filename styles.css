@@ -174,3 +174,64 @@ main > .hero {
 .button:hover {
   opacity: 0.9;
 }
+
+/* ==========================================================
+   BOOK SHELVES (Grid)
+   2 columns on phones. More columns are added in the
+   media queries at the bottom of this file.
+   ========================================================== */
+.shelf h2 {
+  margin-bottom: var(--space-m);
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-m);
+}
+
+/* Staff picks have longer text, so one per row on phones */
+.book-grid--picks {
+  grid-template-columns: 1fr;
+}
+
+.book {
+  height: 100%;
+  padding: var(--space-m);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.book h3 {
+  font-size: 1rem;
+}
+
+.book p {
+  margin-bottom: 0;
+}
+
+.author,
+.note {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.price {
+  font-weight: bold;
+}
+
+.note {
+  margin-top: var(--space-s);
+  font-style: italic;
+}
+
+.picked-by {
+  display: block;
+  font-style: normal;
+  color: var(--color-text);
+}
+
+.picked-by::before {
+  content: "Picked by ";
+}
