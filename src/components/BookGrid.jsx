@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { books } from '../data/books'
 import { BookCard } from './BookCard'
+import { StarRating } from './StarRating'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
 
@@ -8,6 +9,14 @@ export function BookGrid() {
   // Which section button is selected. Clicking a button calls
   // setSection, React re-renders, and filtered is worked out again.
   const [section, setSection] = useState('All')
+
+  // Star rating per book, e.g. { 'slow-maps': 4 }. Kept here rather than
+  // in each card, so a rating survives when the filter hides the card.
+  const [ratings, setRatings] = useState({})
+
+  function rate(bookId, value) {
+    setRatings({ ...ratings, [bookId]: value })
+  }
 
   const filtered = section === 'All' ? books : books.filter((book) => book.section === section)
 
@@ -39,6 +48,11 @@ export function BookGrid() {
           <li key={book.id}>
             <BookCard book={book}>
               <p className="font-bold text-accent">€{book.price.toFixed(2)}</p>
+              <StarRating
+                label={book.title}
+                value={ratings[book.id] ?? 0}
+                onChange={(value) => rate(book.id, value)}
+              />
             </BookCard>
           </li>
         ))}
