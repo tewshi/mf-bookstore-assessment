@@ -1,20 +1,26 @@
-Build your own site, with your group, before the assessment session.
+# MayerfeldBooks
 
-Quick rules:
-- Team of 4 to 5, one shared project and look, no shared code
-- Everyone builds solo, in their own GitHub repo
-- Meet during the week, help each other debug, stay aligned
-- No one person building while others copy
-- You present and explain your own code at assessment
+An independent bookstore site: fiction, nonfiction, staff picks and an events list.
+Assignment 1 was plain HTML/CSS; Assignment 2 rebuilds it with Vite, React and Tailwind.
 
-Your project: an independent bookstore. Keep the product grid shape, but swap in fiction, nonfiction, and staff picks, and add a short events section for readings or book clubs.
+## Run it
 
-Must have:
-- GitHub repo with real, small commits
-- Single page, responsive, plain HTML5/CSS3, no frameworks
-- Semantic landmarks, one h1, working nav links
-- box-sizing: border-box globally, your own CSS variables for colors
-- Real use of Flexbox and real use of Grid
-- No horizontal scroll on phone, tablet, or desktop
+```bash
+npm install
+npm run dev
+```
 
-Use AI (ChatGPT, Claude, Copilot) as much as you want, just make sure you understand your own code. Pick one teammate as project manager to organize meetings.
+## Where things live
+
+- `src/data/books.js`, `src/data/events.js`: all content, as arrays of objects
+- `src/components/`: one component per part of the page
+  - `Header`, `Hero`, `BookGrid`, `StaffPicks`, `Events`, `Footer`
+  - `BookCard`: one book, used by both grids
+  - `BookDetails`: shown instead of the home page for `#book/<id>` links
+  - `StarRating`: controlled rating, one per book in the grid
+- `src/index.css`: Tailwind import and theme colours
+
+## useState
+
+- `BookGrid` keeps the selected section (`All`, `Fiction`, `Nonfiction`) in state and filters `books` on every render.
+- `BookGrid` also keeps every rating in one object, `{ bookId: stars }`, and passes each `StarRating` its `value` and an `onChange`. The stars have no state of their own, so a rating survives when the filter hides that card.
