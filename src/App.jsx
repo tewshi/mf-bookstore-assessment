@@ -1,6 +1,8 @@
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { BookGrid } from './components/BookGrid'
+import { StaffPicks } from './components/StaffPicks'
+import { Events } from './components/Events'
 import { Footer } from './components/Footer'
 
 function App() {
@@ -11,6 +13,8 @@ function App() {
       <main id="top" className="flex-1">
         <Hero />
         <BookGrid />
+        <StaffPicks />
+        <Events />
       </main>
       <Footer />
     </div>
