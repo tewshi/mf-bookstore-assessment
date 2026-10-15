@@ -1,5 +1,18 @@
+import { Header } from './components/Header'
+import { Hero } from './components/Hero'
+import { Footer } from './components/Footer'
+
 function App() {
-  return <h1 className="p-4 text-3xl text-accent">MayerfeldBooks</h1>
+  return (
+    // Sticky footer: page is at least screen height, main grows to fill it
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main id="top" className="flex-1">
+        <Hero />
+      </main>
+      <Footer />
+    </div>
+  )
 }
 
 export default App
