@@ -1,5 +1,6 @@
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
+import { BookGrid } from './components/BookGrid'
 import { Footer } from './components/Footer'
 
 function App() {
@@ -9,6 +10,7 @@ function App() {
       <Header />
       <main id="top" className="flex-1">
         <Hero />
+        <BookGrid />
       </main>
       <Footer />
     </div>
