@@ -1,9 +1,8 @@
-import { books } from '../data/books'
 import { BookCard } from './BookCard'
 
-const picks = books.filter((book) => book.staffPick)
+export function StaffPicks({ books }) {
+  const picks = books.filter((book) => book.staffPick)
 
-export function StaffPicks() {
   return (
     <section id="staff-picks" className="mx-auto max-w-page scroll-mt-8 px-4 py-8">
       <h2 className="mb-4 text-2xl font-bold">Staff Picks</h2>

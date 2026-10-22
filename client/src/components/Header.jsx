@@ -1,3 +1,5 @@
+import { authClient } from '../auth'
+
 const links = [
   { href: '#books', label: 'Books' },
   { href: '#staff-picks', label: 'Staff Picks' },
@@ -6,6 +8,10 @@ const links = [
 ]
 
 export function Header() {
+  // Asks the server who is signed in (by the session cookie), and
+  // re-renders the header when someone signs in or out.
+  const { data: session, isPending } = authClient.useSession()
+
   return (
     <header className="border-b border-line bg-surface">
       {/* Phones: logo on top, nav centred underneath. sm and up: one row. */}
@@ -22,6 +28,27 @@ export function Header() {
                 </a>
               </li>
             ))}
+            {/* Nothing until we know, so "Sign in" does not flash for signed-in people */}
+            {!isPending && (
+              <li>
+                {session ? (
+                  <>
+                    <span className="text-muted">Hi, {session.user.name} · </span>
+                    <button
+                      type="button"
+                      onClick={() => authClient.signOut()}
+                      className="cursor-pointer text-accent hover:underline"
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <a href="#signin" className="text-accent hover:underline">
+                    Sign in
+                  </a>
+                )}
+              </li>
+            )}
           </ul>
         </nav>
       </div>

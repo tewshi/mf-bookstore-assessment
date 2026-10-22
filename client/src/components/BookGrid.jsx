@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { books } from '../data/books'
 import { BookCard } from './BookCard'
 import { StarRating } from './StarRating'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
 
-export function BookGrid() {
+export function BookGrid({ books }) {
   // Which section button is selected. Clicking a button calls
   // setSection, React re-renders, and filtered is worked out again.
   const [section, setSection] = useState('All')

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { books } from './data/books'
+import { getJson } from './api'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { BookGrid } from './components/BookGrid'
 import { StaffPicks } from './components/StaffPicks'
 import { Events } from './components/Events'
 import { BookDetails } from './components/BookDetails'
+import { AuthForm } from './components/AuthForm'
 import { Footer } from './components/Footer'
 
 function App() {
@@ -19,8 +20,16 @@ function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  // Books come from our API now. null until they arrive.
+  const [books, setBooks] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    getJson('/api/books').then(setBooks, setError)
+  }, [])
+
   const bookId = hash.startsWith('#book/') ? hash.slice('#book/'.length) : null
-  const book = books.find((b) => b.id === bookId)
+  const book = books?.find((b) => b.id === bookId)
 
   // After switching views, jump to the top of a book, or to the section
   // the link pointed at (it did not exist yet when the browser looked for it).
@@ -37,13 +46,24 @@ function App() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main id="top" className="flex-1">
-        {book ? (
+        {hash === '#signin' || hash === '#signup' ? (
+          <AuthForm key={hash} mode={hash.slice(1)} />
+        ) : book ? (
           <BookDetails book={book} />
         ) : (
           <>
             <Hero />
-            <BookGrid />
-            <StaffPicks />
+            {error && (
+              <p role="alert" className="mx-auto max-w-page px-4 py-8 text-accent">
+                Could not load the books. Please try again later.
+              </p>
+            )}
+            {books && (
+              <>
+                <BookGrid books={books} />
+                <StaffPicks books={books} />
+              </>
+            )}
             <Events />
           </>
         )}
