@@ -1,0 +1,30 @@
+// Copies the Week 2 arrays into the database. Safe to run again:
+// it empties both tables first, so you always end up with exactly this data.
+import { pool } from '../src/db.js'
+import { books } from './data/books.js'
+import { events } from './data/events.js'
+
+await pool.query('DELETE FROM books')
+for (const book of books) {
+  await pool.query(
+    `INSERT INTO books (id, title, author, section, isbn, price, image, description,
+                        format, pages, published, staff_pick_quote, staff_pick_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+    [
+      book.id, book.title, book.author, book.section, book.isbn, book.price, book.image,
+      book.description, book.format, book.pages, book.published,
+      book.staffPick?.quote ?? null, book.staffPick?.by ?? null,
+    ],
+  )
+}
+
+await pool.query('DELETE FROM events')
+for (const event of events) {
+  await pool.query(
+    'INSERT INTO events (id, starts_at, label, title, text) VALUES ($1, $2, $3, $4, $5)',
+    [event.id, event.datetime, event.label, event.title, event.text],
+  )
+}
+
+console.log(`Seeded ${books.length} books and ${events.length} events`)
+await pool.end()
