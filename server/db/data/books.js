@@ -1,5 +1,4 @@
-// Every book in the shop. The grid, staff picks and details page
-// all read from this one array.
+// The Week 2 books, now only used by seed.js to fill the books table.
 // staffPick is null, or { quote, by } when a bookseller recommends it.
 export const books = [
   {
