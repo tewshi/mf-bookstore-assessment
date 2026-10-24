@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getJson } from './api'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
-import { BookGrid } from './components/BookGrid'
+import { BookGrid, BookGridSkeleton } from './components/BookGrid'
 import { StaffPicks } from './components/StaffPicks'
 import { Events } from './components/Events'
 import { BookDetails } from './components/BookDetails'
@@ -128,6 +128,7 @@ function App() {
             Could not load the books. Please try again later.
           </p>
         )}
+        {!books && !error && <BookGridSkeleton />}
         {books && (
           <>
             <BookGrid books={books} onAdd={addToCart} />

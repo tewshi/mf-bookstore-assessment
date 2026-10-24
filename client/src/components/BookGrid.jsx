@@ -134,3 +134,31 @@ export function BookGrid({ books, onAdd }) {
     </section>
   )
 }
+
+// Grey placeholder cards shown while the books load, so the page has its
+// shape straight away instead of a gap. animate-pulse fades them in and out.
+export function BookGridSkeleton() {
+  const placeholders = [1, 2, 3, 4, 5, 6, 7, 8]
+
+  return (
+    <section aria-busy="true" aria-label="Loading books" className="mx-auto max-w-page px-4 py-16">
+      <div className="mb-2 h-9 w-32 animate-pulse rounded-lg bg-line" />
+      <div className="mb-8 h-5 w-64 animate-pulse rounded bg-line" />
+      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
+        {placeholders.map((n) => (
+          <li
+            key={n}
+            className="animate-pulse overflow-hidden rounded-2xl border border-line bg-surface"
+          >
+            <div className="aspect-[4/5] bg-accent-soft/60" />
+            <div className="flex flex-col gap-2 p-4">
+              <div className="h-4 w-3/4 rounded bg-line" />
+              <div className="h-3 w-1/2 rounded bg-line" />
+              <div className="mt-4 h-8 rounded-full bg-line" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
