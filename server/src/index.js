@@ -17,4 +17,8 @@ app.use('/api', api)
 app.use(express.static(new URL('../../client/dist', import.meta.url).pathname))
 
 const port = process.env.PORT || 3000
-app.listen(port, () => console.log(`Server on http://localhost:${port}`))
+app.listen(port, () => {
+  console.log(`API on http://localhost:${port}/api`)
+  // In dev the page itself comes from Vite, which passes /api on to here
+  if (process.env.NODE_ENV !== 'production') console.log('Open the site at http://localhost:5173')
+})
