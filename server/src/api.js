@@ -53,7 +53,7 @@ const sortOrders = {
 
 // GET /api/books: every book, fiction first, then by title.
 // GET /api/books?page=2&q=river&section=Fiction&sort=price-low: one page of
-// books that match, as { books, total, page, pageCount }. q searches the
+// books that match, as { books, total, page, perPage, pageCount }. q searches the
 // title, author and ISBN (with or without dashes). 8 books per page.
 api.get('/books', async (req, res) => {
   if (!req.query.page) {
@@ -92,7 +92,13 @@ api.get('/books', async (req, res) => {
      LIMIT $4 OFFSET $5`,
     [...filters, perPage, (page - 1) * perPage],
   )
-  res.json({ books: rows.map(toBook), total, page, pageCount: Math.ceil(total / perPage) })
+  res.json({
+    books: rows.map(toBook),
+    total,
+    page,
+    perPage,
+    pageCount: Math.ceil(total / perPage),
+  })
 })
 
 // GET /api/books/slow-maps: one book, or 404

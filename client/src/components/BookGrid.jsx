@@ -1,13 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getJson } from '../api'
 import { BookCard, StockNote } from './BookCard'
 import { Stars } from './StarRating'
 import { CartIcon, ChevronDownIcon, SearchIcon } from './Icons'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
 
-// How many books each page of the grid shows (two rows of four on a laptop)
-const perPage = 8
-
+// The values are the sort names the API understands (see server/src/api.js)
 const sortOptions = [
   { value: 'featured', label: 'Featured' },
   { value: 'price-low', label: 'Price: low to high' },
@@ -16,54 +15,52 @@ const sortOptions = [
   { value: 'newest', label: 'Newest' },
 ]
 
-// A sorted copy of books. We copy first because sort() changes the array
-// it is given, and books belongs to App. 'featured' keeps the API's order.
-function sortBooks(books, sort) {
-  const sorted = [...books]
-  if (sort === 'price-low') sorted.sort((a, b) => a.price - b.price)
-  if (sort === 'price-high') sorted.sort((a, b) => b.price - a.price)
-  // Books with no reviews count as 0, so they go last
-  if (sort === 'rating') sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-  if (sort === 'newest') sorted.sort((a, b) => b.published - a.published)
-  return sorted
-}
-
+// The searchable, sortable book grid. The server does the searching,
+// sorting and paging: we ask for one page at a time.
+// books (App's full list) is only used to know when to fetch again: App
+// reloads it after a payment or a review, when stock or ratings change.
 // onAdd(bookId) puts one copy of a book in the cart. savedIds and
 // onToggleSave(bookId) are the wishlist, for the heart on each card.
 export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
-  // Which section button is selected. Clicking a button calls
-  // setSection, React re-renders, and filtered is worked out again.
   const [section, setSection] = useState('All')
-  // What is typed in the search box, and the chosen sort
-  const [query, setQuery] = useState('')
   const [sort, setSort] = useState('featured')
-  // Which page of results is showing, counting from 1
   const [pageNumber, setPageNumber] = useState(1)
+  // query is what is in the search box right now; search is what we last
+  // searched for, which catches up once typing pauses (see below)
+  const [query, setQuery] = useState('')
+  const [search, setSearch] = useState('')
+  // The API's answer: { books, total, page, perPage, pageCount }
+  const [result, setResult] = useState(null)
 
-  // Section first, then the search, then the order. The search ignores
-  // upper/lower case, and ISBNs match with or without the dashes.
-  const search = query.trim().toLowerCase()
-  const searchIsbn = search.replaceAll('-', '')
-  const filtered = books.filter(
-    (book) =>
-      (section === 'All' || book.section === section) &&
-      (book.title.toLowerCase().includes(search) ||
-        book.author.toLowerCase().includes(search) ||
-        book.isbn.replaceAll('-', '').includes(searchIsbn)),
-  )
-  const shown = sortBooks(filtered, sort)
+  // Wait until typing pauses for 300ms before searching, instead of
+  // sending a request for every letter. Each new letter cancels the timer.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(query)
+      setPageNumber(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [query])
 
-  // Cut the results into pages. slice(8, 16) gives books 9 to 16, and so on.
-  const pageCount = Math.ceil(shown.length / perPage)
-  const first = (pageNumber - 1) * perPage
-  const pageBooks = shown.slice(first, first + perPage)
-  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1)
+  // Fetch the page whenever the search, section, sort or page changes.
+  // ignore: if the user moves on before the answer arrives, a newer
+  // request is already on its way, so the old answer is thrown away.
+  useEffect(() => {
+    const params = new URLSearchParams({ page: pageNumber, q: search, sort })
+    if (section !== 'All') params.set('section', section)
+    let ignore = false
+    getJson(`/api/books?${params}`).then(
+      (data) => {
+        if (!ignore) setResult(data)
+      },
+      () => {},
+    )
+    return () => {
+      ignore = true
+    }
+  }, [search, section, sort, pageNumber, books])
 
-  // A new search, sort or section starts again at page 1
-  function changeQuery(value) {
-    setQuery(value)
-    setPageNumber(1)
-  }
+  // A new sort or section starts again at page 1
   function changeSort(value) {
     setSort(value)
     setPageNumber(1)
@@ -79,6 +76,23 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
     document.getElementById('books').scrollIntoView()
   }
 
+  // Before the first answer, pretend it's an empty first page
+  const {
+    books: pageBooks,
+    total,
+    page,
+    perPage,
+    pageCount,
+  } = result ?? {
+    books: [],
+    total: 0,
+    page: 1,
+    perPage: 8,
+    pageCount: 0,
+  }
+  const first = (page - 1) * perPage
+  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1)
+
   return (
     <section id="books" className="mx-auto max-w-page scroll-mt-16 px-4 py-16">
       <h2 className="text-3xl font-bold">Books</h2>
@@ -92,7 +106,7 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
           <input
             type="search"
             value={query}
-            onChange={(e) => changeQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title, author or ISBN"
             className="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 outline-none focus:border-accent focus:ring-4 focus:ring-accent-soft"
           />
@@ -130,7 +144,7 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
           ))}
         </div>
       </div>
-      {shown.length === 0 && (
+      {result && total === 0 && (
         <p className="rounded-2xl border border-line bg-surface px-6 py-12 text-center text-muted">
           No books match "{query}". Try another title, author or ISBN.
         </p>
@@ -180,13 +194,13 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
       {pageCount > 1 && (
         <nav aria-label="Pages" className="mt-10 flex flex-col items-center gap-3">
           <p className="text-sm text-muted">
-            Showing {first + 1}–{first + pageBooks.length} of {shown.length} books
+            Showing {first + 1}–{first + pageBooks.length} of {total} books
           </p>
           <div className="flex flex-wrap items-center justify-center gap-1">
             <button
               type="button"
-              onClick={() => goToPage(pageNumber - 1)}
-              disabled={pageNumber === 1}
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1}
               className="cursor-pointer rounded-full px-4 py-2 text-sm font-medium hover:bg-accent-soft hover:text-accent disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit"
             >
               &larr; Previous
@@ -197,9 +211,9 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
                 type="button"
                 onClick={() => goToPage(number)}
                 aria-label={`Page ${number}`}
-                aria-current={number === pageNumber ? 'page' : undefined}
+                aria-current={number === page ? 'page' : undefined}
                 className={`size-10 cursor-pointer rounded-full text-sm font-medium ${
-                  number === pageNumber
+                  number === page
                     ? 'bg-accent text-white'
                     : 'hover:bg-accent-soft hover:text-accent'
                 }`}
@@ -209,8 +223,8 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
             ))}
             <button
               type="button"
-              onClick={() => goToPage(pageNumber + 1)}
-              disabled={pageNumber === pageCount}
+              onClick={() => goToPage(page + 1)}
+              disabled={page === pageCount}
               className="cursor-pointer rounded-full px-4 py-2 text-sm font-medium hover:bg-accent-soft hover:text-accent disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit"
             >
               Next &rarr;
