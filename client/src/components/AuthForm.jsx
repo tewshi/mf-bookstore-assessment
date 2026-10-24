@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { authClient } from '../auth'
 
 // One form for both #signin and #signup. Sign up also asks for a name.
-export function AuthForm({ mode }) {
+// next is where to go afterwards, e.g. "checkout" for #signin/checkout.
+export function AuthForm({ mode, next }) {
   const isSignUp = mode === 'signup'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -15,7 +16,7 @@ export function AuthForm({ mode }) {
     setBusy(true)
     setError(null)
     // Both calls set the session cookie on success, so the person is
-    // signed in straight away, then we send them back to the home page.
+    // signed in straight away, then we send them on (home by default).
     const { error } = isSignUp
       ? await authClient.signUp.email({ name, email, password })
       : await authClient.signIn.email({ email, password })
@@ -23,7 +24,7 @@ export function AuthForm({ mode }) {
     if (error) {
       setError(error.message)
     } else {
-      window.location.hash = ''
+      window.location.hash = next ?? ''
     }
   }
 
@@ -96,7 +97,8 @@ export function AuthForm({ mode }) {
         <p className="mt-6 text-center text-sm text-muted">
           {isSignUp ? 'Already have an account? ' : 'New here? '}
           <a
-            href={isSignUp ? '#signin' : '#signup'}
+            // Keep next when switching between sign in and sign up
+            href={`${isSignUp ? '#signin' : '#signup'}${next ? `/${next}` : ''}`}
             className="font-medium text-accent hover:underline"
           >
             {isSignUp ? 'Sign in' : 'Create an account'}

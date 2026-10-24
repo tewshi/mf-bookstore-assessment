@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { authClient } from '../auth'
-import { ChevronDownIcon, SignOutIcon } from './Icons'
+import { BookIcon, ChevronDownIcon, SignOutIcon } from './Icons'
 
 // The person's picture, or our default one. Better Auth has an `image`
 // field on the user, but email sign up leaves it empty for now.
@@ -15,7 +15,7 @@ export function Avatar({ user, className = 'size-8' }) {
 }
 
 // Avatar and name in the header. Clicking opens a small dropdown
-// with the email address and the sign out button.
+// with the email address, a link to My books and the sign out button.
 export function UserMenu({ user }) {
   const [open, setOpen] = useState(false)
   // A ref points at the menu's element, so we can tell whether a
@@ -65,6 +65,15 @@ export function UserMenu({ user }) {
             <p className="font-medium">{user.name}</p>
             <p className="truncate text-sm text-muted">{user.email}</p>
           </div>
+          {/* Close the menu when the link is followed */}
+          <a
+            href="#my-books"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent-soft hover:text-accent"
+          >
+            <BookIcon className="size-4" />
+            My books
+          </a>
           <button
             type="button"
             onClick={() => authClient.signOut()}

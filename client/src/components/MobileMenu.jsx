@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { authClient } from '../auth'
 import { Avatar } from './UserMenu'
-import { CloseIcon, SignOutIcon } from './Icons'
+import { BookIcon, CloseIcon, SignOutIcon } from './Icons'
 
 // The drawer the hamburger button opens on phones. It is always in the
 // page, just pushed off the right edge (translate-x-full) while closed,
@@ -79,6 +79,18 @@ export function MobileMenu({ open, onClose, links, session }) {
                 </a>
               </li>
             ))}
+            {session && (
+              <li className="mt-2 border-t border-line pt-2">
+                <a
+                  href="#my-books"
+                  onClick={onClose}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-lg hover:bg-accent-soft hover:text-accent"
+                >
+                  <BookIcon className="size-5" />
+                  My books
+                </a>
+              </li>
+            )}
           </ul>
         </nav>
 

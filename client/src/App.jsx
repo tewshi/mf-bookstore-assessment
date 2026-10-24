@@ -8,6 +8,8 @@ import { Events } from './components/Events'
 import { BookDetails } from './components/BookDetails'
 import { AuthForm } from './components/AuthForm'
 import { Cart } from './components/Cart'
+import { Checkout } from './components/Checkout'
+import { MyBooks } from './components/MyBooks'
 import { Footer } from './components/Footer'
 
 // The cart this browser saved last time, or an empty one. try/catch in
@@ -35,9 +37,12 @@ function App() {
   const [books, setBooks] = useState(null)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
+  // Also called after someone posts a review, to refresh the star averages
+  function loadBooks() {
     getJson('/api/books').then(setBooks, setError)
-  }, [])
+  }
+
+  useEffect(loadBooks, [])
 
   // The cart: how many of each book, e.g. { 'slow-maps': 2 }. It lives
   // here because the header, the book pages and #cart all need it.
@@ -67,47 +72,78 @@ function App() {
   // Total number of books, for the badge on the cart icon
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
 
-  const bookId = hash.startsWith('#book/') ? hash.slice('#book/'.length) : null
-  const book = books?.find((b) => b.id === bookId)
+  // Split the hash at each /, e.g. "#book/slow-maps/reviews" gives
+  // page "book", param "slow-maps" and anchor "reviews".
+  // "#signin/checkout" gives page "signin" and param "checkout".
+  const [page, param, anchor] = hash.slice(1).split('/')
+  const book = page === 'book' ? books?.find((b) => b.id === param) : null
 
-  // After switching views, jump to the top of a book, or to the section
-  // the link pointed at (it did not exist yet when the browser looked for it).
+  // After switching views, jump to the top of a book (or to its reviews),
+  // or to the section the link pointed at (it did not exist yet when the
+  // browser looked for it).
   useEffect(() => {
     if (book) {
-      window.scrollTo(0, 0)
+      const target = anchor ? document.getElementById(anchor) : null
+      if (target) {
+        target.scrollIntoView()
+      } else {
+        window.scrollTo(0, 0)
+      }
     } else if (hash) {
       document.getElementById(hash.slice(1))?.scrollIntoView()
     }
-  }, [hash, book])
+  }, [hash, book, anchor])
+
+  // Which view goes in <main>, picked from the page part of the hash
+  function renderPage() {
+    if (page === 'signin' || page === 'signup') {
+      // param is where to go after signing in, e.g. back to "checkout"
+      return <AuthForm key={hash} mode={page} next={param} />
+    }
+    if (page === 'cart') {
+      return <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
+    }
+    if (page === 'checkout') {
+      return <Checkout books={books} cart={cart} onPaid={() => setCart({})} />
+    }
+    if (page === 'my-books') {
+      return <MyBooks />
+    }
+    if (book) {
+      return (
+        <BookDetails
+          book={book}
+          quantity={cart[book.id] ?? 0}
+          onAdd={() => addToCart(book.id)}
+          onReviewed={loadBooks}
+        />
+      )
+    }
+    return (
+      <>
+        <Hero />
+        {error && (
+          <p role="alert" className="mx-auto max-w-page px-4 py-8 text-accent">
+            Could not load the books. Please try again later.
+          </p>
+        )}
+        {books && (
+          <>
+            <BookGrid books={books} onAdd={addToCart} />
+            <StaffPicks books={books} />
+          </>
+        )}
+        <Events />
+      </>
+    )
+  }
 
   return (
     // Sticky footer: page is at least screen height, main grows to fill it
     <div className="flex min-h-screen flex-col">
       <Header cartCount={cartCount} />
       <main id="top" className="flex-1">
-        {hash === '#signin' || hash === '#signup' ? (
-          <AuthForm key={hash} mode={hash.slice(1)} />
-        ) : hash === '#cart' ? (
-          <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
-        ) : book ? (
-          <BookDetails book={book} quantity={cart[book.id] ?? 0} onAdd={() => addToCart(book.id)} />
-        ) : (
-          <>
-            <Hero />
-            {error && (
-              <p role="alert" className="mx-auto max-w-page px-4 py-8 text-accent">
-                Could not load the books. Please try again later.
-              </p>
-            )}
-            {books && (
-              <>
-                <BookGrid books={books} onAdd={addToCart} />
-                <StaffPicks books={books} />
-              </>
-            )}
-            <Events />
-          </>
-        )}
+        {renderPage()}
       </main>
       <Footer />
     </div>

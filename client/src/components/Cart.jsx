@@ -1,3 +1,4 @@
+import { cartItems, cartTotal } from '../cart'
 import { CartIcon, TrashIcon } from './Icons'
 
 // The #cart page. cart only holds ids and quantities, so we look each
@@ -7,10 +8,8 @@ export function Cart({ books, cart, onChangeQuantity }) {
     return <p className="mx-auto max-w-page px-4 py-16 text-muted">Loading your cart…</p>
   }
 
-  const items = books
-    .filter((book) => cart[book.id])
-    .map((book) => ({ book, quantity: cart[book.id] }))
-  const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0)
+  const items = cartItems(books, cart)
+  const total = cartTotal(items)
 
   if (items.length === 0) {
     return (
@@ -109,15 +108,11 @@ export function Cart({ books, cart, onChangeQuantity }) {
             <span>Total</span>
             <span>€{total.toFixed(2)}</span>
           </div>
-          <p className="mb-4 rounded-xl bg-accent-soft p-3 text-sm text-accent-dark">
-            Online payment is coming soon. Show this cart in the shop and we'll have your books
-            ready.
-          </p>
           <a
-            href="#visit"
+            href="#checkout"
             className="block rounded-full bg-accent px-6 py-3 text-center font-medium text-white hover:bg-accent-dark"
           >
-            Find the shop
+            Checkout
           </a>
           <a href="#books" className="mt-3 block text-center text-sm text-muted hover:text-accent">
             Continue shopping

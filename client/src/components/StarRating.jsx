@@ -24,3 +24,21 @@ export function StarRating({ value, onChange, label, max = 5 }) {
     </div>
   )
 }
+
+// Read-only stars for showing a rating, e.g. the average of all reviews.
+// It is rounded to whole stars; put the exact number next to it if needed.
+export function Stars({ rating, max = 5, className = '' }) {
+  const stars = Array.from({ length: max }, (_, i) => i + 1)
+
+  return (
+    // role="img" with a label: screen readers say "4 out of 5 stars"
+    // once, instead of reading out five star characters
+    <span role="img" aria-label={`${rating} out of ${max} stars`} className={className}>
+      {stars.map((star) => (
+        <span key={star} className={star <= Math.round(rating) ? 'text-accent' : 'text-line'}>
+          ★
+        </span>
+      ))}
+    </span>
+  )
+}

@@ -67,3 +67,28 @@ export function TrashIcon({ className }) {
     </Icon>
   )
 }
+
+export function BookIcon({ className }) {
+  return (
+    <Icon className={className}>
+      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5zM4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3" />
+    </Icon>
+  )
+}
+
+export function CheckIcon({ className }) {
+  return (
+    <Icon className={className}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </Icon>
+  )
+}
+
+export function LockIcon({ className }) {
+  return (
+    <Icon className={className}>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </Icon>
+  )
+}
