@@ -1,9 +1,10 @@
 // Three covers fanned out beside the heading. Only decoration, so alt="".
 // Each starts centred, then `place` moves and turns it; z-10 puts the middle one on top.
+// delay: the covers fade in one after another, after the text.
 const covers = [
-  { src: '/images/night-ferry.jpg', place: '-translate-x-[110%] -rotate-8' },
-  { src: '/images/salt-orchard.jpg', place: '-translate-x-1/2 z-10' },
-  { src: '/images/slow-maps.jpg', place: 'translate-x-[10%] rotate-8' },
+  { src: '/images/night-ferry.jpg', place: '-translate-x-[110%] -rotate-8', delay: '300ms' },
+  { src: '/images/salt-orchard.jpg', place: '-translate-x-1/2 z-10', delay: '450ms' },
+  { src: '/images/slow-maps.jpg', place: 'translate-x-[10%] rotate-8', delay: '600ms' },
 ]
 
 export function Hero() {
@@ -12,7 +13,8 @@ export function Hero() {
     <section className="overflow-hidden bg-linear-to-b from-accent-soft to-bg">
       {/* Text only on phones; text and covers side by side from lg */}
       <div className="mx-auto grid max-w-page items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-2">
-        <div>
+        {/* motion-safe: only animate for people who haven't asked for less motion */}
+        <div className="motion-safe:animate-fade-up">
           <p className="mb-4 inline-block rounded-full bg-surface px-4 py-1 text-xs font-semibold tracking-[0.15em] text-accent uppercase shadow-sm">
             Independent bookstore &middot; Readings every week
           </p>
@@ -48,7 +50,8 @@ export function Hero() {
               alt=""
               width="600"
               height="900"
-              className={`absolute top-1/2 left-1/2 w-44 -translate-y-1/2 rounded-md shadow-2xl ${cover.place}`}
+              style={{ animationDelay: cover.delay }}
+              className={`absolute top-1/2 left-1/2 w-44 -translate-y-1/2 rounded-md shadow-2xl motion-safe:animate-fade-up ${cover.place}`}
             />
           ))}
         </div>

@@ -135,6 +135,10 @@ They need to refresh the page to see the link.
 
 All the colours are CSS variables in `client/src/index.css`. The `.dark` block gives them night-time values, so components didn't need changing. Dark is the default: a small script in `index.html` adds the `dark` class to `<html>` before the page is drawn, unless the visitor chose light before, and `ThemeToggle` switches it and saves the choice in `localStorage`. Buttons use `text-on-accent` rather than `text-white`, because in dark mode the accent is light and needs dark text.
 
+## Motion
+
+The homepage hero fades up when it loads (`animate-fade-up`, a keyframe in `index.css`), with the three covers following one after another (`animationDelay`). Books, Staff Picks and Events are wrapped in `Reveal`, which uses `IntersectionObserver` to fade each one in the first time it scrolls into view. People who turned on "reduce motion" on their computer get no movement (`motion-safe:` and `motion-reduce:`).
+
 ## How login works
 
 1. `AuthForm` calls `authClient.signUp.email()` or `authClient.signIn.email()`.

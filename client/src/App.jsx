@@ -17,6 +17,7 @@ import { Account } from './components/Account'
 import { Admin } from './components/admin/Admin'
 import { Footer } from './components/Footer'
 import { Toast } from './components/Toast'
+import { Reveal } from './components/Reveal'
 
 // The cart this browser saved last time, or an empty one. try/catch in
 // case the saved text was changed by hand and is no longer valid JSON.
@@ -237,16 +238,22 @@ function App() {
         {!books && !error && <BookGridSkeleton />}
         {books && (
           <>
-            <BookGrid
-              books={books}
-              onAdd={addToCart}
-              savedIds={savedIds}
-              onToggleSave={toggleSaved}
-            />
-            <StaffPicks books={books} />
+            <Reveal>
+              <BookGrid
+                books={books}
+                onAdd={addToCart}
+                savedIds={savedIds}
+                onToggleSave={toggleSaved}
+              />
+            </Reveal>
+            <Reveal>
+              <StaffPicks books={books} />
+            </Reveal>
           </>
         )}
-        <Events />
+        <Reveal>
+          <Events />
+        </Reveal>
       </>
     )
   }
