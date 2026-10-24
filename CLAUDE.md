@@ -18,7 +18,7 @@ Course project for a bookstore site, built up over weekly assignments. The stude
 
 ```bash
 npm install                  # root: installs both workspaces
-npm run dev                  # concurrently: Express on :3000 (API only) + Vite on :5173 (open this)
+npm run dev                  # node dev.js: Express on :3000 (API only) + Vite on :5173 (open this)
 npm run lint                 # oxlint on the client
 npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
@@ -30,7 +30,7 @@ There are no automated tests. Check a change with lint + build, then by running 
 
 ## Layout
 
-npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). One `package-lock.json` at the root.
+npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No lockfile: the instructor asked for none, so `.npmrc` has `package-lock=false` and `.gitignore` lists `package-lock.json`. Don't add one back.
 
 - `server/src/index.js`: mounts Better Auth, then `express.json()`, then `/api`, then serves `client/dist`
 - `server/src/db.js`: the single `pg` pool everything shares
@@ -93,4 +93,5 @@ Seeding production is a manual step the student runs themselves (Railway service
 - **Better Auth** owns the `user`, `session`, `account` and `verification` tables; we only write `books` and `events` in `schema.sql`.
 - **`railway.json` removed (Oct 2026)**: Railway deprecated config-as-code and its replacement is TypeScript-only (or Python/Go), which breaks the no-TypeScript rule. Settings moved to the dashboard.
 - **Local dev uses a local Postgres** installed on the student's Mac, migrated and seeded separately from production. The Railway database stays private.
-- **`npm run dev` uses `concurrently`**: the old `a & b` script left Express running after Ctrl+C, so the next run hit "port in use".
+- **`npm run dev` runs `dev.js`**: the old `a & b` script left Express running after Ctrl+C, so the next run hit "port in use". `concurrently` fixed that, then was replaced (Oct 2026) by `dev.js`, which uses Node's `child_process` so the project needs no extra package. It stops both servers on Ctrl+C, on `kill`, or when either one exits. `node --watch` keeps the API process alive after an app crash (it waits for a file change), the same as before.
+- **No `package-lock.json` (Oct 2026)**: the instructor asked for it to be removed. Railway then installs with `npm install` instead of `npm ci`, so versions float within the `^` ranges in `package.json`.

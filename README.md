@@ -15,13 +15,15 @@ npm run dev                          # Express on :3000, Vite on :5173
 npm run make-admin -w server -- you@example.com   # optional: make your account an admin
 ```
 
-Open **http://localhost:5173**, not :3000. In dev, Express on :3000 only answers `/api`; Vite serves the page and passes every `/api` request on to Express. `concurrently` runs both, and Ctrl+C stops both.
+Open **http://localhost:5173**, not :3000. In dev, Express on :3000 only answers `/api`; Vite serves the page and passes every `/api` request on to Express. `dev.js` (in the repo root) starts both with Node's built-in `child_process`, so no extra package is needed; Ctrl+C stops both, and if one of them stops on its own, so does the other.
 
 For local development, `DATABASE_URL` points at a Postgres on your machine (e.g. `postgresql://localhost:5432/mayerfeld`) and `BETTER_AUTH_URL` is `http://localhost:5173`.
 
 ## Folder structure
 
-The repo is an npm workspace with two packages, so one `npm install` at the root installs both.
+The repo is an npm workspace with two packages, so one `npm install` at the root installs both. There is no `package-lock.json`: `.npmrc` turns it off (`package-lock=false`), so `npm install` takes the newest versions that `package.json` allows.
+
+- `dev.js`: `npm run dev`, which runs the API and the Vite dev server together
 
 - `client/`: the React app (Vite + Tailwind)
   - `src/components/`: one component per part of the page, plus one per extra view: `AuthForm` (`#signin`, `#signup`), `Cart` (`#cart`), `Checkout` (`#checkout`), `MyBooks` (`#my-books`), `Saved` (`#saved`), `Account` (`#account`) and `Receipt` (`#order/<id>`). `Reviews` and `Recommendations` are the sections under each book
