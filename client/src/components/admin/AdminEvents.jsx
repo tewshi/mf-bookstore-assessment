@@ -34,7 +34,7 @@ export function AdminEvents() {
             setEditing('new')
             setMessage(null)
           }}
-          className="cursor-pointer rounded-full bg-accent px-5 py-2 text-sm font-medium text-white hover:bg-accent-dark"
+          className="cursor-pointer rounded-full bg-accent px-5 py-2 text-sm font-medium text-on-accent hover:bg-accent-dark"
         >
           Add an event
         </button>
@@ -43,7 +43,7 @@ export function AdminEvents() {
       {message && (
         <p
           role="status"
-          className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+          className="mb-4 rounded-xl bg-emerald-50 dark:bg-emerald-950 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400"
         >
           {message}
         </p>
@@ -182,7 +182,7 @@ function EventForm({ event, onCancel, onDone }) {
         <button
           type="submit"
           disabled={busy}
-          className="cursor-pointer rounded-full bg-accent px-6 py-2.5 font-medium text-white hover:bg-accent-dark disabled:opacity-50"
+          className="cursor-pointer rounded-full bg-accent px-6 py-2.5 font-medium text-on-accent hover:bg-accent-dark disabled:opacity-50"
         >
           {isNew ? 'Add event' : 'Save changes'}
         </button>
@@ -199,7 +199,7 @@ function EventForm({ event, onCancel, onDone }) {
             onClick={confirmDelete ? handleDelete : () => setConfirmDelete(true)}
             disabled={busy}
             className={`ml-auto cursor-pointer rounded-full px-6 py-2.5 font-medium disabled:opacity-50 ${
-              confirmDelete ? 'bg-accent-dark text-white' : 'text-accent hover:bg-accent-soft'
+              confirmDelete ? 'bg-accent-dark text-on-accent' : 'text-accent hover:bg-accent-soft'
             }`}
           >
             {confirmDelete ? 'Really delete? Seats are cancelled too' : 'Delete'}

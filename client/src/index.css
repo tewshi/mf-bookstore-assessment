@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* dark: utilities (e.g. dark:bg-emerald-950) apply inside <html class="dark">,
+   which the theme button in the header switches on and off */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Theme: the shop's warm colours, plus two fonts from Google Fonts
    (loaded in index.html). Each --color-* here becomes a utility,
    e.g. bg-surface, text-accent. */
@@ -14,6 +18,8 @@
   --color-muted: #6f635a;
   --color-accent: #8a3b2a;
   --color-accent-dark: #6e2e20;
+  /* Text on accent-coloured buttons (text-on-accent) */
+  --color-on-accent: #ffffff;
   /* A pale tint of the accent, for badges and soft backgrounds */
   --color-accent-soft: #f5e6df;
   --color-line: #e4dacb;
@@ -29,6 +35,23 @@
       transform: translateY(0.75rem);
     }
   }
+}
+
+/* Dark mode: the same names with night-time values. Every bg-surface,
+   text-ink, ... uses these automatically, so components need no changes.
+   The accent gets lighter, so its button text turns dark (on-accent). */
+.dark {
+  --color-bg: #171310;
+  --color-surface: #211b17;
+  --color-ink: #f1e9df;
+  --color-muted: #b2a596;
+  --color-accent: #e3876a;
+  --color-accent-dark: #f0a286;
+  --color-on-accent: #1f130e;
+  --color-accent-soft: #3b2820;
+  --color-line: #3a302a;
+  /* Dark scrollbars and form controls from the browser too */
+  color-scheme: dark;
 }
 
 html {

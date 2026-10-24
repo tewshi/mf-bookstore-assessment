@@ -175,14 +175,17 @@ function ReviewForm({ book, mine, onSaved }) {
         </p>
       )}
       {saved && (
-        <p role="status" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p
+          role="status"
+          className="rounded-xl bg-emerald-50 dark:bg-emerald-950 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400"
+        >
           Thanks! Your review is up.
         </p>
       )}
       <button
         type="submit"
         disabled={busy}
-        className="cursor-pointer rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark disabled:opacity-50"
+        className="cursor-pointer rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark disabled:opacity-50"
       >
         {mine ? 'Update review' : 'Post review'}
       </button>

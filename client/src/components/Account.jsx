@@ -6,7 +6,7 @@ import { Avatar } from './UserMenu'
 const input =
   'mt-1 w-full rounded-xl border border-line bg-bg px-4 py-3 font-normal outline-none focus:border-accent focus:ring-4 focus:ring-accent-soft'
 const button =
-  'cursor-pointer rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark disabled:opacity-50'
+  'cursor-pointer rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark disabled:opacity-50'
 
 // The #account page: picture, name and password. Better Auth does the
 // saving; after each change it refreshes the session, so the header's
@@ -24,7 +24,7 @@ export function Account() {
         <h1 className="mb-2 text-3xl font-bold">Sign in to see your account</h1>
         <a
           href="#signin/account"
-          className="mt-6 inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+          className="mt-6 inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
         </a>
@@ -129,7 +129,10 @@ function ProfileForm({ user }) {
           </p>
         )}
         {message && (
-          <p role="status" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <p
+            role="status"
+            className="rounded-xl bg-emerald-50 dark:bg-emerald-950 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400"
+          >
             {message}
           </p>
         )}
@@ -205,7 +208,10 @@ function PasswordForm() {
         </p>
       )}
       {message && (
-        <p role="status" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p
+          role="status"
+          className="rounded-xl bg-emerald-50 dark:bg-emerald-950 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400"
+        >
           {message}
         </p>
       )}

@@ -21,7 +21,7 @@ export function Cart({ books, cart, onChangeQuantity }) {
         <p className="mb-8 text-muted">Find something good to read and add it here.</p>
         <a
           href="#books"
-          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Browse books
         </a>
@@ -59,7 +59,7 @@ export function Cart({ books, cart, onChangeQuantity }) {
                     <p className="text-sm text-muted">{book.author}</p>
                     {/* The stock went down since this was added (someone else bought it) */}
                     {quantity > book.stock && (
-                      <p className="mt-1 text-sm font-medium text-amber-700">
+                      <p className="mt-1 text-sm font-medium text-amber-700 dark:text-amber-400">
                         {book.stock === 0 ? 'Sold out' : `Only ${book.stock} left`}
                       </p>
                     )}
@@ -117,7 +117,7 @@ export function Cart({ books, cart, onChangeQuantity }) {
           </div>
           <a
             href="#checkout"
-            className="block rounded-full bg-accent px-6 py-3 text-center font-medium text-white hover:bg-accent-dark"
+            className="block rounded-full bg-accent px-6 py-3 text-center font-medium text-on-accent hover:bg-accent-dark"
           >
             Checkout
           </a>

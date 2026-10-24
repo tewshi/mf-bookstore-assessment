@@ -37,7 +37,7 @@ export function MyBooks() {
         <p className="mb-8 text-muted">Your orders and reviews are kept in your account.</p>
         <a
           href="#signin/my-books"
-          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
         </a>
@@ -89,7 +89,7 @@ export function MyBooks() {
           <p className="mb-6 text-muted">You haven't bought any books yet.</p>
           <a
             href="#books"
-            className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+            className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
           >
             Browse books
           </a>
@@ -153,7 +153,7 @@ export function MyBooks() {
                     ) : (
                       <a
                         href={`#book/${item.bookId}/reviews`}
-                        className="w-fit shrink-0 rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-white"
+                        className="w-fit shrink-0 rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-on-accent"
                       >
                         Write a review
                       </a>

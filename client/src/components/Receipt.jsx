@@ -31,7 +31,7 @@ export function Receipt({ orderId }) {
         </p>
         <a
           href={session ? '#my-books' : '#signin/my-books'}
-          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           {session ? 'Go to My books' : 'Sign in'}
         </a>

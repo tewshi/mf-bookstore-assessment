@@ -21,9 +21,9 @@ export function Toast({ toast, onClose }) {
         className="pointer-events-auto flex animate-toast-in items-center gap-3 rounded-full bg-ink py-3 pr-3 pl-4 text-sm text-bg shadow-xl"
       >
         {toast.warning ? (
-          <AlertIcon className="size-5 shrink-0 text-amber-400" />
+          <AlertIcon className="size-5 shrink-0 text-amber-400 dark:text-amber-700" />
         ) : (
-          <CheckIcon className="size-5 shrink-0 text-emerald-400" />
+          <CheckIcon className="size-5 shrink-0 text-emerald-400 dark:text-emerald-700" />
         )}
         <span>{toast.text}</span>
         {toast.link && (

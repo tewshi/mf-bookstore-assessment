@@ -89,7 +89,7 @@ export function AuthForm({ mode, next }) {
           <button
             type="submit"
             disabled={busy}
-            className="mt-2 cursor-pointer rounded-full bg-accent px-8 py-3 font-medium text-white hover:bg-accent-dark disabled:opacity-50"
+            className="mt-2 cursor-pointer rounded-full bg-accent px-8 py-3 font-medium text-on-accent hover:bg-accent-dark disabled:opacity-50"
           >
             {isSignUp ? 'Sign up' : 'Sign in'}
           </button>

@@ -57,7 +57,11 @@ export function StockNote({ stock, className = '' }) {
     return <p className={`text-sm font-medium text-muted ${className}`}>Sold out</p>
   }
   if (stock <= 3) {
-    return <p className={`text-sm font-medium text-amber-700 ${className}`}>Only {stock} left</p>
+    return (
+      <p className={`text-sm font-medium text-amber-700 dark:text-amber-400 ${className}`}>
+        Only {stock} left
+      </p>
+    )
   }
   return null
 }

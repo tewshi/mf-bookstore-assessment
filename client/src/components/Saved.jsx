@@ -11,7 +11,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
         <p className="mb-8 text-muted">Tap the heart on any book to keep it for later.</p>
         <a
           href="#signin/saved"
-          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
         </a>
@@ -39,7 +39,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
           <p className="mb-6 text-muted">Nothing saved yet.</p>
           <a
             href="#books"
-            className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+            className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
           >
             Browse books
           </a>
@@ -56,7 +56,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
                     onClick={() => onAdd(book.id)}
                     disabled={book.stock === 0}
                     aria-label={`Add ${book.title} to cart`}
-                    className="relative z-10 flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-dark disabled:cursor-default disabled:bg-line disabled:text-muted"
+                    className="relative z-10 flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-dark disabled:cursor-default disabled:bg-line disabled:text-muted"
                   >
                     <CartIcon className="size-4" />
                     {book.stock === 0 ? 'Sold out' : 'Add'}

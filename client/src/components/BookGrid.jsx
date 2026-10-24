@@ -136,7 +136,9 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
               onClick={() => changeSection(name)}
               aria-pressed={section === name}
               className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                section === name ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-accent'
+                section === name
+                  ? 'bg-accent text-on-accent shadow-sm'
+                  : 'text-muted hover:text-accent'
               }`}
             >
               {name}
@@ -178,7 +180,7 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
                   onClick={() => onAdd(book.id)}
                   disabled={book.stock === 0}
                   aria-label={`Add ${book.title} to cart`}
-                  className="relative z-10 flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-dark disabled:cursor-default disabled:bg-line disabled:text-muted"
+                  className="relative z-10 flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-dark disabled:cursor-default disabled:bg-line disabled:text-muted"
                 >
                   <CartIcon className="size-4" />
                   Add
@@ -214,7 +216,7 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
                 aria-current={number === page ? 'page' : undefined}
                 className={`size-10 cursor-pointer rounded-full text-sm font-medium ${
                   number === page
-                    ? 'bg-accent text-white'
+                    ? 'bg-accent text-on-accent'
                     : 'hover:bg-accent-soft hover:text-accent'
                 }`}
               >

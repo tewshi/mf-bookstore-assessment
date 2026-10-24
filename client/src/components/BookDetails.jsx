@@ -52,7 +52,9 @@ export function BookDetails({ book, books, quantity, onAdd, onReviewed, saved, o
           <p className="mt-4 text-2xl font-semibold">€{book.price.toFixed(2)}</p>
           {/* "In stock" when there's plenty; StockNote covers low and sold out */}
           {book.stock > 3 ? (
-            <p className="mb-6 text-sm font-medium text-emerald-700">In stock</p>
+            <p className="mb-6 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              In stock
+            </p>
           ) : (
             <StockNote stock={book.stock} className="mb-6" />
           )}
@@ -62,7 +64,7 @@ export function BookDetails({ book, books, quantity, onAdd, onReviewed, saved, o
               type="button"
               onClick={onAdd}
               disabled={book.stock === 0}
-              className="flex cursor-pointer items-center gap-2 rounded-full bg-accent px-8 py-3 font-medium text-white shadow-sm hover:bg-accent-dark disabled:cursor-default disabled:bg-line disabled:text-muted disabled:shadow-none"
+              className="flex cursor-pointer items-center gap-2 rounded-full bg-accent px-8 py-3 font-medium text-on-accent shadow-sm hover:bg-accent-dark disabled:cursor-default disabled:bg-line disabled:text-muted disabled:shadow-none"
             >
               <CartIcon className="size-5" />
               {book.stock === 0 ? 'Sold out' : 'Add to cart'}

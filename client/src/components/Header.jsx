@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { authClient } from '../auth'
 import { UserMenu } from './UserMenu'
 import { MobileMenu } from './MobileMenu'
+import { ThemeToggle } from './ThemeToggle'
 import { CartIcon, MenuIcon } from './Icons'
 
 const links = [
@@ -99,6 +100,7 @@ export function Header({ cartCount, page }) {
           </nav>
 
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <a
               href="#cart"
               aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
@@ -110,7 +112,7 @@ export function Header({ cartCount, page }) {
               <CartIcon />
               {/* The little number on the icon, only when something is in the cart */}
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white">
+                <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-accent text-xs font-semibold text-on-accent">
                   {cartCount}
                 </span>
               )}
@@ -124,7 +126,7 @@ export function Header({ cartCount, page }) {
                 ) : (
                   <a
                     href="#signin"
-                    className="ml-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark"
+                    className="ml-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-dark"
                   >
                     Sign in
                   </a>

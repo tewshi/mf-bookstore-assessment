@@ -120,7 +120,7 @@ export function MobileMenu({ open, onClose, links, activeHref, page, session }) 
             <a
               href="#signin"
               onClick={onClose}
-              className="block rounded-full bg-accent px-4 py-3 text-center font-medium text-white hover:bg-accent-dark"
+              className="block rounded-full bg-accent px-4 py-3 text-center font-medium text-on-accent hover:bg-accent-dark"
             >
               Sign in
             </a>

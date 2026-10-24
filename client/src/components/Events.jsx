@@ -61,7 +61,7 @@ export function Events() {
             {/* mt-auto keeps the buttons at the bottom of every card */}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-3">
               {event.going ? (
-                <span className="flex items-center gap-1 text-sm font-medium text-emerald-700">
+                <span className="flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400">
                   <CheckIcon className="size-4" />
                   You're going
                 </span>
@@ -81,7 +81,7 @@ export function Events() {
                   className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium disabled:cursor-default disabled:opacity-50 ${
                     event.going
                       ? 'border border-line hover:border-accent hover:text-accent'
-                      : 'bg-accent text-white hover:bg-accent-dark'
+                      : 'bg-accent text-on-accent hover:bg-accent-dark'
                   }`}
                 >
                   {event.going ? 'Cancel' : 'Reserve a seat'}

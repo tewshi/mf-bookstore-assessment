@@ -44,7 +44,7 @@ export function Admin({ tab = 'orders', books, onBooksChanged }) {
             href={`#admin/${t.id}`}
             aria-current={tab === t.id ? 'page' : undefined}
             className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-              tab === t.id ? 'bg-accent text-white' : 'text-muted hover:text-accent'
+              tab === t.id ? 'bg-accent text-on-accent' : 'text-muted hover:text-accent'
             }`}
           >
             {t.label}

@@ -28,7 +28,7 @@ export function Checkout({ books, cart, onPaid }) {
   if (order) {
     return (
       <section id="checkout" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
-        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-400">
           <CheckIcon className="size-8" />
         </div>
         <h1 className="mb-2 text-3xl font-bold">Payment successful</h1>
@@ -39,7 +39,7 @@ export function Checkout({ books, cart, onPaid }) {
         <div className="flex flex-wrap justify-center gap-3">
           <a
             href="#my-books"
-            className="rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+            className="rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
           >
             Go to My books
           </a>
@@ -73,7 +73,7 @@ export function Checkout({ books, cart, onPaid }) {
         <p className="mb-8 text-muted">Your cart is kept while you sign in.</p>
         <a
           href="#signin/checkout"
-          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
         </a>
@@ -91,7 +91,7 @@ export function Checkout({ books, cart, onPaid }) {
         <p className="mb-8 text-muted">Your cart is empty.</p>
         <a
           href="#books"
-          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent-dark"
+          className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Browse books
         </a>
@@ -223,7 +223,7 @@ export function Checkout({ books, cart, onPaid }) {
             <button
               type="submit"
               disabled={busy}
-              className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-full bg-accent px-8 py-3 font-medium text-white hover:bg-accent-dark disabled:cursor-wait disabled:opacity-70"
+              className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-full bg-accent px-8 py-3 font-medium text-on-accent hover:bg-accent-dark disabled:cursor-wait disabled:opacity-70"
             >
               {busy ? (
                 <>

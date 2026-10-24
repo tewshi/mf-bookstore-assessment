@@ -1,11 +1,11 @@
 export function Footer() {
   return (
-    <footer className="bg-ink text-bg print:hidden">
+    <footer className="bg-ink text-bg dark:border-t dark:border-line dark:bg-surface dark:text-ink print:hidden">
       {/* One column on phones, three from sm */}
       <div className="mx-auto grid max-w-page gap-8 px-4 py-12 sm:grid-cols-3">
         <div>
           <p className="mb-2 font-serif text-2xl font-bold">
-            Mayerfeld<span className="text-accent-soft">Books</span>
+            Mayerfeld<span className="text-accent-soft dark:text-accent">Books</span>
           </p>
           <p className="text-sm opacity-70">
             A small, careful selection, chosen by people who read.
@@ -30,7 +30,7 @@ export function Footer() {
           </p>
         </div>
         {/* col-span-full puts the copyright on its own row */}
-        <p className="col-span-full border-t border-bg/15 pt-6 text-sm opacity-60">
+        <p className="col-span-full border-t border-bg/15 pt-6 dark:border-line text-sm opacity-60">
           &copy; 2026 MayerfeldBooks
         </p>
       </div>
