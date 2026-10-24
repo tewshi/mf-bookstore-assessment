@@ -84,7 +84,12 @@ export function MyBooks() {
                 </span>
                 <span className="text-muted">Card •••• {order.cardLast4}</span>
               </div>
-              <span className="font-semibold">€{order.total.toFixed(2)}</span>
+              <div className="flex items-center gap-4">
+                <a href={`#order/${order.id}`} className="text-accent hover:underline">
+                  Receipt
+                </a>
+                <span className="font-semibold">€{order.total.toFixed(2)}</span>
+              </div>
             </div>
 
             <ul className="divide-y divide-line">

@@ -12,6 +12,7 @@ import { Cart } from './components/Cart'
 import { Checkout } from './components/Checkout'
 import { MyBooks } from './components/MyBooks'
 import { Saved } from './components/Saved'
+import { Receipt } from './components/Receipt'
 import { Footer } from './components/Footer'
 import { Toast } from './components/Toast'
 
@@ -188,6 +189,10 @@ function App() {
     }
     if (page === 'my-books') {
       return <MyBooks />
+    }
+    if (page === 'order') {
+      // key: a fresh Receipt when going from one order to another
+      return <Receipt key={param} orderId={param} />
     }
     if (page === 'saved') {
       return (

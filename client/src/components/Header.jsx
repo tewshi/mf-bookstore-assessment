@@ -72,7 +72,7 @@ export function Header({ cartCount, page }) {
     // would otherwise trap the drawer's position: fixed inside the header.
     <>
       {/* sticky: the header stays at the top while the page scrolls */}
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur print:hidden">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4">
           <a href="#top" className="font-serif text-2xl font-bold text-ink">
             Mayerfeld<span className="text-accent">Books</span>

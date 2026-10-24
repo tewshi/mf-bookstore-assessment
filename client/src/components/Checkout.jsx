@@ -44,6 +44,12 @@ export function Checkout({ books, cart, onPaid }) {
             Go to My books
           </a>
           <a
+            href={`#order/${order.id}`}
+            className="rounded-full border border-line bg-surface px-6 py-3 font-medium hover:border-accent hover:text-accent"
+          >
+            View receipt
+          </a>
+          <a
             href="#books"
             className="rounded-full border border-line bg-surface px-6 py-3 font-medium hover:border-accent hover:text-accent"
           >
