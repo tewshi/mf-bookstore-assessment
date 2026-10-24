@@ -5,6 +5,9 @@ import { CartIcon, SearchIcon } from './Icons'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
 
+// How many books each page of the grid shows (two rows of four on a laptop)
+const perPage = 8
+
 const sortOptions = [
   { value: 'featured', label: 'Featured' },
   { value: 'price-low', label: 'Price: low to high' },
@@ -33,16 +36,47 @@ export function BookGrid({ books, onAdd }) {
   // What is typed in the search box, and the chosen sort
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('featured')
+  // Which page of results is showing, counting from 1
+  const [pageNumber, setPageNumber] = useState(1)
 
-  // Section first, then the search (title or author, upper/lower case
-  // doesn't matter), then the order
+  // Section first, then the search, then the order. The search ignores
+  // upper/lower case, and ISBNs match with or without the dashes.
   const search = query.trim().toLowerCase()
+  const searchIsbn = search.replaceAll('-', '')
   const filtered = books.filter(
     (book) =>
       (section === 'All' || book.section === section) &&
-      (book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search)),
+      (book.title.toLowerCase().includes(search) ||
+        book.author.toLowerCase().includes(search) ||
+        book.isbn.replaceAll('-', '').includes(searchIsbn)),
   )
   const shown = sortBooks(filtered, sort)
+
+  // Cut the results into pages. slice(8, 16) gives books 9 to 16, and so on.
+  const pageCount = Math.ceil(shown.length / perPage)
+  const first = (pageNumber - 1) * perPage
+  const pageBooks = shown.slice(first, first + perPage)
+  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1)
+
+  // A new search, sort or section starts again at page 1
+  function changeQuery(value) {
+    setQuery(value)
+    setPageNumber(1)
+  }
+  function changeSort(value) {
+    setSort(value)
+    setPageNumber(1)
+  }
+  function changeSection(value) {
+    setSection(value)
+    setPageNumber(1)
+  }
+
+  // Switch page, then scroll back up to the top of the grid
+  function goToPage(number) {
+    setPageNumber(number)
+    document.getElementById('books').scrollIntoView()
+  }
 
   return (
     <section id="books" className="mx-auto max-w-page scroll-mt-16 px-4 py-16">
@@ -52,13 +86,13 @@ export function BookGrid({ books, onAdd }) {
       {/* Search, sort and section filter: stacked on phones, one row from md */}
       <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center">
         <label className="relative flex-1">
-          <span className="sr-only">Search by title or author</span>
+          <span className="sr-only">Search by title, author or ISBN</span>
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
           <input
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by title or author"
+            onChange={(e) => changeQuery(e.target.value)}
+            placeholder="Search by title, author or ISBN"
             className="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 outline-none focus:border-accent focus:ring-4 focus:ring-accent-soft"
           />
         </label>
@@ -66,7 +100,7 @@ export function BookGrid({ books, onAdd }) {
           <span className="sr-only">Sort by</span>
           <select
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
+            onChange={(e) => changeSort(e.target.value)}
             className="w-full cursor-pointer rounded-full border border-line bg-surface px-4 py-2.5 outline-none focus:border-accent md:w-auto"
           >
             {sortOptions.map((option) => (
@@ -81,7 +115,7 @@ export function BookGrid({ books, onAdd }) {
             <button
               key={name}
               type="button"
-              onClick={() => setSection(name)}
+              onClick={() => changeSection(name)}
               aria-pressed={section === name}
               className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition ${
                 section === name ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-accent'
@@ -94,13 +128,13 @@ export function BookGrid({ books, onAdd }) {
       </div>
       {shown.length === 0 && (
         <p className="rounded-2xl border border-line bg-surface px-6 py-12 text-center text-muted">
-          No books match "{query}". Try another title or author.
+          No books match "{query}". Try another title, author or ISBN.
         </p>
       )}
 
       {/* 2 columns on phones, 3 from sm, 4 from lg */}
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
-        {shown.map((book) => (
+        {pageBooks.map((book) => (
           <li key={book.id}>
             <BookCard book={book}>
               {/* The average of the reviews; people rate on the book's page now */}
@@ -131,6 +165,49 @@ export function BookGrid({ books, onAdd }) {
           </li>
         ))}
       </ul>
+
+      {/* Only when there is more than one page */}
+      {pageCount > 1 && (
+        <nav aria-label="Pages" className="mt-10 flex flex-col items-center gap-3">
+          <p className="text-sm text-muted">
+            Showing {first + 1}–{first + pageBooks.length} of {shown.length} books
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-1">
+            <button
+              type="button"
+              onClick={() => goToPage(pageNumber - 1)}
+              disabled={pageNumber === 1}
+              className="cursor-pointer rounded-full px-4 py-2 text-sm font-medium hover:bg-accent-soft hover:text-accent disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit"
+            >
+              &larr; Previous
+            </button>
+            {pageNumbers.map((number) => (
+              <button
+                key={number}
+                type="button"
+                onClick={() => goToPage(number)}
+                aria-label={`Page ${number}`}
+                aria-current={number === pageNumber ? 'page' : undefined}
+                className={`size-10 cursor-pointer rounded-full text-sm font-medium ${
+                  number === pageNumber
+                    ? 'bg-accent text-white'
+                    : 'hover:bg-accent-soft hover:text-accent'
+                }`}
+              >
+                {number}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => goToPage(pageNumber + 1)}
+              disabled={pageNumber === pageCount}
+              className="cursor-pointer rounded-full px-4 py-2 text-sm font-medium hover:bg-accent-soft hover:text-accent disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit"
+            >
+              Next &rarr;
+            </button>
+          </div>
+        </nav>
+      )}
     </section>
   )
 }
