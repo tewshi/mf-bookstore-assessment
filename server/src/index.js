@@ -5,6 +5,9 @@ import { api } from './api.js'
 
 const app = express()
 
+// `npm start` sets NODE_ENV=production; `npm run dev` doesn't
+const isProduction = process.env.NODE_ENV === 'production'
+
 // Signup, login, logout and "who am I" all live under /api/auth.
 // It goes before express.json(), because Better Auth reads the body itself.
 app.all('/api/auth/{*any}', toNodeHandler(auth))
@@ -13,12 +16,18 @@ app.use(express.json())
 app.use('/api', api)
 
 // In production the same server also hands out the built React app,
-// so the site and its API share one URL. In dev, Vite does this instead.
-app.use(express.static(new URL('../../client/dist', import.meta.url).pathname))
+// so the site and its API share one URL. In dev, Vite does this instead,
+// so an old build in client/dist can't be mistaken for the live code.
+if (isProduction) {
+  app.use(express.static(new URL('../../client/dist', import.meta.url).pathname))
+}
 
 const port = process.env.PORT || 3000
 app.listen(port, () => {
-  console.log(`API on http://localhost:${port}/api`)
-  // In dev the page itself comes from Vite, which passes /api on to here
-  if (process.env.NODE_ENV !== 'production') console.log('Open the site at http://localhost:5173')
+  if (isProduction) {
+    console.log(`Site and API on port ${port}`)
+  } else {
+    // In dev the page comes from Vite, which passes /api on to here
+    console.log(`API on http://localhost:${port}/api. Open the site at http://localhost:5173`)
+  }
 })
