@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer id="visit" className="bg-ink text-bg">
+    <footer className="bg-ink text-bg">
       {/* One column on phones, three from sm */}
       <div className="mx-auto grid max-w-page gap-8 px-4 py-12 sm:grid-cols-3">
         <div>

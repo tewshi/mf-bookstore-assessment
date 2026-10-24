@@ -8,15 +8,14 @@ const links = [
   { href: '#books', label: 'Books' },
   { href: '#staff-picks', label: 'Staff Picks' },
   { href: '#events', label: 'Events' },
-  { href: '#visit', label: 'Visit' },
 ]
 
 // Which home page section is on screen, as a link href like '#events':
 // the last section whose top has scrolled above a line 40% down the screen.
 function sectionInView() {
-  // At the very bottom, the last sections (and the footer) can't scroll up
-  // that far. So if a link was clicked (the hash) and its section is on
-  // screen, trust that one.
+  // At the very bottom, the last section (Events) can't scroll up that far.
+  // So if a link was clicked (the hash) and its section is on screen,
+  // trust that one.
   const hash = window.location.hash
   const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2
   const clicked = links.some((link) => link.href === hash)
@@ -49,7 +48,7 @@ export function Header({ cartCount, page }) {
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   // Work out the section on screen again every time the page scrolls,
-  // and when the hash changes (clicking Visit at the bottom doesn't scroll)
+  // and when the hash changes (clicking Events at the bottom doesn't scroll)
   const [inView, setInView] = useState(null)
   useEffect(() => {
     const update = () => setInView(sectionInView())
