@@ -27,3 +27,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Claude Code personal settings
+.claude/settings.local.json
+CLAUDE.local.md

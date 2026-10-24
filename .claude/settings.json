@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(railway whoami)",
+      "Bash(railway status:*)",
+      "Bash(railway service status:*)",
+      "Bash(railway logs:*)"
+    ],
+    "deny": [
+      "Read(./server/.env)",
+      "Bash(railway variable set:*)",
+      "Bash(railway variable delete:*)",
+      "Bash(railway tcp-proxy create:*)",
+      "Bash(railway delete:*)",
+      "Bash(railway down:*)"
+    ]
+  }
+}
