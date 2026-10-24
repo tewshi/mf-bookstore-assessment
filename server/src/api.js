@@ -26,6 +26,7 @@ function toBook(row) {
     pages: row.pages,
     published: row.published,
     staffPick: row.staff_pick_quote ? { quote: row.staff_pick_quote, by: row.staff_pick_by } : null,
+    stock: row.stock,
     rating: row.rating === null ? null : Number(row.rating),
     reviewCount: row.review_count,
   }

@@ -19,6 +19,11 @@ CREATE TABLE IF NOT EXISTS books (
   staff_pick_by    text
 );
 
+-- How many copies are on the shelf. Added after the table already existed,
+-- so it's an ALTER: ADD COLUMN IF NOT EXISTS adds it once and is skipped
+-- on later runs. New databases get it the same way.
+ALTER TABLE books ADD COLUMN IF NOT EXISTS stock integer NOT NULL DEFAULT 10 CHECK (stock >= 0);
+
 -- One row per event in the shop.
 CREATE TABLE IF NOT EXISTS events (
   id       text PRIMARY KEY,

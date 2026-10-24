@@ -14,6 +14,13 @@ const testCards = {
   '4000000000000002': 'declined',
 }
 
+// The message when someone wants more copies than we have
+function outOfStock(book) {
+  return book.stock === 0
+    ? `Sorry, "${book.title}" just sold out. Remove it from your cart to continue.`
+    : `Sorry, only ${book.stock} of "${book.title}" left. Lower the quantity to continue.`
+}
+
 // POST /api/orders with { items: [{ bookId, quantity }], cardNumber }
 // "Charges" the card, then saves the order. Answers { id, total }.
 orders.post('/', async (req, res) => {
@@ -33,13 +40,20 @@ orders.post('/', async (req, res) => {
 
   // Prices come from the database, not from the browser,
   // so nobody can change what they pay by editing the request.
-  const { rows: books } = await pool.query('SELECT id, price FROM books WHERE id = ANY($1)', [
-    items.map((item) => item.bookId),
-  ])
+  const { rows: books } = await pool.query(
+    'SELECT id, title, price, stock FROM books WHERE id = ANY($1)',
+    [items.map((item) => item.bookId)],
+  )
+  const byId = Object.fromEntries(books.map((book) => [book.id, book]))
   const prices = Object.fromEntries(books.map((book) => [book.id, Number(book.price)]))
   for (const item of items) {
-    if (!(item.bookId in prices) || !Number.isInteger(item.quantity) || item.quantity < 1) {
+    const book = byId[item.bookId]
+    if (!book || !Number.isInteger(item.quantity) || item.quantity < 1) {
       return res.status(400).json({ error: 'Something in your cart is not in the shop any more' })
+    }
+    // Checked before "charging" the card, so nobody pays for books we don't have
+    if (item.quantity > book.stock) {
+      return res.status(409).json({ error: outOfStock(book) })
     }
   }
   const total = items.reduce((sum, item) => sum + prices[item.bookId] * item.quantity, 0)
@@ -56,6 +70,21 @@ orders.post('/', async (req, res) => {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+
+    // Take the books off the shelf. "AND stock >= $1" makes the update do
+    // nothing if someone else bought the last copies a moment ago; then
+    // rowCount is 0 and we undo everything with ROLLBACK.
+    for (const item of items) {
+      const { rowCount } = await client.query(
+        'UPDATE books SET stock = stock - $1 WHERE id = $2 AND stock >= $1',
+        [item.quantity, item.bookId],
+      )
+      if (rowCount === 0) {
+        await client.query('ROLLBACK')
+        return res.status(409).json({ error: outOfStock(byId[item.bookId]) })
+      }
+    }
+
     const { rows } = await client.query(
       'INSERT INTO orders (user_id, total, card_last4) VALUES ($1, $2, $3) RETURNING id',
       [req.user.id, total, digits.slice(-4)],

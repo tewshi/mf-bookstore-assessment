@@ -1,5 +1,6 @@
 // The Week 2 books, now only used by seed.js to fill the books table.
 // staffPick is null, or { quote, by } when a bookseller recommends it.
+// stock is how many copies are on the shelf (0 shows as sold out).
 export const books = [
   {
     id: 'salt-orchard',
@@ -14,6 +15,7 @@ export const books = [
     format: 'Paperback',
     pages: 288,
     published: 2025,
+    stock: 12,
     staffPick: null,
   },
   {
@@ -29,6 +31,7 @@ export const books = [
     format: 'Paperback',
     pages: 342,
     published: 2026,
+    stock: 2,
     staffPick: { quote: 'Funny, strange, and over far too soon.', by: 'Sofie' },
   },
   {
@@ -44,6 +47,7 @@ export const books = [
     format: 'Paperback',
     pages: 196,
     published: 2024,
+    stock: 3,
     staffPick: { quote: 'I read it in one sitting and then started again.', by: 'Hanna' },
   },
   {
@@ -59,6 +63,7 @@ export const books = [
     format: 'Paperback',
     pages: 310,
     published: 2025,
+    stock: 8,
     staffPick: null,
   },
   {
@@ -74,6 +79,7 @@ export const books = [
     format: 'Hardcover',
     pages: 264,
     published: 2025,
+    stock: 6,
     staffPick: { quote: 'The best book about water I have ever sold.', by: 'Emeka' },
   },
   {
@@ -89,6 +95,7 @@ export const books = [
     format: 'Paperback',
     pages: 232,
     published: 2026,
+    stock: 9,
     staffPick: null,
   },
   {
@@ -104,6 +111,7 @@ export const books = [
     format: 'Paperback',
     pages: 178,
     published: 2024,
+    stock: 14,
     staffPick: null,
   },
   {
@@ -119,6 +127,7 @@ export const books = [
     format: 'Hardcover',
     pages: 208,
     published: 2025,
+    stock: 5,
     staffPick: null,
   },
   {
@@ -134,6 +143,7 @@ export const books = [
     format: 'Paperback',
     pages: 280,
     published: 2025,
+    stock: 10,
     staffPick: null,
   },
   {
@@ -149,6 +159,7 @@ export const books = [
     format: 'Hardcover',
     pages: 356,
     published: 2026,
+    stock: 4,
     staffPick: { quote: 'Quietly devastating. I still think about the last chapter.', by: 'Sofie' },
   },
   {
@@ -164,6 +175,7 @@ export const books = [
     format: 'Paperback',
     pages: 240,
     published: 2024,
+    stock: 7,
     staffPick: null,
   },
   {
@@ -179,6 +191,7 @@ export const books = [
     format: 'Paperback',
     pages: 302,
     published: 2025,
+    stock: 11,
     staffPick: null,
   },
   {
@@ -194,6 +207,7 @@ export const books = [
     format: 'Paperback',
     pages: 188,
     published: 2026,
+    stock: 6,
     staffPick: null,
   },
   {
@@ -209,6 +223,7 @@ export const books = [
     format: 'Paperback',
     pages: 164,
     published: 2024,
+    stock: 1,
     staffPick: { quote: 'Small, gentle and perfect. I keep giving it to people.', by: 'Hanna' },
   },
   {
@@ -224,6 +239,7 @@ export const books = [
     format: 'Paperback',
     pages: 334,
     published: 2025,
+    stock: 9,
     staffPick: null,
   },
   {
@@ -239,6 +255,7 @@ export const books = [
     format: 'Paperback',
     pages: 256,
     published: 2026,
+    stock: 8,
     staffPick: null,
   },
   {
@@ -254,6 +271,7 @@ export const books = [
     format: 'Hardcover',
     pages: 312,
     published: 2025,
+    stock: 5,
     staffPick: { quote: 'Read it hungry. Then bake something.', by: 'Emeka' },
   },
   {
@@ -269,6 +287,7 @@ export const books = [
     format: 'Paperback',
     pages: 220,
     published: 2024,
+    stock: 12,
     staffPick: null,
   },
   {
@@ -284,6 +303,7 @@ export const books = [
     format: 'Paperback',
     pages: 288,
     published: 2026,
+    stock: 7,
     staffPick: null,
   },
   {
@@ -299,6 +319,7 @@ export const books = [
     format: 'Hardcover',
     pages: 368,
     published: 2025,
+    stock: 0,
     staffPick: null,
   },
   {
@@ -314,6 +335,7 @@ export const books = [
     format: 'Paperback',
     pages: 240,
     published: 2024,
+    stock: 10,
     staffPick: null,
   },
   {
@@ -329,6 +351,7 @@ export const books = [
     format: 'Paperback',
     pages: 216,
     published: 2026,
+    stock: 6,
     staffPick: null,
   },
   {
@@ -344,6 +367,7 @@ export const books = [
     format: 'Hardcover',
     pages: 272,
     published: 2025,
+    stock: 9,
     staffPick: null,
   },
   {
@@ -359,6 +383,7 @@ export const books = [
     format: 'Paperback',
     pages: 196,
     published: 2024,
+    stock: 15,
     staffPick: null,
   },
 ]
