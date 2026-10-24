@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
-import { CheckIcon } from './Icons'
+import { AlertIcon, CheckIcon } from './Icons'
 
 // A short message that pops up at the bottom of the screen, e.g. "Added
 // to your cart", and goes away by itself after 3 seconds. toast is
-// { text, link?, linkText? }; onClose removes it.
+// { text, link?, linkText?, warning? }; onClose removes it.
+// warning shows an amber "!" instead of the green tick.
 export function Toast({ toast, onClose }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000)
@@ -19,7 +20,11 @@ export function Toast({ toast, onClose }) {
         role="status"
         className="pointer-events-auto flex animate-toast-in items-center gap-3 rounded-full bg-ink py-3 pr-3 pl-4 text-sm text-bg shadow-xl"
       >
-        <CheckIcon className="size-5 shrink-0 text-emerald-400" />
+        {toast.warning ? (
+          <AlertIcon className="size-5 shrink-0 text-amber-400" />
+        ) : (
+          <CheckIcon className="size-5 shrink-0 text-emerald-400" />
+        )}
         <span>{toast.text}</span>
         {toast.link && (
           <a

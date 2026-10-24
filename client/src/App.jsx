@@ -64,16 +64,29 @@ function App() {
   // value between renders without causing a re-render when it changes.
   const toastCount = useRef(0)
 
-  // A new id each time, so showing the same text twice still restarts it
-  function showToast(text, link, linkText) {
+  // message is { text, link?, linkText?, warning? }. A new id each time,
+  // so showing the same text twice still restarts the timer.
+  function showToast(message) {
     toastCount.current += 1
-    setToast({ id: toastCount.current, text, link, linkText })
+    setToast({ ...message, id: toastCount.current })
   }
 
   function addToCart(bookId) {
-    setCart({ ...cart, [bookId]: (cart[bookId] ?? 0) + 1 })
     const book = books.find((b) => b.id === bookId)
-    showToast(`Added "${book.title}" to your cart`, '#cart', 'View cart')
+    const inCart = cart[bookId] ?? 0
+    // Never more in the cart than on the shelf
+    if (inCart >= book.stock) {
+      showToast({
+        text:
+          book.stock === 0
+            ? `"${book.title}" is sold out`
+            : `Only ${book.stock} of "${book.title}" in stock`,
+        warning: true,
+      })
+      return
+    }
+    setCart({ ...cart, [bookId]: inCart + 1 })
+    showToast({ text: `Added "${book.title}" to your cart`, link: '#cart', linkText: 'View cart' })
   }
 
   // A quantity of 0 takes the book out of the cart
@@ -122,7 +135,12 @@ function App() {
       return <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
     }
     if (page === 'checkout') {
-      return <Checkout books={books} cart={cart} onPaid={() => setCart({})} />
+      // After paying: empty the cart, and reload the books for the new stock
+      const onPaid = () => {
+        setCart({})
+        loadBooks()
+      }
+      return <Checkout books={books} cart={cart} onPaid={onPaid} />
     }
     if (page === 'my-books') {
       return <MyBooks />

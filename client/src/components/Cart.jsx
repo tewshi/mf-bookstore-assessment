@@ -30,7 +30,7 @@ export function Cart({ books, cart, onChangeQuantity }) {
   }
 
   const stepButton =
-    'flex size-8 cursor-pointer items-center justify-center rounded-full text-lg hover:bg-accent-soft hover:text-accent'
+    'flex size-8 cursor-pointer items-center justify-center rounded-full text-lg hover:bg-accent-soft hover:text-accent disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-inherit'
 
   return (
     <section id="cart" className="scroll-mt-16 mx-auto max-w-page px-4 py-12">
@@ -57,6 +57,12 @@ export function Cart({ books, cart, onChangeQuantity }) {
                       </a>
                     </h2>
                     <p className="text-sm text-muted">{book.author}</p>
+                    {/* The stock went down since this was added (someone else bought it) */}
+                    {quantity > book.stock && (
+                      <p className="mt-1 text-sm font-medium text-amber-700">
+                        {book.stock === 0 ? 'Sold out' : `Only ${book.stock} left`}
+                      </p>
+                    )}
                   </div>
                   <p className="font-semibold whitespace-nowrap">
                     €{(book.price * quantity).toFixed(2)}
@@ -77,6 +83,7 @@ export function Cart({ books, cart, onChangeQuantity }) {
                     <button
                       type="button"
                       onClick={() => onChangeQuantity(book.id, quantity + 1)}
+                      disabled={quantity >= book.stock}
                       aria-label={`One more ${book.title}`}
                       className={stepButton}
                     >

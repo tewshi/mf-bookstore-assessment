@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookCard } from './BookCard'
+import { BookCard, StockNote } from './BookCard'
 import { Stars } from './StarRating'
 import { CartIcon, SearchIcon } from './Icons'
 
@@ -154,13 +154,15 @@ export function BookGrid({ books, onAdd }) {
                 <button
                   type="button"
                   onClick={() => onAdd(book.id)}
+                  disabled={book.stock === 0}
                   aria-label={`Add ${book.title} to cart`}
-                  className="relative z-10 flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-dark"
+                  className="relative z-10 flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-dark disabled:cursor-default disabled:bg-line disabled:text-muted"
                 >
                   <CartIcon className="size-4" />
                   Add
                 </button>
               </div>
+              <StockNote stock={book.stock} className="mt-2" />
             </BookCard>
           </li>
         ))}

@@ -33,3 +33,14 @@ export function BookCard({ book, children }) {
     </article>
   )
 }
+
+// "Sold out" or "Only 2 left" under a book, or nothing when there's plenty
+export function StockNote({ stock, className = '' }) {
+  if (stock === 0) {
+    return <p className={`text-sm font-medium text-muted ${className}`}>Sold out</p>
+  }
+  if (stock <= 3) {
+    return <p className={`text-sm font-medium text-amber-700 ${className}`}>Only {stock} left</p>
+  }
+  return null
+}
