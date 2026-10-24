@@ -113,6 +113,7 @@ function App() {
       return (
         <BookDetails
           book={book}
+          books={books}
           quantity={cart[book.id] ?? 0}
           onAdd={() => addToCart(book.id)}
           onReviewed={loadBooks}

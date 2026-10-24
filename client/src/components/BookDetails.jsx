@@ -1,9 +1,11 @@
 import { CartIcon } from './Icons'
 import { Stars } from './StarRating'
 import { Reviews } from './Reviews'
+import { Recommendations } from './Recommendations'
 
-// quantity is how many of this book are already in the cart
-export function BookDetails({ book, quantity, onAdd, onReviewed }) {
+// quantity is how many of this book are already in the cart.
+// books is every book, for the recommendations' fallback.
+export function BookDetails({ book, books, quantity, onAdd, onReviewed }) {
   const specs = [
     ['ISBN', book.isbn],
     ['Section', book.section],
@@ -75,7 +77,8 @@ export function BookDetails({ book, quantity, onAdd, onReviewed }) {
         </div>
       </article>
 
-      {/* key: a fresh Reviews (and form) for each book, not last book's text */}
+      {/* key: start fresh for each book, so nothing from the last book shows */}
+      <Recommendations key={`also-${book.id}`} book={book} books={books} />
       <Reviews key={book.id} book={book} onReviewed={onReviewed} />
     </section>
   )
