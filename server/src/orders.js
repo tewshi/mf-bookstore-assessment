@@ -106,9 +106,10 @@ orders.post('/', async (req, res) => {
   }
 })
 
-// GET /api/orders: the signed-in person's orders, newest first, each with
-// its books. myRating is their review of that book, or null if none yet.
-orders.get('/', async (req, res) => {
+// One person's orders, newest first, each with its books. With orderId,
+// just that one order (still only if it is theirs). myRating is their
+// review of each book, or null if none yet.
+async function findOrders(userId, orderId = null) {
   const { rows } = await pool.query(
     `SELECT orders.id, orders.total, orders.card_last4, orders.created_at,
             order_items.book_id, order_items.quantity, order_items.price,
@@ -117,9 +118,9 @@ orders.get('/', async (req, res) => {
      JOIN order_items ON order_items.order_id = orders.id
      JOIN books ON books.id = order_items.book_id
      LEFT JOIN reviews ON reviews.book_id = books.id AND reviews.user_id = orders.user_id
-     WHERE orders.user_id = $1
+     WHERE orders.user_id = $1 AND ($2::int IS NULL OR orders.id = $2)
      ORDER BY orders.created_at DESC, books.title`,
-    [req.user.id],
+    [userId, orderId],
   )
 
   // The query gives one row per book. Group them back into orders.
@@ -146,5 +147,19 @@ orders.get('/', async (req, res) => {
       myRating: row.my_rating,
     })
   }
-  res.json(list)
+  return list
+}
+
+// GET /api/orders: all of the signed-in person's orders
+orders.get('/', async (req, res) => {
+  res.json(await findOrders(req.user.id))
+})
+
+// GET /api/orders/12: one order, for the receipt. 404 if it doesn't exist
+// or belongs to someone else (we don't say which).
+orders.get('/:id', async (req, res) => {
+  const orderId = Number.parseInt(req.params.id)
+  const [order] = Number.isInteger(orderId) ? await findOrders(req.user.id, orderId) : []
+  if (!order) return res.status(404).json({ error: 'Order not found' })
+  res.json(order)
 })
