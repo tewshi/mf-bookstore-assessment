@@ -31,3 +31,6 @@ dist-ssr
 # Claude Code personal settings
 .claude/settings.local.json
 CLAUDE.local.md
+
+# No lockfile in this project (see .npmrc)
+package-lock.json
