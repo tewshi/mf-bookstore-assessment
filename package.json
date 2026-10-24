@@ -1,14 +1,20 @@
 {
   "name": "mayerfeld-books",
   "private": true,
-  "workspaces": ["client", "server"],
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "engines": {
     "node": ">=22.9"
   },
   "scripts": {
-    "dev": "npm run dev -w server & npm run dev -w client",
+    "dev": "concurrently --names api,web --kill-others \"npm run dev -w server\" \"npm run dev -w client\"",
     "build": "npm run build -w client",
     "start": "npm start -w server",
     "lint": "npm run lint -w client"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
   }
 }
