@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BookCard, StockNote } from './BookCard'
 import { Stars } from './StarRating'
-import { CartIcon, SearchIcon } from './Icons'
+import { CartIcon, ChevronDownIcon, SearchIcon } from './Icons'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
 
@@ -97,12 +97,14 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
             className="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 outline-none focus:border-accent focus:ring-4 focus:ring-accent-soft"
           />
         </label>
-        <label>
+        {/* appearance-none hides the browser's own arrow (each browser puts it
+            somewhere different); we draw a chevron instead, with room (pr-11) */}
+        <label className="relative">
           <span className="sr-only">Sort by</span>
           <select
             value={sort}
             onChange={(e) => changeSort(e.target.value)}
-            className="w-full cursor-pointer rounded-full border border-line bg-surface px-4 py-2.5 outline-none focus:border-accent md:w-auto"
+            className="w-full cursor-pointer appearance-none rounded-full border border-line bg-surface py-2.5 pr-11 pl-4 outline-none focus:border-accent md:w-auto"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -110,6 +112,7 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
               </option>
             ))}
           </select>
+          <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-muted" />
         </label>
         <div className="flex w-fit gap-1 rounded-full border border-line bg-surface p-1">
           {sections.map((name) => (
