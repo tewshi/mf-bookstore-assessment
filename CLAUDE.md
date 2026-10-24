@@ -34,7 +34,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). One `p
 - `server/src/index.js`: mounts Better Auth, then `express.json()`, then `/api`, then serves `client/dist`
 - `server/src/db.js`: the single `pg` pool everything shares
 - `server/src/auth.js`: Better Auth config (email + password)
-- `server/src/api.js`: `/api/books`, `/api/books/:id`, `/api/books/:id/reviews`, `/api/events`
+- `server/src/api.js`: `/api/books`, `/api/books/:id`, `/api/books/:id/reviews`, `/api/books/:id/recommendations`, `/api/events`
 - `server/src/orders.js`: `/api/orders` (simulated test-card payment, order history)
 - `server/src/session.js`: `currentUser(req)` and the `requireUser` middleware (Better Auth `getSession`)
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)

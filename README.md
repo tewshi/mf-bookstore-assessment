@@ -23,7 +23,7 @@ For local development, `DATABASE_URL` points at a Postgres on your machine (e.g.
 The repo is an npm workspace with two packages, so one `npm install` at the root installs both.
 
 - `client/`: the React app (Vite + Tailwind)
-  - `src/components/`: one component per part of the page, plus one per extra view: `AuthForm` (`#signin`, `#signup`), `Cart` (`#cart`), `Checkout` (`#checkout`) and `MyBooks` (`#my-books`). `Reviews` is the reviews section under each book
+  - `src/components/`: one component per part of the page, plus one per extra view: `AuthForm` (`#signin`, `#signup`), `Cart` (`#cart`), `Checkout` (`#checkout`) and `MyBooks` (`#my-books`). `Reviews` and `Recommendations` are the sections under each book
   - `src/components/Header.jsx`: the top bar. `UserMenu` is the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones
   - `src/components/Icons.jsx`: the small SVG icons (cart, menu, close, ...)
   - `src/api.js`: `getJson()` and `postJson()`, small `fetch` wrappers
@@ -56,6 +56,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `GET /api/books` | every book, with its average `rating` and `reviewCount` |
 | `GET /api/books/:id` | one book, or 404 |
 | `GET /api/books/:id/reviews` | `{ canReview, reviews }`: the reviews, newest first, and whether the signed-in person may write one |
+| `GET /api/books/:id/recommendations` | up to 4 books that this book's buyers also bought, most buyers first |
 | `POST /api/books/:id/reviews` | `{ rating, text }`: add or replace your review. Signed in, and only for books you bought |
 | `POST /api/orders` | `{ items, cardNumber }`: pay with a test card and save the order. Signed in |
 | `GET /api/orders` | your orders, newest first, with their books. Signed in |
@@ -80,6 +81,16 @@ The checkout page has buttons that fill in either test card.
 ## Reviews
 
 Only people who bought a book can review it: the server checks `order_items` before saving. Each book page loads its reviews from `GET /api/books/:id/reviews`, and buyers get a form with the `StarRating` component. My books (`#my-books`, in the account menu) lists every order with a "Write a review" link for each book, which opens `#book/<id>/reviews`.
+
+## Recommendations
+
+Under each book, "Readers who bought this also bought" comes from `GET /api/books/:id/recommendations`. The query in `server/src/api.js` works in three steps (a `WITH` query):
+
+1. `buyers`: everyone who has ordered this book.
+2. `also_bought`: the other books those people ordered, and how many of them ordered each one.
+3. Those books in full, with their ratings, the most-shared first, at most 4.
+
+When nobody has bought the book yet, the list is empty, and the page shows "More in Fiction" (or Nonfiction) from the books it already has instead.
 
 ## How login works
 
