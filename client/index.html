@@ -12,17 +12,15 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap"
     />
     <script>
-      // Turn dark mode on before the page is drawn, so it doesn't flash light
-      // first: the visitor's saved choice, else their computer's setting.
+      // Dark is the default. Turn it on before the page is drawn, so it
+      // doesn't flash light first, unless the visitor chose light before.
+      let theme = 'dark'
       try {
-        const saved = localStorage.getItem('theme')
-        const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches
-        if (saved === 'dark' || (!saved && prefersDark)) {
-          document.documentElement.classList.add('dark')
-        }
+        theme = localStorage.getItem('theme') ?? 'dark'
       } catch {
-        // localStorage can be blocked; then we simply start light
+        // localStorage can be blocked; then we just use the default
       }
+      if (theme === 'dark') document.documentElement.classList.add('dark')
     </script>
     <title>MayerfeldBooks | Independent Bookstore</title>
   </head>

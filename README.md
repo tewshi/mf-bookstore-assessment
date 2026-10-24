@@ -133,7 +133,7 @@ They need to refresh the page to see the link.
 
 ## Dark mode
 
-All the colours are CSS variables in `client/src/index.css`. The `.dark` block gives them night-time values, so components didn't need changing. A small script in `index.html` adds the `dark` class to `<html>` before the page is drawn (the saved choice, else the computer's setting), and `ThemeToggle` switches it and saves the choice in `localStorage`. Buttons use `text-on-accent` rather than `text-white`, because in dark mode the accent is light and needs dark text.
+All the colours are CSS variables in `client/src/index.css`. The `.dark` block gives them night-time values, so components didn't need changing. Dark is the default: a small script in `index.html` adds the `dark` class to `<html>` before the page is drawn, unless the visitor chose light before, and `ThemeToggle` switches it and saves the choice in `localStorage`. Buttons use `text-on-accent` rather than `text-white`, because in dark mode the accent is light and needs dark text.
 
 ## How login works
 
