@@ -13,11 +13,17 @@ export function MyBooks() {
   // null until /api/orders answers
   const [orders, setOrders] = useState(null)
   const [error, setError] = useState(null)
+  // Upcoming events this person has a seat at
+  const [myEvents, setMyEvents] = useState([])
 
   // Fetch again if a different person signs in
   useEffect(() => {
     if (!userId) return
     getJson('/api/orders').then(setOrders, setError)
+    getJson('/api/events').then(
+      (events) => setMyEvents(events.filter((e) => e.going)),
+      () => {},
+    )
   }, [userId])
 
   if (isPending) {
@@ -45,6 +51,28 @@ export function MyBooks() {
       <p className="mb-8 text-muted">
         Your orders, newest first. Tell other readers what you thought.
       </p>
+
+      {myEvents.length > 0 && (
+        <div className="mb-8 rounded-2xl border border-line bg-surface p-6">
+          <h2 className="mb-3 text-xl font-bold">Your events</h2>
+          <ul className="flex flex-col gap-2">
+            {myEvents.map((event) => (
+              <li key={event.id} className="flex flex-wrap items-center gap-x-3 text-sm">
+                <time
+                  dateTime={event.datetime}
+                  className="rounded-full bg-accent-soft px-3 py-1 font-semibold text-accent"
+                >
+                  {event.label}
+                </time>
+                <span className="font-medium">{event.title}</span>
+              </li>
+            ))}
+          </ul>
+          <a href="#events" className="mt-3 inline-block text-sm text-accent hover:underline">
+            See all events
+          </a>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="text-accent">
