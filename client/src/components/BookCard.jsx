@@ -18,7 +18,10 @@ export function BookCard({ book, children }) {
       <div className="flex flex-1 flex-col p-4">
         <h3 className="mb-1 leading-snug font-semibold">
           {/* after:inset-0 stretches the link over the whole card */}
-          <a href={`#book/${book.id}`} className="after:absolute after:inset-0 group-hover:text-accent">
+          <a
+            href={`#book/${book.id}`}
+            className="after:absolute after:inset-0 group-hover:text-accent"
+          >
             {book.title}
           </a>
         </h3>

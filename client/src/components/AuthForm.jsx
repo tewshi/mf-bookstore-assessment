@@ -27,60 +27,82 @@ export function AuthForm({ mode }) {
     }
   }
 
-  const input = 'w-full rounded-md border border-line bg-surface px-4 py-2'
+  const input =
+    'mt-1 w-full rounded-xl border border-line bg-bg px-4 py-3 outline-none focus:border-accent focus:ring-4 focus:ring-accent-soft'
 
   return (
-    <section className="mx-auto max-w-md px-4 py-8">
-      <h1 className="mb-4 text-3xl font-bold">{isSignUp ? 'Create an account' : 'Sign in'}</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {isSignUp && (
-          <label>
-            Name
-            <input className={input} value={name} onChange={(e) => setName(e.target.value)} required />
+    // The form sits in a white card in the middle of the page
+    <section className="mx-auto max-w-md px-4 py-16">
+      <div className="rounded-2xl border border-line bg-surface p-8 shadow-sm">
+        <h1 className="mb-1 text-3xl font-bold">
+          {isSignUp ? 'Create an account' : 'Welcome back'}
+        </h1>
+        <p className="mb-6 text-muted">
+          {isSignUp
+            ? 'Join to keep your details for next time.'
+            : 'Sign in to your MayerfeldBooks account.'}
+        </p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {isSignUp && (
+            <label className="text-sm font-medium">
+              Name
+              <input
+                className={input}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </label>
+          )}
+          <label className="text-sm font-medium">
+            Email
+            <input
+              className={input}
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </label>
-        )}
-        <label>
-          Email
-          <input
-            className={input}
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Password
-          <input
-            className={input}
-            type="password"
-            autoComplete={isSignUp ? 'new-password' : 'current-password'}
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        {error && (
-          <p role="alert" className="text-accent">
-            {error}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={busy}
-          className="cursor-pointer rounded-full bg-accent px-8 py-4 font-bold text-white hover:opacity-90 disabled:opacity-50"
-        >
-          {isSignUp ? 'Sign up' : 'Sign in'}
-        </button>
-      </form>
-      <p className="mt-4 text-muted">
-        {isSignUp ? 'Already have an account? ' : 'New here? '}
-        <a href={isSignUp ? '#signin' : '#signup'} className="text-accent underline">
-          {isSignUp ? 'Sign in' : 'Create an account'}
-        </a>
-      </p>
+          <label className="text-sm font-medium">
+            Password
+            <input
+              className={input}
+              type="password"
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-accent-dark"
+            >
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={busy}
+            className="mt-2 cursor-pointer rounded-full bg-accent px-8 py-3 font-medium text-white hover:bg-accent-dark disabled:opacity-50"
+          >
+            {isSignUp ? 'Sign up' : 'Sign in'}
+          </button>
+        </form>
+        <p className="mt-6 text-center text-sm text-muted">
+          {isSignUp ? 'Already have an account? ' : 'New here? '}
+          <a
+            href={isSignUp ? '#signin' : '#signup'}
+            className="font-medium text-accent hover:underline"
+          >
+            {isSignUp ? 'Sign in' : 'Create an account'}
+          </a>
+        </p>
+      </div>
     </section>
   )
 }

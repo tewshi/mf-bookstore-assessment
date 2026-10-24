@@ -51,7 +51,9 @@ export function UserMenu({ user }) {
       >
         <Avatar user={user} />
         <span className="max-w-32 truncate text-sm font-medium">{user.name}</span>
-        <ChevronDownIcon className={`size-4 text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDownIcon
+          className={`size-4 text-muted transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {open && (

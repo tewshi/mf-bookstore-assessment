@@ -59,7 +59,9 @@ export function Cart({ books, cart, onChangeQuantity }) {
                     </h2>
                     <p className="text-sm text-muted">{book.author}</p>
                   </div>
-                  <p className="font-semibold whitespace-nowrap">€{(book.price * quantity).toFixed(2)}</p>
+                  <p className="font-semibold whitespace-nowrap">
+                    €{(book.price * quantity).toFixed(2)}
+                  </p>
                 </div>
 
                 <div className="mt-auto flex items-center justify-between pt-3">
