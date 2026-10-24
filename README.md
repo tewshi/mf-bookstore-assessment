@@ -23,7 +23,9 @@ For local development, `DATABASE_URL` points at a Postgres on your machine (e.g.
 The repo is an npm workspace with two packages, so one `npm install` at the root installs both.
 
 - `client/`: the React app (Vite + Tailwind)
-  - `src/components/`: one component per part of the page, plus `AuthForm` for `#signin` and `#signup`
+  - `src/components/`: one component per part of the page, plus `AuthForm` for `#signin` and `#signup` and `Cart` for `#cart`
+  - `src/components/Header.jsx`: the top bar. `UserMenu` is the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones
+  - `src/components/Icons.jsx`: the small SVG icons (cart, menu, close, ...)
   - `src/api.js`: `getJson()`, a small `fetch` wrapper
   - `src/auth.js`: the Better Auth client (`signIn`, `signUp`, `signOut`, `useSession`)
 - `server/`: the Express API
@@ -49,6 +51,10 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `GET /api/books/:id` | one book, or 404 |
 | `GET /api/events` | every event, soonest first |
 | `/api/auth/*` | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
+
+## The cart
+
+The cart lives in the browser, not the database. `App` keeps it in state as `{ bookId: quantity }` and saves it to `localStorage` whenever it changes, so it survives a refresh. The header badge, the Add buttons and the `#cart` page all read the same state. There is no online payment yet: the cart page tells people to show it in the shop.
 
 ## How login works
 
