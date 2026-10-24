@@ -22,7 +22,8 @@ npm run dev                  # concurrently: Express on :3000 (API only) + Vite 
 npm run lint                 # oxlint on the client
 npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
-npm run seed -w server       # upserts the Week 2 books, replaces events (orders/reviews survive)
+npm run seed -w server       # upserts the 24 books and 7 events (orders, reviews, reservations survive)
+npm run make-admin -w server -- you@example.com   # role = 'admin' (--undo to reverse)
 ```
 
 There are no automated tests. Check a change with lint + build, then by running the server and hitting the API (curl) or the page.
@@ -34,18 +35,21 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). One `p
 - `server/src/index.js`: mounts Better Auth, then `express.json()`, then `/api`, then serves `client/dist`
 - `server/src/db.js`: the single `pg` pool everything shares
 - `server/src/auth.js`: Better Auth config (email + password)
-- `server/src/api.js`: `/api/books`, `/api/books/:id`, `/api/books/:id/reviews`, `/api/books/:id/recommendations`, `/api/events`
-- `server/src/orders.js`: `/api/orders` (simulated test-card payment, order history)
-- `server/src/session.js`: `currentUser(req)` and the `requireUser` middleware (Better Auth `getSession`)
+- `server/src/api.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/api/books/:id`, reviews, recommendations; mounts the routers below
+- `server/src/orders.js`: `/api/orders` (simulated test-card payment, stock decrement in the transaction, history, `/:id` receipt)
+- `server/src/wishlist.js`, `server/src/events.js` (seat sign-up), `server/src/admin.js` (`requireAdmin`)
+- `server/src/session.js`: `currentUser(req)`, `requireUser`, `requireAdmin` (Better Auth `getSession`)
+- Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
 - `client/src/api.js`: `getJson()`, `postJson()`; `client/src/auth.js`: Better Auth React client
-- Cart is client-only (`localStorage`, state in `App.jsx`); orders and reviews are in Postgres
+- Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres
+- Dark mode: `.dark` overrides the `--color-*` tokens in `index.css`; use `text-on-accent` (not `text-white`) on `bg-accent`
 
 ## Conventions
 
 - Plain SQL with `pg` and `$1` placeholders. No ORM.
 - Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/api.js`).
-- Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#my-books`.
+- Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#my-books`, `#saved`, `#account`, `#order/<id>`, `#admin/<tab>`.
 - Comments explain *why* in plain English for a student reader; match the density of the existing files.
 - Commits: small, one-line messages, one logical step each.
 
@@ -56,6 +60,9 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). One `p
 - `getMigrations` is imported from `better-auth/db/migration` (not `better-auth/db`) in v1.7.
 - Postgres `numeric` comes back as a string: convert `price` with `Number()`.
 - `timestamp` → JS `Date` shifts by the local timezone; events use `to_char(...)` in SQL instead.
+- Better Auth rejects cookie-authenticated POSTs without an `Origin` header (CSRF check): add `-H 'Origin: http://localhost:5173'` when testing with curl.
+- In zsh, an unquoted `$VAR` holding several curl flags is NOT split into words; spell flags out or use a function.
+- oxlint's React rules flag `Date.now()` in render scope, `setState` straight inside an effect, and writing `window.location` in a component; use a ref, derive the value during render, or render a link instead.
 - `pool.on('error')` is required: Neon/Railway close idle connections and an unhandled pool error crashes the process.
 - Better Auth throws at startup in production without `BETTER_AUTH_SECRET`. `db.js` and `auth.js` check the three env vars and name the missing one.
 
