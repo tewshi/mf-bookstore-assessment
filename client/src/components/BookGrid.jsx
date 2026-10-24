@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BookCard } from './BookCard'
-import { StarRating } from './StarRating'
+import { Stars } from './StarRating'
 import { CartIcon } from './Icons'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
@@ -10,14 +10,6 @@ export function BookGrid({ books, onAdd }) {
   // Which section button is selected. Clicking a button calls
   // setSection, React re-renders, and filtered is worked out again.
   const [section, setSection] = useState('All')
-
-  // Star rating per book, e.g. { 'slow-maps': 4 }. Kept here rather than
-  // in each card, so a rating survives when the filter hides the card.
-  const [ratings, setRatings] = useState({})
-
-  function rate(bookId, value) {
-    setRatings({ ...ratings, [bookId]: value })
-  }
 
   const filtered = section === 'All' ? books : books.filter((book) => book.section === section)
 
@@ -49,11 +41,17 @@ export function BookGrid({ books, onAdd }) {
         {filtered.map((book) => (
           <li key={book.id}>
             <BookCard book={book}>
-              <StarRating
-                label={book.title}
-                value={ratings[book.id] ?? 0}
-                onChange={(value) => rate(book.id, value)}
-              />
+              {/* The average of the reviews; people rate on the book's page now */}
+              <p className="flex items-center gap-1 text-sm text-muted">
+                {book.reviewCount > 0 ? (
+                  <>
+                    <Stars rating={book.rating} />
+                    {book.rating.toFixed(1)} ({book.reviewCount})
+                  </>
+                ) : (
+                  'No reviews yet'
+                )}
+              </p>
               <div className="mt-3 flex items-center justify-between gap-2">
                 <p className="font-semibold text-accent">€{book.price.toFixed(2)}</p>
                 {/* relative z-10 lifts the button above the card's stretched link */}

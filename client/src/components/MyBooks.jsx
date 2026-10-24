@@ -42,7 +42,9 @@ export function MyBooks() {
   return (
     <section id="my-books" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-12">
       <h1 className="text-3xl font-bold sm:text-4xl">My books</h1>
-      <p className="mb-8 text-muted">Your orders, newest first. Tell other readers what you thought.</p>
+      <p className="mb-8 text-muted">
+        Your orders, newest first. Tell other readers what you thought.
+      </p>
 
       {error && (
         <p role="alert" className="text-accent">

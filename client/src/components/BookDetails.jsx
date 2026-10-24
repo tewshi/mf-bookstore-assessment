@@ -1,7 +1,9 @@
 import { CartIcon } from './Icons'
+import { Stars } from './StarRating'
+import { Reviews } from './Reviews'
 
 // quantity is how many of this book are already in the cart
-export function BookDetails({ book, quantity, onAdd }) {
+export function BookDetails({ book, quantity, onAdd, onReviewed }) {
   const specs = [
     ['ISBN', book.isbn],
     ['Section', book.section],
@@ -33,8 +35,17 @@ export function BookDetails({ book, quantity, onAdd }) {
             {book.section}
           </p>
           <h1 className="mb-2 text-3xl leading-tight font-bold sm:text-4xl">{book.title}</h1>
-          <p className="mb-6 text-lg text-muted">by {book.author}</p>
-          <p className="mb-6 text-2xl font-semibold">€{book.price.toFixed(2)}</p>
+          <p className="mb-2 text-lg text-muted">by {book.author}</p>
+          {book.reviewCount > 0 && (
+            <a
+              href={`#book/${book.id}/reviews`}
+              className="mb-2 flex w-fit items-center gap-2 text-sm text-muted hover:text-accent"
+            >
+              <Stars rating={book.rating} className="text-lg" />
+              {book.rating.toFixed(1)} ({book.reviewCount})
+            </a>
+          )}
+          <p className="mt-4 mb-6 text-2xl font-semibold">€{book.price.toFixed(2)}</p>
 
           <div className="mb-8 flex flex-wrap items-center gap-4">
             <button
@@ -63,6 +74,9 @@ export function BookDetails({ book, quantity, onAdd }) {
           </dl>
         </div>
       </article>
+
+      {/* key: a fresh Reviews (and form) for each book, not last book's text */}
+      <Reviews key={book.id} book={book} onReviewed={onReviewed} />
     </section>
   )
 }

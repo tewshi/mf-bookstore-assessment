@@ -206,7 +206,10 @@ export function Checkout({ books, cart, onPaid }) {
             </div>
 
             {error && (
-              <p role="alert" className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-accent-dark">
+              <p
+                role="alert"
+                className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-accent-dark"
+              >
                 {error}
               </p>
             )}
