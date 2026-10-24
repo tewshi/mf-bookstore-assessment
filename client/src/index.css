@@ -1,19 +1,25 @@
 @import "tailwindcss";
 
-/* Theme: the same colours and fonts as the old styles.css.
-   Each --color-* here becomes a utility, e.g. bg-surface, text-accent. */
+/* Theme: the shop's warm colours, plus two fonts from Google Fonts
+   (loaded in index.html). Each --color-* here becomes a utility,
+   e.g. bg-surface, text-accent. */
 @theme {
-  --font-serif: Georgia, "Times New Roman", serif;
+  /* Fraunces for headings, Inter for everything else */
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
 
   --color-bg: #faf6ef;
   --color-surface: #ffffff;
   --color-ink: #2b2420;
   --color-muted: #6f635a;
   --color-accent: #8a3b2a;
+  --color-accent-dark: #6e2e20;
+  /* A pale tint of the accent, for badges and soft backgrounds */
+  --color-accent-soft: #f5e6df;
   --color-line: #e4dacb;
 
   /* max-w-page keeps content in a centred column */
-  --container-page: 70rem;
+  --container-page: 72rem;
 }
 
 html {
@@ -23,6 +29,13 @@ html {
 body {
   background-color: var(--color-bg);
   color: var(--color-ink);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   line-height: 1.6;
+}
+
+/* Every heading uses the serif font, so components don't repeat it */
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
 }
