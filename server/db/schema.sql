@@ -65,3 +65,12 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (user_id, book_id)
 );
+
+-- Books someone saved for later (the heart on each book). The primary key
+-- on both columns means a book can only be saved once per person.
+CREATE TABLE IF NOT EXISTS wishlist (
+  user_id    text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  book_id    text NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, book_id)
+);

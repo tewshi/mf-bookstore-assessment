@@ -2,11 +2,13 @@ import { Router } from 'express'
 import { pool } from './db.js'
 import { currentUser, requireUser } from './session.js'
 import { orders } from './orders.js'
+import { wishlist } from './wishlist.js'
 
 export const api = Router()
 
-// /api/orders lives in its own file, orders.js
+// /api/orders and /api/wishlist live in their own files
 api.use('/orders', orders)
+api.use('/wishlist', wishlist)
 
 // Turns a books row (snake_case columns) into the shape the React app
 // has always used, with staffPick as null or { quote, by }.
