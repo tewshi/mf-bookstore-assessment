@@ -16,7 +16,8 @@ export function Avatar({ user, className = 'size-8' }) {
 
 // Avatar and name in the header. Clicking opens a small dropdown
 // with the email address, a link to My books and the sign out button.
-export function UserMenu({ user }) {
+// page (from App) lets us highlight My books while it is open
+export function UserMenu({ user, page }) {
   const [open, setOpen] = useState(false)
   // A ref points at the menu's element, so we can tell whether a
   // click landed inside it or somewhere else on the page.
@@ -69,7 +70,10 @@ export function UserMenu({ user }) {
           <a
             href="#my-books"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent-soft hover:text-accent"
+            aria-current={page === 'my-books' ? 'page' : undefined}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent-soft hover:text-accent ${
+              page === 'my-books' ? 'bg-accent-soft text-accent' : ''
+            }`}
           >
             <BookIcon className="size-4" />
             My books

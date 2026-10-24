@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { authClient } from '../auth'
 import { UserMenu } from './UserMenu'
 import { MobileMenu } from './MobileMenu'
@@ -11,7 +11,34 @@ const links = [
   { href: '#visit', label: 'Visit' },
 ]
 
-export function Header({ cartCount }) {
+// Which home page section is on screen, as a link href like '#events':
+// the last section whose top has scrolled above a line 40% down the screen.
+function sectionInView() {
+  // At the very bottom, the last sections (and the footer) can't scroll up
+  // that far. So if a link was clicked (the hash) and its section is on
+  // screen, trust that one.
+  const hash = window.location.hash
+  const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2
+  const clicked = links.some((link) => link.href === hash)
+    ? document.getElementById(hash.slice(1))
+    : null
+  if (atBottom && clicked) {
+    const { top, bottom } = clicked.getBoundingClientRect()
+    if (top < window.innerHeight && bottom > 0) return hash
+  }
+
+  let current = null
+  for (const link of links) {
+    const section = document.getElementById(link.href.slice(1))
+    if (section && section.getBoundingClientRect().top < window.innerHeight * 0.4) {
+      current = link.href
+    }
+  }
+  return current
+}
+
+// page is the first part of the hash (see App.jsx), e.g. 'book' or 'cart'
+export function Header({ cartCount, page }) {
   // Asks the server who is signed in (by the session cookie), and
   // re-renders the header when someone signs in or out.
   const { data: session, isPending } = authClient.useSession()
@@ -20,6 +47,26 @@ export function Header({ cartCount }) {
   // function between renders, so MobileMenu's effect doesn't re-run for nothing.
   const [menuOpen, setMenuOpen] = useState(false)
   const closeMenu = useCallback(() => setMenuOpen(false), [])
+
+  // Work out the section on screen again every time the page scrolls,
+  // and when the hash changes (clicking Visit at the bottom doesn't scroll)
+  const [inView, setInView] = useState(null)
+  useEffect(() => {
+    const update = () => setInView(sectionInView())
+    update()
+    window.addEventListener('scroll', update)
+    window.addEventListener('hashchange', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('hashchange', update)
+    }
+  }, [])
+
+  // The link to highlight: Books on a book's own page, the section on
+  // screen on the home page (no hash, or one of the sections), else none.
+  const onHomePage = page === '' || page === 'top' || links.some((link) => link.href === `#${page}`)
+  const activeHref = page === 'book' ? '#books' : onHomePage ? inView : null
+  const cartActive = page === 'cart' || page === 'checkout'
 
   return (
     // The drawer sits next to the header, not inside it: backdrop-blur
@@ -37,9 +84,13 @@ export function Header({ cartCount }) {
             <ul className="flex gap-1">
               {links.map((link) => (
                 <li key={link.href}>
+                  {/* aria-current tells screen readers which link is the current one */}
                   <a
                     href={link.href}
-                    className="rounded-full px-3 py-2 text-sm font-medium text-muted hover:bg-accent-soft hover:text-accent"
+                    aria-current={link.href === activeHref ? 'true' : undefined}
+                    className={`rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-accent-soft hover:text-accent ${
+                      link.href === activeHref ? 'bg-accent-soft text-accent' : 'text-muted'
+                    }`}
                   >
                     {link.label}
                   </a>
@@ -52,7 +103,10 @@ export function Header({ cartCount }) {
             <a
               href="#cart"
               aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
-              className="relative rounded-full p-2 hover:bg-accent-soft hover:text-accent"
+              aria-current={cartActive ? 'page' : undefined}
+              className={`relative rounded-full p-2 hover:bg-accent-soft hover:text-accent ${
+                cartActive ? 'bg-accent-soft text-accent' : ''
+              }`}
             >
               <CartIcon />
               {/* The little number on the icon, only when something is in the cart */}
@@ -67,7 +121,7 @@ export function Header({ cartCount }) {
             {!isPending && (
               <div className="hidden md:block">
                 {session ? (
-                  <UserMenu user={session.user} />
+                  <UserMenu user={session.user} page={page} />
                 ) : (
                   <a
                     href="#signin"
@@ -93,7 +147,14 @@ export function Header({ cartCount }) {
         </div>
       </header>
 
-      <MobileMenu open={menuOpen} onClose={closeMenu} links={links} session={session} />
+      <MobileMenu
+        open={menuOpen}
+        onClose={closeMenu}
+        links={links}
+        activeHref={activeHref}
+        page={page}
+        session={session}
+      />
     </>
   )
 }

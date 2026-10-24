@@ -141,7 +141,7 @@ function App() {
   return (
     // Sticky footer: page is at least screen height, main grows to fill it
     <div className="flex min-h-screen flex-col">
-      <Header cartCount={cartCount} />
+      <Header cartCount={cartCount} page={page} />
       <main id="top" className="flex-1">
         {renderPage()}
       </main>

@@ -6,7 +6,8 @@ import { BookIcon, CloseIcon, SignOutIcon } from './Icons'
 // The drawer the hamburger button opens on phones. It is always in the
 // page, just pushed off the right edge (translate-x-full) while closed,
 // so opening it can slide it in with a CSS transition.
-export function MobileMenu({ open, onClose, links, session }) {
+// activeHref and page come from Header, to highlight the current link
+export function MobileMenu({ open, onClose, links, activeHref, page, session }) {
   // While open: Escape closes it, and the page behind does not scroll.
   useEffect(() => {
     if (!open) return
@@ -26,7 +27,8 @@ export function MobileMenu({ open, onClose, links, session }) {
     onClose()
   }
 
-  const link = 'block rounded-lg px-3 py-3 text-lg hover:bg-accent-soft hover:text-accent'
+  const link = 'rounded-lg px-3 py-3 text-lg hover:bg-accent-soft hover:text-accent'
+  const active = 'bg-accent-soft text-accent'
 
   return (
     // md:hidden: from md up the links are in the header instead
@@ -74,7 +76,12 @@ export function MobileMenu({ open, onClose, links, session }) {
           <ul>
             {links.map((item) => (
               <li key={item.href}>
-                <a href={item.href} onClick={onClose} className={link}>
+                <a
+                  href={item.href}
+                  onClick={onClose}
+                  aria-current={item.href === activeHref ? 'true' : undefined}
+                  className={`block ${link} ${item.href === activeHref ? active : ''}`}
+                >
                   {item.label}
                 </a>
               </li>
@@ -84,7 +91,8 @@ export function MobileMenu({ open, onClose, links, session }) {
                 <a
                   href="#my-books"
                   onClick={onClose}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-lg hover:bg-accent-soft hover:text-accent"
+                  aria-current={page === 'my-books' ? 'page' : undefined}
+                  className={`flex items-center gap-3 ${link} ${page === 'my-books' ? active : ''}`}
                 >
                   <BookIcon className="size-5" />
                   My books
