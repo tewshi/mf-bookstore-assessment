@@ -8,7 +8,7 @@ import { pool } from '../src/db.js'
 const { runMigrations } = await getMigrations(auth.options)
 await runMigrations()
 
-// 2. Our tables: books and events
+// 2. Our tables: books, events, orders, order_items and reviews
 await pool.query(await readFile(new URL('schema.sql', import.meta.url), 'utf8'))
 
 console.log('Tables are up to date')
