@@ -64,6 +64,35 @@ api.get('/events', async (req, res) => {
   res.json(rows)
 })
 
+// GET /api/books/slow-maps/recommendations: "readers who bought this also
+// bought". Up to 4 books, the ones most of this book's buyers also bought
+// first. Empty when nobody has bought the book yet.
+api.get('/books/:id/recommendations', async (req, res) => {
+  const { rows } = await pool.query(
+    `-- 1. Everyone who has bought this book
+     WITH buyers AS (
+       SELECT DISTINCT orders.user_id
+       FROM orders JOIN order_items ON order_items.order_id = orders.id
+       WHERE order_items.book_id = $1
+     ),
+     -- 2. The other books those people bought, and how many of them bought each
+     also_bought AS (
+       SELECT order_items.book_id, count(DISTINCT orders.user_id) AS readers
+       FROM orders JOIN order_items ON order_items.order_id = orders.id
+       WHERE orders.user_id IN (SELECT user_id FROM buyers) AND order_items.book_id <> $1
+       GROUP BY order_items.book_id
+     )
+     -- 3. Those books in full (with ratings), most readers first
+     ${booksWithRatings}
+     JOIN also_bought ON also_bought.book_id = books.id
+     GROUP BY books.id, also_bought.readers
+     ORDER BY also_bought.readers DESC, books.title
+     LIMIT 4`,
+    [req.params.id],
+  )
+  res.json(rows.map(toBook))
+})
+
 // Has this person bought this book? Only buyers may review it.
 async function hasBought(userId, bookId) {
   const { rows } = await pool.query(
