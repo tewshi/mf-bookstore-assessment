@@ -28,8 +28,9 @@ function sortBooks(books, sort) {
   return sorted
 }
 
-// onAdd(bookId) puts one copy of a book in the cart
-export function BookGrid({ books, onAdd }) {
+// onAdd(bookId) puts one copy of a book in the cart. savedIds and
+// onToggleSave(bookId) are the wishlist, for the heart on each card.
+export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
   // Which section button is selected. Clicking a button calls
   // setSection, React re-renders, and filtered is worked out again.
   const [section, setSection] = useState('All')
@@ -136,7 +137,11 @@ export function BookGrid({ books, onAdd }) {
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
         {pageBooks.map((book) => (
           <li key={book.id}>
-            <BookCard book={book}>
+            <BookCard
+              book={book}
+              saved={savedIds.includes(book.id)}
+              onToggleSave={() => onToggleSave(book.id)}
+            >
               {/* The average of the reviews; people rate on the book's page now */}
               <p className="flex items-center gap-1 text-sm text-muted">
                 {book.reviewCount > 0 ? (

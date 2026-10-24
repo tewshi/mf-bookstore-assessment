@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getJson } from './api'
+import { getJson, sendJson } from './api'
+import { authClient } from './auth'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { BookGrid, BookGridSkeleton } from './components/BookGrid'
@@ -10,6 +11,7 @@ import { AuthForm } from './components/AuthForm'
 import { Cart } from './components/Cart'
 import { Checkout } from './components/Checkout'
 import { MyBooks } from './components/MyBooks'
+import { Saved } from './components/Saved'
 import { Footer } from './components/Footer'
 import { Toast } from './components/Toast'
 
@@ -100,6 +102,48 @@ function App() {
     setCart(next)
   }
 
+  // Who is signed in. The wishlist below belongs to them.
+  const { data: session } = authClient.useSession()
+  const userId = session?.user.id
+
+  // Ids of the books the signed-in person saved (the hearts), e.g.
+  // ['slow-maps']. Fetched again whenever someone signs in.
+  const [savedList, setSavedList] = useState([])
+
+  useEffect(() => {
+    if (userId) getJson('/api/wishlist').then(setSavedList, () => {})
+  }, [userId])
+
+  // Signed out: nothing is saved, whatever the last person's list was
+  const savedIds = userId ? savedList : []
+
+  function toggleSaved(bookId) {
+    if (!userId) {
+      showToast({
+        text: 'Sign in to save books',
+        link: '#signin',
+        linkText: 'Sign in',
+        warning: true,
+      })
+      return
+    }
+    const wasSaved = savedIds.includes(bookId)
+    // Change the heart straight away, then tell the server. If the server
+    // fails, put the list back the way it was.
+    setSavedList(wasSaved ? savedIds.filter((id) => id !== bookId) : [bookId, ...savedIds])
+    sendJson(wasSaved ? 'DELETE' : 'PUT', `/api/wishlist/${bookId}`).then(
+      () => {
+        if (!wasSaved) {
+          showToast({ text: 'Saved for later', link: '#saved', linkText: 'View saved' })
+        }
+      },
+      () => {
+        setSavedList(savedIds)
+        showToast({ text: 'Could not save that. Please try again.', warning: true })
+      },
+    )
+  }
+
   // Total number of books, for the badge on the cart icon
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
 
@@ -145,6 +189,17 @@ function App() {
     if (page === 'my-books') {
       return <MyBooks />
     }
+    if (page === 'saved') {
+      return (
+        <Saved
+          books={books}
+          signedIn={Boolean(userId)}
+          savedIds={savedIds}
+          onToggleSave={toggleSaved}
+          onAdd={addToCart}
+        />
+      )
+    }
     if (book) {
       return (
         <BookDetails
@@ -153,6 +208,8 @@ function App() {
           quantity={cart[book.id] ?? 0}
           onAdd={() => addToCart(book.id)}
           onReviewed={loadBooks}
+          saved={savedIds.includes(book.id)}
+          onToggleSave={() => toggleSaved(book.id)}
         />
       )
     }
@@ -167,7 +224,12 @@ function App() {
         {!books && !error && <BookGridSkeleton />}
         {books && (
           <>
-            <BookGrid books={books} onAdd={addToCart} />
+            <BookGrid
+              books={books}
+              onAdd={addToCart}
+              savedIds={savedIds}
+              onToggleSave={toggleSaved}
+            />
             <StaffPicks books={books} />
           </>
         )}

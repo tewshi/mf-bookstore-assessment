@@ -1,4 +1,4 @@
-import { CartIcon } from './Icons'
+import { CartIcon, HeartIcon } from './Icons'
 import { Stars } from './StarRating'
 import { StockNote } from './BookCard'
 import { Reviews } from './Reviews'
@@ -6,7 +6,8 @@ import { Recommendations } from './Recommendations'
 
 // quantity is how many of this book are already in the cart.
 // books is every book, for the recommendations' fallback.
-export function BookDetails({ book, books, quantity, onAdd, onReviewed }) {
+// saved and onToggleSave are for the Save (wishlist) button.
+export function BookDetails({ book, books, quantity, onAdd, onReviewed, saved, onToggleSave }) {
   const specs = [
     ['ISBN', book.isbn],
     ['Section', book.section],
@@ -65,6 +66,17 @@ export function BookDetails({ book, books, quantity, onAdd, onReviewed }) {
             >
               <CartIcon className="size-5" />
               {book.stock === 0 ? 'Sold out' : 'Add to cart'}
+            </button>
+            <button
+              type="button"
+              onClick={onToggleSave}
+              aria-pressed={saved}
+              className={`flex cursor-pointer items-center gap-2 rounded-full border px-6 py-3 font-medium hover:border-accent hover:text-accent ${
+                saved ? 'border-accent text-accent' : 'border-line'
+              }`}
+            >
+              <HeartIcon className="size-5" filled={saved} />
+              {saved ? 'Saved' : 'Save'}
             </button>
             {quantity > 0 && (
               <a href="#cart" className="text-sm text-muted hover:text-accent">

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { authClient } from '../auth'
-import { BookIcon, ChevronDownIcon, SignOutIcon } from './Icons'
+import { accountLinks } from '../accountLinks'
+import { ChevronDownIcon, SignOutIcon } from './Icons'
 
 // The person's picture, or our default one. Better Auth has an `image`
 // field on the user, but email sign up leaves it empty for now.
@@ -15,8 +16,8 @@ export function Avatar({ user, className = 'size-8' }) {
 }
 
 // Avatar and name in the header. Clicking opens a small dropdown
-// with the email address, a link to My books and the sign out button.
-// page (from App) lets us highlight My books while it is open
+// with the email address, the account links and the sign out button.
+// page (from App) lets us highlight the link that is open
 export function UserMenu({ user, page }) {
   const [open, setOpen] = useState(false)
   // A ref points at the menu's element, so we can tell whether a
@@ -66,18 +67,21 @@ export function UserMenu({ user, page }) {
             <p className="font-medium">{user.name}</p>
             <p className="truncate text-sm text-muted">{user.email}</p>
           </div>
-          {/* Close the menu when the link is followed */}
-          <a
-            href="#my-books"
-            onClick={() => setOpen(false)}
-            aria-current={page === 'my-books' ? 'page' : undefined}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent-soft hover:text-accent ${
-              page === 'my-books' ? 'bg-accent-soft text-accent' : ''
-            }`}
-          >
-            <BookIcon className="size-4" />
-            My books
-          </a>
+          {/* Close the menu when a link is followed */}
+          {accountLinks.map(({ href, label, Icon, ...link }) => (
+            <a
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              aria-current={page === link.page ? 'page' : undefined}
+              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent-soft hover:text-accent ${
+                page === link.page ? 'bg-accent-soft text-accent' : ''
+              }`}
+            >
+              <Icon className="size-4" />
+              {label}
+            </a>
+          ))}
           <button
             type="button"
             onClick={() => authClient.signOut()}

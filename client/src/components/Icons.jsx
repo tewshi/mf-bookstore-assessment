@@ -110,3 +110,15 @@ export function AlertIcon({ className }) {
     </Icon>
   )
 }
+
+// filled: a solid heart for books that are saved, an outline otherwise
+export function HeartIcon({ className, filled = false }) {
+  return (
+    <Icon className={className}>
+      <path
+        fill={filled ? 'currentColor' : 'none'}
+        d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"
+      />
+    </Icon>
+  )
+}
