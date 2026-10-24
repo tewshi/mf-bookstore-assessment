@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getJson } from './api'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
@@ -11,6 +11,7 @@ import { Cart } from './components/Cart'
 import { Checkout } from './components/Checkout'
 import { MyBooks } from './components/MyBooks'
 import { Footer } from './components/Footer'
+import { Toast } from './components/Toast'
 
 // The cart this browser saved last time, or an empty one. try/catch in
 // case the saved text was changed by hand and is no longer valid JSON.
@@ -54,8 +55,25 @@ function App() {
     localStorage.setItem('cart', JSON.stringify(cart))
   }, [cart])
 
+  // The message at the bottom of the screen, or null. useCallback keeps
+  // closeToast the same function, so Toast's timer isn't restarted on
+  // every render of App.
+  const [toast, setToast] = useState(null)
+  const closeToast = useCallback(() => setToast(null), [])
+  // Counts every toast shown, to give each one its own id. A ref keeps a
+  // value between renders without causing a re-render when it changes.
+  const toastCount = useRef(0)
+
+  // A new id each time, so showing the same text twice still restarts it
+  function showToast(text, link, linkText) {
+    toastCount.current += 1
+    setToast({ id: toastCount.current, text, link, linkText })
+  }
+
   function addToCart(bookId) {
     setCart({ ...cart, [bookId]: (cart[bookId] ?? 0) + 1 })
+    const book = books.find((b) => b.id === bookId)
+    showToast(`Added "${book.title}" to your cart`, '#cart', 'View cart')
   }
 
   // A quantity of 0 takes the book out of the cart
@@ -148,6 +166,8 @@ function App() {
         {renderPage()}
       </main>
       <Footer />
+      {/* key: a new toast replaces the old one and starts its own timer */}
+      {toast && <Toast key={toast.id} toast={toast} onClose={closeToast} />}
     </div>
   )
 }
