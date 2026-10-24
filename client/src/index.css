@@ -37,6 +37,23 @@
     }
   }
 
+  /* animate-drift: the blurred colour blobs behind the hero wander slowly.
+     "alternate" plays it forwards then backwards, so it never jumps back. */
+  --animate-drift: drift 18s ease-in-out infinite alternate;
+  @keyframes drift {
+    to {
+      transform: translate(4rem, 3rem) scale(1.2);
+    }
+  }
+
+  /* animate-float: the hero covers bob gently up and down */
+  --animate-float: float 6s ease-in-out infinite;
+  @keyframes float {
+    50% {
+      transform: translateY(-0.75rem);
+    }
+  }
+
   /* animate-toast-in: the toast slides up a little as it fades in */
   --animate-toast-in: toast-in 0.2s ease-out;
   @keyframes toast-in {
@@ -62,6 +79,14 @@
   --color-line: #3a302a;
   /* Dark scrollbars and form controls from the browser too */
   color-scheme: dark;
+}
+
+/* A grid of small dots behind the hero. The mask fades the dots out
+   towards the edges, so the grid has no hard border. */
+.hero-dots {
+  background-image: radial-gradient(var(--color-line) 1px, transparent 1px);
+  background-size: 1.5rem 1.5rem;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
 }
 
 html {

@@ -139,7 +139,7 @@ All the colours are CSS variables in `client/src/index.css`. The `.dark` block g
 
 ## Motion
 
-The homepage hero fades up when it loads (`animate-fade-up`, a keyframe in `index.css`), with the three covers following one after another (`animationDelay`). Books, Staff Picks and Events are wrapped in `Reveal`, which uses `IntersectionObserver` to fade each one in the first time it scrolls into view. People who turned on "reduce motion" on their computer get no movement (`motion-safe:` and `motion-reduce:`).
+The homepage hero fades up when it loads (`animate-fade-up`, a keyframe in `index.css`), with the three covers following one after another (`animationDelay`). Behind it, three blurred colour blobs drift slowly (`animate-drift`) over a faint grid of dots (`.hero-dots`), and the covers bob gently (`animate-float`). Books, Staff Picks and Events are wrapped in `Reveal`, which uses `IntersectionObserver` to fade each one in the first time it scrolls into view. People who turned on "reduce motion" on their computer get no movement (`motion-safe:` and `motion-reduce:`).
 
 ## How login works
 

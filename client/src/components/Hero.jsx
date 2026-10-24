@@ -7,12 +7,38 @@ const covers = [
   { src: '/images/slow-maps.jpg', place: 'translate-x-[10%] rotate-8', delay: '600ms' },
 ]
 
+// The blurred colour blobs behind the hero, one layer under the text.
+// delay: a negative delay starts each one partway through its drift, so they
+// don't all move together.
+const blobs = [
+  { place: '-top-24 -left-24 bg-accent/30', delay: '0s' },
+  { place: 'top-1/3 right-0 bg-amber-400/20', delay: '-6s' },
+  { place: '-bottom-32 left-1/3 bg-rose-400/20', delay: '-12s' },
+]
+
 export function Hero() {
   return (
     // A soft gradient from the accent tint into the page background
-    <section className="overflow-hidden bg-linear-to-b from-accent-soft to-bg">
-      {/* Text only on phones; text and covers side by side from lg */}
-      <div className="mx-auto grid max-w-page items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-2">
+    // relative: the background layers below are placed inside it
+    <section className="relative overflow-hidden bg-linear-to-b from-accent-soft to-bg">
+      {/* Background layers, only decoration: aria-hidden hides them from screen
+          readers, pointer-events-none lets clicks pass through to the buttons */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        {blobs.map((blob) => (
+          <div
+            key={blob.place}
+            style={{ animationDelay: blob.delay }}
+            className={`absolute size-96 rounded-full blur-3xl motion-safe:animate-drift ${blob.place}`}
+          />
+        ))}
+        <div className="hero-dots absolute inset-0" />
+        {/* Fades the layers into the page at the bottom, so the hero has no hard edge */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-bg" />
+      </div>
+
+      {/* Text only on phones; text and covers side by side from lg.
+          relative: drawn above the background layers */}
+      <div className="relative mx-auto grid max-w-page items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-2">
         {/* motion-safe: only animate for people who haven't asked for less motion */}
         <div className="motion-safe:animate-fade-up">
           <p className="mb-4 inline-block rounded-full bg-surface px-4 py-1 text-xs font-semibold tracking-[0.15em] text-accent uppercase shadow-sm">
@@ -42,7 +68,8 @@ export function Hero() {
         </div>
 
         {/* hidden below lg: on phones the covers would push the buttons down */}
-        <div className="relative hidden h-96 lg:block">
+        {/* The whole group of covers floats gently (motion-safe:animate-float) */}
+        <div className="relative hidden h-96 motion-safe:animate-float lg:block">
           {covers.map((cover) => (
             <img
               key={cover.src}
