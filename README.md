@@ -23,38 +23,63 @@ For local development, `DATABASE_URL` points at a Postgres on your machine (e.g.
 The repo is an npm workspace with two packages, so one `npm install` at the root installs both.
 
 - `client/`: the React app (Vite + Tailwind)
-  - `src/components/`: one component per part of the page, plus `AuthForm` for `#signin` and `#signup` and `Cart` for `#cart`
+  - `src/components/`: one component per part of the page, plus one per extra view: `AuthForm` (`#signin`, `#signup`), `Cart` (`#cart`), `Checkout` (`#checkout`) and `MyBooks` (`#my-books`). `Reviews` is the reviews section under each book
   - `src/components/Header.jsx`: the top bar. `UserMenu` is the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones
   - `src/components/Icons.jsx`: the small SVG icons (cart, menu, close, ...)
-  - `src/api.js`: `getJson()`, a small `fetch` wrapper
+  - `src/api.js`: `getJson()` and `postJson()`, small `fetch` wrappers
+  - `src/cart.js`: turns the saved cart into a list of books and a total
   - `src/auth.js`: the Better Auth client (`signIn`, `signUp`, `signOut`, `useSession`)
 - `server/`: the Express API
   - `src/index.js`: starts Express, mounts auth and the API, serves `client/dist`
-  - `src/api.js`: the `/api/books` and `/api/events` routes
+  - `src/api.js`: the book, review and event routes
+  - `src/orders.js`: `/api/orders`, the pretend payment and order history
+  - `src/session.js`: `currentUser()` and `requireUser`, which find the signed-in person from the session cookie
   - `src/auth.js`: Better Auth setup (email and password)
   - `src/db.js`: one `pg` connection pool, shared by everything
-  - `db/schema.sql`: the `books` and `events` tables
+  - `db/schema.sql`: the `books`, `events`, `orders`, `order_items` and `reviews` tables
   - `db/migrate.js`: creates Better Auth's tables, then runs `schema.sql`
-  - `db/seed.js`: copies the Week 2 arrays in `db/data/` into the database
+  - `db/seed.js`: copies the Week 2 arrays in `db/data/` into the database (books are updated in place, so orders and reviews survive a re-seed)
 
 ## The database
 
 - `books`: one row per book. `id` is the slug used in links (`#book/slow-maps`). A book is a staff pick when `staff_pick_quote` is set.
 - `events`: one row per event, sorted by `starts_at`.
+- `orders`: one row per checkout: who paid, the total, the last 4 digits of the test card, and when.
+- `order_items`: the books in each order, with the quantity and the price at the time.
+- `reviews`: a rating (1 to 5) and text per person per book. `UNIQUE (user_id, book_id)` means writing again replaces your old review.
 - `user`, `session`, `account`, `verification`: created and managed by Better Auth. `user` holds name and email, `account` holds the hashed password, `session` holds one row per signed-in browser.
 
 ## API
 
 | Route | Returns |
 | --- | --- |
-| `GET /api/books` | every book |
+| `GET /api/books` | every book, with its average `rating` and `reviewCount` |
 | `GET /api/books/:id` | one book, or 404 |
+| `GET /api/books/:id/reviews` | `{ canReview, reviews }`: the reviews, newest first, and whether the signed-in person may write one |
+| `POST /api/books/:id/reviews` | `{ rating, text }`: add or replace your review. Signed in, and only for books you bought |
+| `POST /api/orders` | `{ items, cardNumber }`: pay with a test card and save the order. Signed in |
+| `GET /api/orders` | your orders, newest first, with their books. Signed in |
 | `GET /api/events` | every event, soonest first |
 | `/api/auth/*` | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
 
 ## The cart
 
-The cart lives in the browser, not the database. `App` keeps it in state as `{ bookId: quantity }` and saves it to `localStorage` whenever it changes, so it survives a refresh. The header badge, the Add buttons and the `#cart` page all read the same state. There is no online payment yet: the cart page tells people to show it in the shop.
+The cart lives in the browser, not the database. `App` keeps it in state as `{ bookId: quantity }` and saves it to `localStorage` whenever it changes, so it survives a refresh. The header badge, the Add buttons and the `#cart` page all read the same state. After a successful payment, `Checkout` empties it.
+
+## Payment (a demo)
+
+No real payment provider is involved and no money moves. `#checkout` sends the cart's book ids and quantities, plus the card number, to `POST /api/orders`. The server:
+
+1. Accepts only two test cards: `4242 4242 4242 4242` goes through and `4000 0000 0000 0002` is declined. Anything else is refused, so nobody can enter a real card.
+2. Looks the prices up in the database itself, so the browser can't change what it pays.
+3. Waits 1.5 seconds, like a real payment would.
+4. Saves the order and its books in one transaction (`BEGIN` ... `COMMIT`): either all of it is saved or none of it. Only the card's last 4 digits are kept.
+
+The checkout page has buttons that fill in either test card.
+
+## Reviews
+
+Only people who bought a book can review it: the server checks `order_items` before saving. Each book page loads its reviews from `GET /api/books/:id/reviews`, and buyers get a form with the `StarRating` component. My books (`#my-books`, in the account menu) lists every order with a "Write a review" link for each book, which opens `#book/<id>/reviews`.
 
 ## How login works
 

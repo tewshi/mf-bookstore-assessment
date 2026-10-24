@@ -22,7 +22,7 @@ npm run dev                  # concurrently: Express on :3000 (API only) + Vite 
 npm run lint                 # oxlint on the client
 npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
-npm run seed -w server       # empties books/events and re-inserts the Week 2 data
+npm run seed -w server       # upserts the Week 2 books, replaces events (orders/reviews survive)
 ```
 
 There are no automated tests. Check a change with lint + build, then by running the server and hitting the API (curl) or the page.
@@ -34,15 +34,18 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). One `p
 - `server/src/index.js`: mounts Better Auth, then `express.json()`, then `/api`, then serves `client/dist`
 - `server/src/db.js`: the single `pg` pool everything shares
 - `server/src/auth.js`: Better Auth config (email + password)
-- `server/src/api.js`: `/api/books`, `/api/books/:id`, `/api/events`
+- `server/src/api.js`: `/api/books`, `/api/books/:id`, `/api/books/:id/reviews`, `/api/events`
+- `server/src/orders.js`: `/api/orders` (simulated test-card payment, order history)
+- `server/src/session.js`: `currentUser(req)` and the `requireUser` middleware (Better Auth `getSession`)
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
-- `client/src/api.js`: `getJson()`; `client/src/auth.js`: Better Auth React client
+- `client/src/api.js`: `getJson()`, `postJson()`; `client/src/auth.js`: Better Auth React client
+- Cart is client-only (`localStorage`, state in `App.jsx`); orders and reviews are in Postgres
 
 ## Conventions
 
 - Plain SQL with `pg` and `$1` placeholders. No ORM.
 - Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/api.js`).
-- Hash routing in `App.jsx` (`#book/<id>`, `#signin`, `#signup`), no router library.
+- Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#my-books`.
 - Comments explain *why* in plain English for a student reader; match the density of the existing files.
 - Commits: small, one-line messages, one logical step each.
 
