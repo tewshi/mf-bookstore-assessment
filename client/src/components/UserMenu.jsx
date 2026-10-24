@@ -3,8 +3,8 @@ import { authClient } from '../auth'
 import { accountLinks } from '../accountLinks'
 import { ChevronDownIcon, SignOutIcon } from './Icons'
 
-// The person's picture, or our default one. Better Auth has an `image`
-// field on the user, but email sign up leaves it empty for now.
+// The person's picture, or our default one. Better Auth keeps it in the
+// user's `image` field; it's empty until they upload one on #account.
 export function Avatar({ user, className = 'size-8' }) {
   return (
     <img
