@@ -13,4 +13,12 @@ for (const name of ['BETTER_AUTH_SECRET', 'BETTER_AUTH_URL']) {
 export const auth = betterAuth({
   database: pool,
   emailAndPassword: { enabled: true },
+  user: {
+    // An extra column on the user table: 'customer' or 'admin'. migrate.js
+    // adds it. input: false means sign up can't set it, so nobody can make
+    // themselves an admin; only db/make-admin.js changes it.
+    additionalFields: {
+      role: { type: 'string', defaultValue: 'customer', input: false },
+    },
+  },
 })

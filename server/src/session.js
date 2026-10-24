@@ -15,3 +15,11 @@ export async function requireUser(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Please sign in first' })
   next()
 }
+
+// Like requireUser, but only for admins: 403 for everyone else
+export async function requireAdmin(req, res, next) {
+  req.user = await currentUser(req)
+  if (!req.user) return res.status(401).json({ error: 'Please sign in first' })
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admins only' })
+  next()
+}

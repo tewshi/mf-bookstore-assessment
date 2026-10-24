@@ -4,13 +4,15 @@ import { currentUser, requireUser } from './session.js'
 import { orders } from './orders.js'
 import { wishlist } from './wishlist.js'
 import { events } from './events.js'
+import { admin } from './admin.js'
 
 export const api = Router()
 
-// /api/orders, /api/wishlist and /api/events live in their own files
+// These live in their own files
 api.use('/orders', orders)
 api.use('/wishlist', wishlist)
 api.use('/events', events)
+api.use('/admin', admin)
 
 // Turns a books row (snake_case columns) into the shape the React app
 // has always used, with staffPick as null or { quote, by }.
