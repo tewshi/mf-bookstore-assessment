@@ -140,3 +140,11 @@ export function UserIcon({ className }) {
     </Icon>
   )
 }
+
+export function ShieldIcon({ className }) {
+  return (
+    <Icon className={className}>
+      <path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z" />
+    </Icon>
+  )
+}

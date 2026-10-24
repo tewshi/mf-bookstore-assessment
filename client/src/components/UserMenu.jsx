@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { authClient } from '../auth'
-import { accountLinks } from '../accountLinks'
+import { accountLinksFor } from '../accountLinks'
 import { ChevronDownIcon, SignOutIcon } from './Icons'
 
 // The person's picture, or our default one. Better Auth keeps it in the
@@ -68,7 +68,7 @@ export function UserMenu({ user, page }) {
             <p className="truncate text-sm text-muted">{user.email}</p>
           </div>
           {/* Close the menu when a link is followed */}
-          {accountLinks.map(({ href, label, Icon, ...link }) => (
+          {accountLinksFor(user).map(({ href, label, Icon, ...link }) => (
             <a
               key={href}
               href={href}

@@ -14,6 +14,7 @@ import { MyBooks } from './components/MyBooks'
 import { Saved } from './components/Saved'
 import { Receipt } from './components/Receipt'
 import { Account } from './components/Account'
+import { Admin } from './components/admin/Admin'
 import { Footer } from './components/Footer'
 import { Toast } from './components/Toast'
 
@@ -194,6 +195,9 @@ function App() {
     if (page === 'order') {
       // key: a fresh Receipt when going from one order to another
       return <Receipt key={param} orderId={param} />
+    }
+    if (page === 'admin') {
+      return <Admin tab={param} books={books} onBooksChanged={loadBooks} />
     }
     if (page === 'account') {
       return <Account />

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { authClient } from '../auth'
 import { Avatar } from './UserMenu'
-import { accountLinks } from '../accountLinks'
+import { accountLinksFor } from '../accountLinks'
 import { CloseIcon, SignOutIcon } from './Icons'
 
 // The drawer the hamburger button opens on phones. It is always in the
@@ -89,7 +89,7 @@ export function MobileMenu({ open, onClose, links, activeHref, page, session }) 
             ))}
             {/* The account links, under a line, for signed-in people */}
             {session &&
-              accountLinks.map(({ href, label, Icon, ...item }, i) => (
+              accountLinksFor(session.user).map(({ href, label, Icon, ...item }, i) => (
                 <li key={href} className={i === 0 ? 'mt-2 border-t border-line pt-2' : ''}>
                   <a
                     href={href}
