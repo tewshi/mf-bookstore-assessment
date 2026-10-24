@@ -40,12 +40,59 @@ const booksWithRatings = `
   SELECT books.*, round(avg(reviews.rating), 1) AS rating, count(reviews.id)::int AS review_count
   FROM books LEFT JOIN reviews ON reviews.book_id = books.id`
 
-// GET /api/books: every book, fiction first, then by title
+// The sort options the book grid offers. ORDER BY can't take a $1
+// placeholder, so we only ever put one of these fixed strings into the SQL,
+// never text from the request (that would allow SQL injection).
+const sortOrders = {
+  featured: 'books.section, books.title',
+  'price-low': 'books.price, books.title',
+  'price-high': 'books.price DESC, books.title',
+  rating: 'rating DESC NULLS LAST, books.title',
+  newest: 'books.published DESC, books.title',
+}
+
+// GET /api/books: every book, fiction first, then by title.
+// GET /api/books?page=2&q=river&section=Fiction&sort=price-low: one page of
+// books that match, as { books, total, page, pageCount }. q searches the
+// title, author and ISBN (with or without dashes). 8 books per page.
 api.get('/books', async (req, res) => {
-  const { rows } = await pool.query(
-    `${booksWithRatings} GROUP BY books.id ORDER BY books.section, books.title`,
+  if (!req.query.page) {
+    const { rows } = await pool.query(
+      `${booksWithRatings} GROUP BY books.id ORDER BY books.section, books.title`,
+    )
+    return res.json(rows.map(toBook))
+  }
+
+  const perPage = 8
+  const page = Math.max(1, Number.parseInt(req.query.page) || 1)
+  const q = String(req.query.q ?? '').trim()
+  const section =
+    req.query.section === 'Fiction' || req.query.section === 'Nonfiction' ? req.query.section : null
+  const orderBy = sortOrders[req.query.sort] ?? sortOrders.featured
+
+  // The same filter for the count and for the page. ILIKE is LIKE that
+  // ignores upper/lower case, and % means "anything here".
+  // "$1::text IS NULL" lets one query handle "no section chosen".
+  const where = `
+    WHERE ($1::text IS NULL OR books.section = $1)
+      AND (books.title ILIKE $2 OR books.author ILIKE $2 OR replace(books.isbn, '-', '') LIKE $3)`
+  const filters = [section, `%${q}%`, `%${q.replaceAll('-', '')}%`]
+
+  // How many books match in total, to work out the number of pages
+  const { rows: counted } = await pool.query(
+    `SELECT count(*)::int AS total FROM books ${where}`,
+    filters,
   )
-  res.json(rows.map(toBook))
+  const total = counted[0].total
+
+  // Just this page: OFFSET skips the books on earlier pages, LIMIT stops after 8
+  const { rows } = await pool.query(
+    `${booksWithRatings} ${where}
+     GROUP BY books.id ORDER BY ${orderBy}
+     LIMIT $4 OFFSET $5`,
+    [...filters, perPage, (page - 1) * perPage],
+  )
+  res.json({ books: rows.map(toBook), total, page, pageCount: Math.ceil(total / perPage) })
 })
 
 // GET /api/books/slow-maps: one book, or 404
