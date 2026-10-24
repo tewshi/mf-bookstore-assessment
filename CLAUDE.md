@@ -18,7 +18,7 @@ Course project for a bookstore site, built up over weekly assignments. The stude
 
 ```bash
 npm install                  # root: installs both workspaces
-npm run dev                  # Express on :3000 + Vite on :5173 (Vite proxies /api)
+npm run dev                  # concurrently: Express on :3000 (API only) + Vite on :5173 (open this)
 npm run lint                 # oxlint on the client
 npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
@@ -82,4 +82,5 @@ Seeding production is a manual step the student runs themselves (Railway service
 - **One Railway service instead of Railway + Vercel**: Express serves `client/dist`, so the site and API share a URL and the session cookie is same-origin.
 - **Better Auth** owns the `user`, `session`, `account` and `verification` tables; we only write `books` and `events` in `schema.sql`.
 - **`railway.json` removed (Oct 2026)**: Railway deprecated config-as-code and its replacement is TypeScript-only (or Python/Go), which breaks the no-TypeScript rule. Settings moved to the dashboard.
-- **Local dev is parked**: `server/.env` still points at a throwaway test database. Running locally needs a reachable Postgres (enable a TCP proxy on `bookstore-pgdb`, or a separate free Neon database).
+- **Local dev uses a local Postgres** installed on the student's Mac, migrated and seeded separately from production. The Railway database stays private.
+- **`npm run dev` uses `concurrently`**: the old `a & b` script left Express running after Ctrl+C, so the next run hit "port in use".

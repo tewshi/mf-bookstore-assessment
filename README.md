@@ -14,7 +14,9 @@ npm run seed -w server               # fill books and events
 npm run dev                          # Express on :3000, Vite on :5173
 ```
 
-Open http://localhost:5173. Vite passes every `/api` request on to Express.
+Open **http://localhost:5173**, not :3000. In dev, Express on :3000 only answers `/api`; Vite serves the page and passes every `/api` request on to Express. `concurrently` runs both, and Ctrl+C stops both.
+
+For local development, `DATABASE_URL` points at a Postgres on your machine (e.g. `postgresql://localhost:5432/mayerfeld`) and `BETTER_AUTH_URL` is `http://localhost:5173`.
 
 ## Folder structure
 
