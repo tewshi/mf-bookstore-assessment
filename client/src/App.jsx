@@ -7,7 +7,18 @@ import { StaffPicks } from './components/StaffPicks'
 import { Events } from './components/Events'
 import { BookDetails } from './components/BookDetails'
 import { AuthForm } from './components/AuthForm'
+import { Cart } from './components/Cart'
 import { Footer } from './components/Footer'
+
+// The cart this browser saved last time, or an empty one. try/catch in
+// case the saved text was changed by hand and is no longer valid JSON.
+function loadCart() {
+  try {
+    return JSON.parse(localStorage.getItem('cart')) ?? {}
+  } catch {
+    return {}
+  }
+}
 
 function App() {
   // The part of the URL after #, e.g. "#book/slow-maps" or "#events".
@@ -28,6 +39,34 @@ function App() {
     getJson('/api/books').then(setBooks, setError)
   }, [])
 
+  // The cart: how many of each book, e.g. { 'slow-maps': 2 }. It lives
+  // here because the header, the book pages and #cart all need it.
+  // Passing a function to useState means loadCart only runs once.
+  const [cart, setCart] = useState(loadCart)
+
+  // Save the cart in the browser whenever it changes, so it survives a refresh
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart))
+  }, [cart])
+
+  function addToCart(bookId) {
+    setCart({ ...cart, [bookId]: (cart[bookId] ?? 0) + 1 })
+  }
+
+  // A quantity of 0 takes the book out of the cart
+  function setQuantity(bookId, quantity) {
+    const next = { ...cart }
+    if (quantity > 0) {
+      next[bookId] = quantity
+    } else {
+      delete next[bookId]
+    }
+    setCart(next)
+  }
+
+  // Total number of books, for the badge on the cart icon
+  const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
+
   const bookId = hash.startsWith('#book/') ? hash.slice('#book/'.length) : null
   const book = books?.find((b) => b.id === bookId)
 
@@ -44,12 +83,14 @@ function App() {
   return (
     // Sticky footer: page is at least screen height, main grows to fill it
     <div className="flex min-h-screen flex-col">
-      <Header />
+      <Header cartCount={cartCount} />
       <main id="top" className="flex-1">
         {hash === '#signin' || hash === '#signup' ? (
           <AuthForm key={hash} mode={hash.slice(1)} />
+        ) : hash === '#cart' ? (
+          <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
         ) : book ? (
-          <BookDetails book={book} />
+          <BookDetails book={book} quantity={cart[book.id] ?? 0} onAdd={() => addToCart(book.id)} />
         ) : (
           <>
             <Hero />
@@ -60,7 +101,7 @@ function App() {
             )}
             {books && (
               <>
-                <BookGrid books={books} />
+                <BookGrid books={books} onAdd={addToCart} />
                 <StaffPicks books={books} />
               </>
             )}
