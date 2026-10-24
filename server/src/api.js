@@ -3,12 +3,14 @@ import { pool } from './db.js'
 import { currentUser, requireUser } from './session.js'
 import { orders } from './orders.js'
 import { wishlist } from './wishlist.js'
+import { events } from './events.js'
 
 export const api = Router()
 
-// /api/orders and /api/wishlist live in their own files
+// /api/orders, /api/wishlist and /api/events live in their own files
 api.use('/orders', orders)
 api.use('/wishlist', wishlist)
+api.use('/events', events)
 
 // Turns a books row (snake_case columns) into the shape the React app
 // has always used, with staffPick as null or { quote, by }.
@@ -108,16 +110,6 @@ api.get('/books/:id', async (req, res) => {
   ])
   if (rows.length === 0) return res.status(404).json({ error: 'Book not found' })
   res.json(toBook(rows[0]))
-})
-
-// GET /api/events: soonest first. to_char gives back the
-// "2026-10-15T19:00" text the <time> tag expects.
-api.get('/events', async (req, res) => {
-  const { rows } = await pool.query(
-    `SELECT id, to_char(starts_at, 'YYYY-MM-DD"T"HH24:MI') AS datetime, label, title, text
-     FROM events ORDER BY starts_at`,
-  )
-  res.json(rows)
 })
 
 // GET /api/books/slow-maps/recommendations: "readers who bought this also

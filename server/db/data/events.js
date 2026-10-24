@@ -1,3 +1,4 @@
+// The events, used only by seed.js. seats is how many people fit.
 export const events = [
   {
     id: 'reading-ines-varga',
@@ -5,6 +6,7 @@ export const events = [
     label: 'Thu 15 Oct, 19:00',
     title: 'Reading: Ines Varga',
     text: 'The author reads from The Salt Orchard, followed by a short Q&A.',
+    seats: 40,
   },
   {
     id: 'fiction-book-club',
@@ -12,6 +14,7 @@ export const events = [
     label: 'Wed 21 Oct, 18:30',
     title: 'Fiction Book Club',
     text: 'This month: Night Ferry to Elsewhere. New members welcome.',
+    seats: 12,
   },
   {
     id: 'nonfiction-book-club',
@@ -19,5 +22,38 @@ export const events = [
     label: 'Sat 31 Oct, 11:00',
     title: 'Nonfiction Book Club',
     text: 'We discuss How Rivers Remember over coffee.',
+    seats: 12,
+  },
+  {
+    id: 'reading-kenji-arai',
+    datetime: '2026-11-07T19:00',
+    label: 'Sat 7 Nov, 19:00',
+    title: 'Reading: Kenji Arai',
+    text: 'Kenji Arai reads from The Glass Harbour and talks about the craft of glassblowing.',
+    seats: 40,
+  },
+  {
+    id: 'poetry-night',
+    datetime: '2026-11-19T20:00',
+    label: 'Thu 19 Nov, 20:00',
+    title: 'Open Poetry Night',
+    text: "Bring a poem, yours or someone else's, and read it to a friendly room.",
+    seats: 25,
+  },
+  {
+    id: 'story-morning',
+    datetime: '2026-12-05T10:30',
+    label: 'Sat 5 Dec, 10:30',
+    title: "Children's Story Morning",
+    text: 'Winter stories for ages 4 to 8, with hot chocolate for everyone.',
+    seats: 20,
+  },
+  {
+    id: 'winter-book-swap',
+    datetime: '2026-12-12T15:00',
+    label: 'Sat 12 Dec, 15:00',
+    title: 'Winter Book Swap',
+    text: 'Bring a book you loved, leave with one someone else loved. Mulled cider provided.',
+    seats: 30,
   },
 ]

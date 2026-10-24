@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS events (
   text     text NOT NULL
 );
 
+-- How many people fit, for event sign-up (added later, hence the ALTER)
+ALTER TABLE events ADD COLUMN IF NOT EXISTS seats integer NOT NULL DEFAULT 20 CHECK (seats > 0);
+
 -- One row per checkout. "user" is Better Auth's table; it needs quotes
 -- because user is a reserved word in SQL.
 CREATE TABLE IF NOT EXISTS orders (
@@ -73,4 +76,12 @@ CREATE TABLE IF NOT EXISTS wishlist (
   book_id    text NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, book_id)
+);
+
+-- Who reserved a seat at which event. One seat per person per event.
+CREATE TABLE IF NOT EXISTS event_signups (
+  user_id    text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  event_id   text NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, event_id)
 );

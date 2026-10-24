@@ -1,6 +1,6 @@
 // Copies the Week 2 arrays into the database. Safe to run again.
-// Books are updated in place rather than deleted: orders and reviews point
-// at books, so deleting them would fail (and lose people's history).
+// Rows are updated in place rather than deleted: orders, reviews and seat
+// reservations point at them, so deleting would fail (or lose history).
 import { pool } from '../src/db.js'
 import { books } from './data/books.js'
 import { events } from './data/events.js'
@@ -25,11 +25,14 @@ for (const book of books) {
   )
 }
 
-await pool.query('DELETE FROM events')
+// Events are updated in place too, so people's seat reservations survive
 for (const event of events) {
   await pool.query(
-    'INSERT INTO events (id, starts_at, label, title, text) VALUES ($1, $2, $3, $4, $5)',
-    [event.id, event.datetime, event.label, event.title, event.text],
+    `INSERT INTO events (id, starts_at, label, title, text, seats) VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (id) DO UPDATE SET
+       starts_at = EXCLUDED.starts_at, label = EXCLUDED.label, title = EXCLUDED.title,
+       text = EXCLUDED.text, seats = EXCLUDED.seats`,
+    [event.id, event.datetime, event.label, event.title, event.text, event.seats],
   )
 }
 
