@@ -1,18 +1,15 @@
 import { Router } from 'express'
 import { pool } from './db.js'
 import { requireUser } from './session.js'
+import { stripe } from './stripe.js'
 
-// Mounted at /api/orders. Every route here needs someone signed in.
+// Mounted at /api/orders. Every route here needs someone signed in,
+// so every order belongs to a real user.
 export const orders = Router()
 orders.use(requireUser)
 
-// Pretend card payments: there is no real payment provider. Only these
-// test numbers (the same ones Stripe uses) are accepted, so nobody can
-// type a real card into the demo by mistake.
-const testCards = {
-  '4242424242424242': 'approved',
-  '4000000000000002': 'declined',
-}
+// The address of the site, for Stripe's links back to us
+const siteUrl = process.env.BETTER_AUTH_URL
 
 // The message when someone wants more copies than we have
 function outOfStock(book) {
@@ -21,19 +18,13 @@ function outOfStock(book) {
     : `Sorry, only ${book.stock} of "${book.title}" left. Lower the quantity to continue.`
 }
 
-// POST /api/orders with { items: [{ bookId, quantity }], cardNumber }
-// "Charges" the card, then saves the order. Answers { id, total }.
+// POST /api/orders with { items: [{ bookId, quantity }] }
+// Saves a 'pending' order, takes its books off the shelf, and starts a
+// Stripe Checkout Session for it. Answers { id, url }: url is Stripe's
+// payment page, where the browser goes next. Nothing here marks the order
+// paid; only the webhook (webhook.js) does that, once Stripe confirms it.
 orders.post('/', async (req, res) => {
-  const { items, cardNumber } = req.body
-
-  // People type card numbers with spaces, so keep only the digits
-  const digits = String(cardNumber ?? '').replace(/\D/g, '')
-  const outcome = testCards[digits]
-  if (!outcome) {
-    return res
-      .status(400)
-      .json({ error: 'This is a demo shop. Use test card 4242 4242 4242 4242.' })
-  }
+  const { items } = req.body
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' })
   }
@@ -51,27 +42,24 @@ orders.post('/', async (req, res) => {
     if (!book || !Number.isInteger(item.quantity) || item.quantity < 1) {
       return res.status(400).json({ error: 'Something in your cart is not in the shop any more' })
     }
-    // Checked before "charging" the card, so nobody pays for books we don't have
+    // Checked before sending anyone to pay, so nobody pays for books we don't have
     if (item.quantity > book.stock) {
       return res.status(409).json({ error: outOfStock(book) })
     }
   }
   const total = items.reduce((sum, item) => sum + prices[item.bookId] * item.quantity, 0)
 
-  // Wait a moment, as a real payment would, so the demo shows "Processing..."
-  await new Promise((resolve) => setTimeout(resolve, 1500))
-  if (outcome === 'declined') {
-    return res.status(402).json({ error: 'Your card was declined. Try the other test card.' })
-  }
-
-  // A transaction: the order and all of its items are saved together, or,
-  // if anything fails halfway, none of them are. It needs one connection
-  // for every query, so we borrow one from the pool and give it back after.
+  // A transaction: the stock change, the order and its items are saved
+  // together, or, if anything fails halfway (Stripe too), none of them are.
+  // It needs one connection for every query, so we borrow one from the
+  // pool and give it back after.
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
 
-    // Take the books off the shelf. "AND stock >= $1" makes the update do
+    // Take the books off the shelf now, so they are kept for this customer
+    // while they pay. If the payment fails or they never finish, the
+    // webhook puts them back. "AND stock >= $1" makes the update do
     // nothing if someone else bought the last copies a moment ago; then
     // rowCount is 0 and we undo everything with ROLLBACK.
     for (const item of items) {
@@ -85,9 +73,10 @@ orders.post('/', async (req, res) => {
       }
     }
 
+    // status is 'pending' by default (see schema.sql)
     const { rows } = await client.query(
-      'INSERT INTO orders (user_id, total, card_last4) VALUES ($1, $2, $3) RETURNING id',
-      [req.user.id, total, digits.slice(-4)],
+      'INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id',
+      [req.user.id, total],
     )
     const orderId = rows[0].id
     for (const item of items) {
@@ -96,29 +85,60 @@ orders.post('/', async (req, res) => {
         [orderId, item.bookId, item.quantity, prices[item.bookId]],
       )
     }
+
+    // Ask Stripe for a payment page. Stripe counts money in cents, so
+    // €14.00 is 1400; Math.round avoids 14.000000001-style float errors.
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer_email: req.user.email,
+      line_items: items.map((item) => ({
+        quantity: item.quantity,
+        price_data: {
+          currency: 'eur',
+          unit_amount: Math.round(prices[item.bookId] * 100),
+          product_data: { name: byId[item.bookId].title },
+        },
+      })),
+      // Where Stripe sends the browser afterwards. BETTER_AUTH_URL is the
+      // address of the site (Vite in dev, the Railway URL in production).
+      success_url: `${siteUrl}/#paid/${orderId}`,
+      cancel_url: `${siteUrl}/#checkout`,
+      // Unpaid sessions expire after 30 minutes (the shortest Stripe allows).
+      // Stripe then sends checkout.session.expired and the books go back.
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+    })
+
+    // The webhook finds the order again by this id
+    await client.query('UPDATE orders SET stripe_session_id = $1 WHERE id = $2', [
+      session.id,
+      orderId,
+    ])
     await client.query('COMMIT')
-    res.status(201).json({ id: orderId, total })
+    res.status(201).json({ id: orderId, url: session.url })
   } catch (err) {
     await client.query('ROLLBACK')
-    throw err
+    console.error('Checkout failed:', err.message)
+    res.status(500).json({ error: 'Could not start the payment. Please try again.' })
   } finally {
     client.release()
   }
 })
 
-// One person's orders, newest first, each with its books. With orderId,
-// just that one order (still only if it is theirs). myRating is their
-// review of each book, or null if none yet.
+// One person's paid orders, newest first, each with its books. With
+// orderId, just that one order (still only if it is theirs), whatever its
+// status, so the success page can watch a pending order turn paid.
+// myRating is their review of each book, or null if none yet.
 async function findOrders(userId, orderId = null) {
   const { rows } = await pool.query(
-    `SELECT orders.id, orders.total, orders.card_last4, orders.created_at,
+    `SELECT orders.id, orders.total, orders.status, orders.card_last4, orders.created_at, orders.paid_at,
             order_items.book_id, order_items.quantity, order_items.price,
             books.title, books.author, books.image, reviews.rating AS my_rating
      FROM orders
      JOIN order_items ON order_items.order_id = orders.id
      JOIN books ON books.id = order_items.book_id
      LEFT JOIN reviews ON reviews.book_id = books.id AND reviews.user_id = orders.user_id
-     WHERE orders.user_id = $1 AND ($2::int IS NULL OR orders.id = $2)
+     WHERE orders.user_id = $1
+       AND (orders.id = $2 OR ($2::int IS NULL AND orders.status = 'paid'))
      ORDER BY orders.created_at DESC, books.title`,
     [userId, orderId],
   )
@@ -131,8 +151,10 @@ async function findOrders(userId, orderId = null) {
       order = {
         id: row.id,
         total: Number(row.total),
+        status: row.status,
         cardLast4: row.card_last4,
         createdAt: row.created_at,
+        paidAt: row.paid_at,
         items: [],
       }
       list.push(order)
@@ -150,12 +172,13 @@ async function findOrders(userId, orderId = null) {
   return list
 }
 
-// GET /api/orders: all of the signed-in person's orders
+// GET /api/orders: the signed-in person's paid orders
 orders.get('/', async (req, res) => {
   res.json(await findOrders(req.user.id))
 })
 
-// GET /api/orders/12: one order, for the receipt. 404 if it doesn't exist
+// GET /api/orders/12: one order, for the receipt and the success page
+// (which reads its status). 404 if it doesn't exist
 // or belongs to someone else (we don't say which).
 orders.get('/:id', async (req, res) => {
   const orderId = Number.parseInt(req.params.id)
