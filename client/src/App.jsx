@@ -10,6 +10,7 @@ import { BookDetails } from './components/BookDetails'
 import { AuthForm } from './components/AuthForm'
 import { Cart } from './components/Cart'
 import { Checkout } from './components/Checkout'
+import { PaymentResult } from './components/PaymentResult'
 import { MyBooks } from './components/MyBooks'
 import { Saved } from './components/Saved'
 import { Receipt } from './components/Receipt'
@@ -55,6 +56,14 @@ function App() {
   // here because the header, the book pages and #cart all need it.
   // Passing a function to useState means loadCart only runs once.
   const [cart, setCart] = useState(loadCart)
+
+  // After a paid order: empty the cart, and reload the books for the new
+  // stock. useCallback keeps it the same function, so PaymentResult doesn't
+  // check the order again every time App re-renders.
+  const onPaid = useCallback(() => {
+    setCart({})
+    getJson('/api/books').then(setBooks, setError)
+  }, [])
 
   // Save the cart in the browser whenever it changes, so it survives a refresh
   useEffect(() => {
@@ -183,12 +192,11 @@ function App() {
       return <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
     }
     if (page === 'checkout') {
-      // After paying: empty the cart, and reload the books for the new stock
-      const onPaid = () => {
-        setCart({})
-        loadBooks()
-      }
-      return <Checkout books={books} cart={cart} onPaid={onPaid} />
+      return <Checkout books={books} cart={cart} />
+    }
+    if (page === 'paid') {
+      // Where Stripe sends people back after paying, e.g. #paid/12
+      return <PaymentResult key={param} orderId={param} onPaid={onPaid} />
     }
     if (page === 'my-books') {
       return <MyBooks />
