@@ -8,6 +8,12 @@ import { admin } from './admin.js'
 
 export const api = Router()
 
+// GET /api/_/health: answers 200 as long as the server is running, so a
+// person (or a monitor) can check the API is up without loading any data
+api.get('/_/health', (req, res) => {
+  res.json({ status: 'ok' })
+})
+
 // These live in their own files
 api.use('/orders', orders)
 api.use('/wishlist', wishlist)

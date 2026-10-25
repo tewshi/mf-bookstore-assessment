@@ -75,6 +75,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 
 | Route | Returns |
 | --- | --- |
+| `GET /api/_/health` | `{ status: 'ok' }` with a 200, to check the API is up |
 | `GET /api/books` | every book, with its average `rating`, `reviewCount` and `stock` |
 | `GET /api/books?page=2&q=river&section=Fiction&sort=price-low` | one page (8 books) of the matching books: `{ books, total, page, perPage, pageCount }`. `q` searches title, author and ISBN; `sort` is `featured`, `price-low`, `price-high`, `rating` or `newest` |
 | `GET /api/books/:id` | one book, or 404 |
