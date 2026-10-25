@@ -48,6 +48,22 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Stripe payments (added later, hence the ALTERs). An order starts as
+-- 'pending' when we send the customer to Stripe. Only the webhook changes
+-- it: to 'paid' when Stripe confirms the money, or to 'cancelled' when
+-- the payment fails or the customer never finishes.
+-- The column is added with DEFAULT 'paid' so the older demo orders (which
+-- were all paid) get 'paid'; then new orders default to 'pending'.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'paid'
+  CHECK (status IN ('pending', 'paid', 'cancelled'));
+ALTER TABLE orders ALTER COLUMN status SET DEFAULT 'pending';
+-- Stripe's id for the checkout session (cs_test_...), so the webhook can find the order
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS stripe_session_id text UNIQUE;
+-- When the webhook marked it paid
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
+-- Stripe keeps the card, so new orders have no card_last4
+ALTER TABLE orders ALTER COLUMN card_last4 DROP NOT NULL;
+
 -- The books in each order. price is what the book cost at checkout,
 -- so an old order stays the same when a price changes later.
 CREATE TABLE IF NOT EXISTS order_items (
