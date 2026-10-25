@@ -6,8 +6,9 @@ import { LockIcon } from './Icons'
 
 // The #checkout page: the order summary and a button that sends the
 // customer to Stripe's payment page. Stripe sends them back to #paid/<id>
-// (PaymentResult) afterwards, or to here if they press back.
-export function Checkout({ books, cart }) {
+// (PaymentResult) afterwards, or to #checkout/<id> if they press Back.
+// orderId is that <id>: the unpaid order they came back from, if any.
+export function Checkout({ books, cart, orderId }) {
   const { data: session, isPending } = authClient.useSession()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
@@ -55,10 +56,12 @@ export function Checkout({ books, cart }) {
     setBusy(true)
     setError(null)
     // Only ids and quantities go to the server; it looks up the prices
-    // itself, saves a pending order and answers with Stripe's page.
+    // itself and answers with Stripe's page. With orderId, the server
+    // reuses that order if the cart still matches it, or else makes a new one.
     try {
       const { url } = await postJson('/api/orders', {
         items: items.map(({ book, quantity }) => ({ bookId: book.id, quantity })),
+        orderId,
       })
       // Leave our site for Stripe's. busy stays true, so the button
       // can't be pressed twice while the page changes.

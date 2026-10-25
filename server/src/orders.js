@@ -18,7 +18,48 @@ function outOfStock(book) {
     : `Sorry, only ${book.stock} of "${book.title}" left. Lower the quantity to continue.`
 }
 
-// POST /api/orders with { items: [{ bookId, quantity }] }
+// Someone who pressed Back on Stripe's page lands on #checkout/<id>, and
+// Checkout sends that id along with the cart. If the cart is exactly what
+// that unpaid order holds, we send them back to the same Stripe page
+// instead of making a second order. Answers { id, url } to reuse it,
+// { error } if it was paid in the meantime, or null to make a new order.
+async function reuseOrder(userId, orderId, items) {
+  const { rows } = await pool.query(
+    `SELECT orders.stripe_session_id, order_items.book_id, order_items.quantity
+     FROM orders JOIN order_items ON order_items.order_id = orders.id
+     WHERE orders.id = $1 AND orders.user_id = $2 AND orders.status = 'pending'`,
+    [orderId, userId],
+  )
+  if (rows.length === 0) return null
+
+  const sessionId = rows[0].stripe_session_id
+  const session = await stripe.checkout.sessions.retrieve(sessionId)
+  // Paid, and the webhook is on its way: don't let them pay twice
+  if (session.status === 'complete') {
+    return { error: 'This order is already paid. Stripe is still confirming it.' }
+  }
+
+  // The same books in the same quantities means the same order
+  const sameCart =
+    rows.length === items.length &&
+    rows.every((row) =>
+      items.some((item) => item.bookId === row.book_id && item.quantity === row.quantity),
+    )
+  if (sameCart && session.status === 'open') {
+    return { id: orderId, url: session.url }
+  }
+
+  // The cart changed, so nobody will pay this order. Expire its session now:
+  // Stripe then sends checkout.session.expired, and the webhook cancels the
+  // order and puts its books back, without waiting the 30 minutes.
+  if (session.status === 'open') {
+    await stripe.checkout.sessions.expire(sessionId)
+  }
+  return null
+}
+
+// POST /api/orders with { items: [{ bookId, quantity }], orderId? }
+// orderId is the unpaid order Checkout came back from, if any (see above).
 // Saves a 'pending' order, takes its books off the shelf, and starts a
 // Stripe Checkout Session for it. Answers { id, url }: url is Stripe's
 // payment page, where the browser goes next. Nothing here marks the order
@@ -27,6 +68,14 @@ orders.post('/', async (req, res) => {
   const { items } = req.body
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' })
+  }
+
+  // Before the stock check: a reused order already holds its books
+  const orderId = Number.parseInt(req.body.orderId)
+  if (Number.isInteger(orderId)) {
+    const reused = await reuseOrder(req.user.id, orderId, items)
+    if (reused?.error) return res.status(409).json(reused)
+    if (reused) return res.json(reused)
   }
 
   // Prices come from the database, not from the browser,
@@ -102,7 +151,9 @@ orders.post('/', async (req, res) => {
       // Where Stripe sends the browser afterwards. BETTER_AUTH_URL is the
       // address of the site (Vite in dev, the Railway URL in production).
       success_url: `${siteUrl}/#paid/${orderId}`,
-      cancel_url: `${siteUrl}/#checkout`,
+      // Back (without paying) returns to #checkout/<id>, so the next
+      // Buy now can reuse this order if the cart is still the same
+      cancel_url: `${siteUrl}/#checkout/${orderId}`,
       // Unpaid sessions expire after 30 minutes (the shortest Stripe allows).
       // Stripe then sends checkout.session.expired and the books go back.
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
