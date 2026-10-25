@@ -119,17 +119,18 @@ api.get('/books/:id', async (req, res) => {
 // first. Empty when nobody has bought the book yet.
 api.get('/books/:id/recommendations', async (req, res) => {
   const { rows } = await pool.query(
-    `-- 1. Everyone who has bought this book
+    `-- 1. Everyone who has bought (and paid for) this book
      WITH buyers AS (
        SELECT DISTINCT orders.user_id
        FROM orders JOIN order_items ON order_items.order_id = orders.id
-       WHERE order_items.book_id = $1
+       WHERE order_items.book_id = $1 AND orders.status = 'paid'
      ),
      -- 2. The other books those people bought, and how many of them bought each
      also_bought AS (
        SELECT order_items.book_id, count(DISTINCT orders.user_id) AS readers
        FROM orders JOIN order_items ON order_items.order_id = orders.id
        WHERE orders.user_id IN (SELECT user_id FROM buyers) AND order_items.book_id <> $1
+         AND orders.status = 'paid'
        GROUP BY order_items.book_id
      )
      -- 3. Those books in full (with ratings), most readers first
@@ -143,11 +144,11 @@ api.get('/books/:id/recommendations', async (req, res) => {
   res.json(rows.map(toBook))
 })
 
-// Has this person bought this book? Only buyers may review it.
+// Has this person bought (and paid for) this book? Only buyers may review it.
 async function hasBought(userId, bookId) {
   const { rows } = await pool.query(
     `SELECT 1 FROM order_items JOIN orders ON orders.id = order_items.order_id
-     WHERE orders.user_id = $1 AND order_items.book_id = $2 LIMIT 1`,
+     WHERE orders.user_id = $1 AND order_items.book_id = $2 AND orders.status = 'paid' LIMIT 1`,
     [userId, bookId],
   )
   return rows.length > 0

@@ -15,7 +15,7 @@ const STILL_REFERENCED = '23503'
 // placed it and a one-line summary of the books
 admin.get('/orders', async (req, res) => {
   const { rows } = await pool.query(
-    `SELECT orders.id, orders.total, orders.card_last4, orders.created_at,
+    `SELECT orders.id, orders.total, orders.status, orders.card_last4, orders.created_at,
             "user".name, "user".email,
             sum(order_items.quantity)::int AS book_count,
             string_agg(books.title || ' × ' || order_items.quantity, ', ' ORDER BY books.title) AS summary
@@ -30,6 +30,7 @@ admin.get('/orders', async (req, res) => {
     rows.map((row) => ({
       id: row.id,
       total: Number(row.total),
+      status: row.status,
       cardLast4: row.card_last4,
       createdAt: row.created_at,
       name: row.name,
