@@ -2,6 +2,7 @@ import express from 'express'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './auth.js'
 import { api } from './api.js'
+import { stripeWebhook } from './webhook.js'
 
 const app = express()
 
@@ -11,6 +12,10 @@ const isProduction = process.env.NODE_ENV === 'production'
 // Signup, login, logout and "who am I" all live under /api/auth.
 // It goes before express.json(), because Better Auth reads the body itself.
 app.all('/api/auth/{*any}', toNodeHandler(auth))
+
+// Stripe's payment confirmations. Also before express.json(): express.raw()
+// keeps the body as the exact bytes Stripe signed (see webhook.js).
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhook)
 
 app.use(express.json())
 app.use('/api', api)
