@@ -5,6 +5,7 @@ Course project for a bookstore site, built up over weekly assignments. The stude
 - Assignment 1: plain HTML/CSS
 - Assignment 2: Vite + React + Tailwind (hardcoded data)
 - Assignment 3: Express API, Postgres, Better Auth, deployed on Railway
+- Assignment 4: Stripe Checkout (test mode), webhook marks orders paid
 
 `README.md` documents the folder structure, the schema, the API and how login works. Keep it up to date when any of those change.
 
@@ -19,6 +20,7 @@ Course project for a bookstore site, built up over weekly assignments. The stude
 ```bash
 npm install                  # root: installs both workspaces
 npm run dev                  # node dev.js: Express on :3000 (API only) + Vite on :5173 (open this)
+stripe listen --forward-to localhost:3000/api/webhooks/stripe   # needed locally for payments to turn 'paid'
 npm run lint                 # oxlint on the client
 npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
@@ -32,11 +34,12 @@ There are no automated tests. Check a change with lint + build, then by running 
 
 npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No lockfile: the instructor asked for none, so `.npmrc` has `package-lock=false` and `.gitignore` lists `package-lock.json`. Don't add one back.
 
-- `server/src/index.js`: mounts Better Auth, then `express.json()`, then `/api`, then serves `client/dist`
+- `server/src/index.js`: mounts Better Auth and the Stripe webhook (raw body), then `express.json()`, then `/api`, then serves `client/dist`
 - `server/src/db.js`: the single `pg` pool everything shares
 - `server/src/auth.js`: Better Auth config (email + password)
 - `server/src/api.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/api/books/:id`, reviews, recommendations; mounts the routers below
-- `server/src/orders.js`: `/api/orders` (simulated test-card payment, stock decrement in the transaction, history, `/:id` receipt)
+- `server/src/orders.js`: `/api/orders` (pending order + stock decrement + Stripe Checkout Session in one transaction, paid history, `/:id` with status)
+- `server/src/webhook.js`: `/api/webhooks/stripe`, the only code that sets `status = 'paid'` (or `cancelled` + stock back on failed/expired); `server/src/stripe.js`: the client
 - `server/src/wishlist.js`, `server/src/events.js` (seat sign-up), `server/src/admin.js` (`requireAdmin`)
 - `server/src/session.js`: `currentUser(req)`, `requireUser`, `requireAdmin` (Better Auth `getSession`)
 - Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
@@ -49,13 +52,16 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 
 - Plain SQL with `pg` and `$1` placeholders. No ORM.
 - Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/api.js`).
-- Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#my-books`, `#saved`, `#account`, `#order/<id>`, `#admin/<tab>`.
+- Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#paid/<id>` (Stripe's success_url), `#my-books`, `#saved`, `#account`, `#order/<id>`, `#admin/<tab>`.
 - Comments explain *why* in plain English for a student reader; match the density of the existing files.
 - Commits: small, one-line messages, one logical step each.
 
 ## Gotchas we already hit
 
 - Better Auth must be mounted **before** `express.json()`, or it can't read the request body.
+- The Stripe webhook also goes before `express.json()`, with `express.raw()`: the signature check needs the exact bytes.
+- The `whsec_` from `stripe listen` (local `.env`) differs from the dashboard endpoint's (Railway). The env var is `STRIPE_WEBHOOK_SECRET_KEY` (the student's name for it).
+- Orders are filtered by `status = 'paid'` for My books, reviews, recommendations and admin totals.
 - Express 5 wildcard syntax: `app.all('/api/auth/{*any}', ...)`.
 - `getMigrations` is imported from `better-auth/db/migration` (not `better-auth/db`) in v1.7.
 - Postgres `numeric` comes back as a string: convert `price` with `Number()`.
@@ -81,7 +87,7 @@ Build/start/pre-deploy commands live in the **service settings on Railway**, not
 | Pre-deploy | `npm run migrate -w server` |
 | Start | `npm start` |
 
-Variables on `bookstore-assessment`: `DATABASE_URL=${{bookstore-pgdb.DATABASE_URL}}`, `BETTER_AUTH_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`, `BETTER_AUTH_SECRET`.
+Variables on `bookstore-assessment`: `DATABASE_URL=${{bookstore-pgdb.DATABASE_URL}}`, `BETTER_AUTH_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`, `BETTER_AUTH_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET_KEY`. `stripe.js` throws at startup if either Stripe one is missing.
 
 Live URL: https://mayerfeld-bookstore-assessment.up.railway.app
 
