@@ -20,7 +20,9 @@ export function Receipt({ orderId }) {
     return <p className="mx-auto max-w-page px-4 py-16 text-muted">Loading…</p>
   }
 
-  if (!session || order === 'missing') {
+  // Only paid orders have a receipt. A pending or cancelled one is
+  // treated like a missing one.
+  if (!session || order === 'missing' || order.status !== 'paid') {
     return (
       <section className="mx-auto max-w-md px-4 py-24 text-center">
         <h1 className="mb-2 text-3xl font-bold">Receipt not found</h1>
@@ -39,7 +41,8 @@ export function Receipt({ orderId }) {
     )
   }
 
-  const paidAt = new Date(order.createdAt).toLocaleString('en-GB', {
+  // Older demo orders have no paidAt, so fall back to when they were placed
+  const paidAt = new Date(order.paidAt ?? order.createdAt).toLocaleString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -90,7 +93,10 @@ export function Receipt({ orderId }) {
           </div>
           <div>
             <dt className="text-muted">Paid with</dt>
-            <dd className="font-medium">Test card •••• {order.cardLast4}</dd>
+            {/* Stripe keeps the card, so only the old demo orders have its last 4 digits */}
+            <dd className="font-medium">
+              {order.cardLast4 ? `Test card •••• ${order.cardLast4}` : 'Card, via Stripe'}
+            </dd>
           </div>
         </dl>
 
@@ -127,7 +133,7 @@ export function Receipt({ orderId }) {
         </table>
 
         <p className="mt-8 text-center text-xs text-muted">
-          A demo receipt: no money was taken. Thank you for shopping with us!
+          Paid in Stripe test mode: no real money was taken. Thank you for shopping with us!
         </p>
       </article>
     </section>

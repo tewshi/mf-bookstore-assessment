@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import { getJson } from '../../api'
 
-// Every order in the shop, newest first, with a few totals on top
+// The badge colour for each order status
+const statusColors = {
+  paid: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-400',
+  pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+  cancelled: 'bg-bg text-muted',
+}
+
+// Every order in the shop, newest first, with a few totals on top.
+// The totals count paid orders only; pending and cancelled ones are listed
+// with their status, but no money came in for them.
 export function AdminOrders() {
   const [orders, setOrders] = useState(null)
 
@@ -11,10 +20,11 @@ export function AdminOrders() {
 
   if (!orders) return <p className="text-muted">Loading orders…</p>
 
-  const revenue = orders.reduce((sum, order) => sum + order.total, 0)
-  const booksSold = orders.reduce((sum, order) => sum + order.bookCount, 0)
+  const paid = orders.filter((order) => order.status === 'paid')
+  const revenue = paid.reduce((sum, order) => sum + order.total, 0)
+  const booksSold = paid.reduce((sum, order) => sum + order.bookCount, 0)
   const stats = [
-    ['Orders', orders.length],
+    ['Paid orders', paid.length],
     ['Books sold', booksSold],
     ['Revenue', `€${revenue.toFixed(2)}`],
   ]
@@ -42,6 +52,7 @@ export function AdminOrders() {
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Books</th>
+                <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 text-right font-medium">Total</th>
               </tr>
             </thead>
@@ -61,6 +72,13 @@ export function AdminOrders() {
                     <p className="text-muted">{order.email}</p>
                   </td>
                   <td className="px-4 py-3">{order.summary}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[order.status]}`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-right font-semibold">€{order.total.toFixed(2)}</td>
                 </tr>
               ))}
