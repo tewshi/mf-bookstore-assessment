@@ -84,6 +84,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `POST /api/books/:id/reviews` | `{ rating, text }`: add or replace your review. Signed in, and only for books you bought |
 | `POST /api/orders` | `{ items }`: save a pending order and start a Stripe Checkout Session. Answers `{ id, url }`, the Stripe page to go to. Signed in |
 | `GET /api/orders` | your paid and pending orders (not cancelled ones), newest first, with their books. Signed in |
+| `POST /api/orders/:id/pay` | back to Stripe's page for one of your pending orders: `{ url }` while its session is open, 409 once it is paid or expired. Signed in |
 | `GET /api/orders/:id` | one of your orders, with its `status`, for the success page and the receipt. Signed in |
 | `POST /api/webhooks/stripe` | Stripe's events. Only accepted with a valid `stripe-signature` header |
 | `GET /api/wishlist` | the ids of the books you saved. Signed in |
@@ -108,6 +109,7 @@ Stripe runs in test mode: the keys start with `sk_test_`, Stripe's page says "Sa
 3. **Stripe's page**: the browser goes to that `url`, and the customer types the card in there, so our site never sees it.
 4. **The webhook** (`server/src/webhook.js`): when the payment completes, Stripe sends `checkout.session.completed` to `POST /api/webhooks/stripe`. `stripe.webhooks.constructEvent` checks the `stripe-signature` header with `STRIPE_WEBHOOK_SECRET_KEY`, so a fake request is refused with 400. Then it finds the order by its session id and sets `status = 'paid'`. This is the only place an order becomes paid. If the payment fails (`async_payment_failed`) or the customer never pays and the session expires after 30 minutes (`checkout.session.expired`), it sets `cancelled` and puts the books back. Every update has `AND status = 'pending'`, so when Stripe sends the same event twice, the second one changes nothing.
 5. **The success page**: Stripe sends the browser to `#paid/<id>`. `PaymentResult` asks `GET /api/orders/<id>` for the status. The webhook can arrive a moment after the customer, so while the order is still `pending` it asks again every 2 seconds (up to 6 times). Once it's `paid`, the page says so and the cart is emptied. Afterwards there is a printable receipt at `#order/<id>`.
+6. **Pressing Back on Stripe's page** brings the customer back to `#checkout` without paying. The order stays `pending`, and My books shows it as "Pending payment" with a **Pay now** button. That calls `POST /api/orders/:id/pay`, which asks Stripe for the same session (`stripe.checkout.sessions.retrieve`) and, while it is still open, sends the customer back to its page. If it is already paid (the webhook is on its way) or expired, the button shows why instead. This route only reads from Stripe; the status still only changes in the webhook, and the 30-minute expiry still cancels the order and puts the books back.
 
 The webhook is mounted in `index.js` before `express.json()`, with `express.raw()`: the signature is worked out from the exact bytes Stripe sent, and `express.json()` would turn them into an object first.
 

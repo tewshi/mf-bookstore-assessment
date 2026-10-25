@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { authClient } from '../auth'
-import { getJson } from '../api'
+import { getJson, postJson } from '../api'
 import { Stars } from './StarRating'
 import { BookIcon } from './Icons'
 
 // The #my-books page: everything the signed-in person has bought,
-// one card per order, with a link to review each book. Orders still
-// waiting for Stripe's webhook show "Payment pending" instead, and get
-// no receipt or review links until they are paid.
+// one card per order, with a link to review each book. Unpaid orders
+// (pending) show "Pending payment" and a Pay now button instead, and get
+// no receipt or review links until the webhook marks them paid.
 export function MyBooks() {
   const { data: session, isPending } = authClient.useSession()
   const userId = session?.user.id
@@ -17,6 +17,9 @@ export function MyBooks() {
   const [error, setError] = useState(null)
   // Upcoming events this person has a seat at
   const [myEvents, setMyEvents] = useState([])
+  // The order whose Pay now was pressed, and why it didn't work, if it didn't
+  const [paying, setPaying] = useState(null)
+  const [payError, setPayError] = useState(null)
 
   // Fetch again if a different person signs in
   useEffect(() => {
@@ -27,6 +30,19 @@ export function MyBooks() {
       () => {},
     )
   }, [userId])
+
+  // Pay now: ask the server for the order's Stripe page and go there
+  async function payNow(orderId) {
+    setPaying(orderId)
+    setPayError(null)
+    try {
+      const { url } = await postJson(`/api/orders/${orderId}/pay`)
+      window.location.assign(url)
+    } catch (err) {
+      setPayError({ orderId, message: err.message })
+      setPaying(null)
+    }
+  }
 
   if (isPending) {
     return <p className="mx-auto max-w-page px-4 py-16 text-muted">Loading…</p>
@@ -118,24 +134,34 @@ export function MyBooks() {
                 )}
                 {order.status === 'pending' && (
                   <span className="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900 dark:text-amber-300">
-                    Payment pending
+                    Pending payment
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-4">
-                {/* #paid/<id> asks the server again, until the webhook has been */}
                 {order.status === 'paid' ? (
                   <a href={`#order/${order.id}`} className="text-accent hover:underline">
                     Receipt
                   </a>
                 ) : (
-                  <a href={`#paid/${order.id}`} className="text-accent hover:underline">
-                    Check status
-                  </a>
+                  <button
+                    type="button"
+                    onClick={() => payNow(order.id)}
+                    disabled={paying !== null}
+                    className="cursor-pointer rounded-full bg-accent px-4 py-1.5 font-medium text-on-accent hover:bg-accent-dark disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {paying === order.id ? 'Opening Stripe…' : 'Pay now'}
+                  </button>
                 )}
                 <span className="font-semibold">€{order.total.toFixed(2)}</span>
               </div>
             </div>
+
+            {payError?.orderId === order.id && (
+              <p role="alert" className="bg-accent-soft px-6 py-3 text-sm text-accent-dark">
+                {payError.message}
+              </p>
+            )}
 
             <ul className="divide-y divide-line">
               {order.items.map((item) => (

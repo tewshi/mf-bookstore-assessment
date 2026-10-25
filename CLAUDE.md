@@ -61,7 +61,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - Better Auth must be mounted **before** `express.json()`, or it can't read the request body.
 - The Stripe webhook also goes before `express.json()`, with `express.raw()`: the signature check needs the exact bytes.
 - The `whsec_` from `stripe listen` (local `.env`) differs from the dashboard endpoint's (Railway). The env var is `STRIPE_WEBHOOK_SECRET_KEY` (the student's name for it).
-- Reviews, recommendations and admin totals count only `status = 'paid'`. My books lists paid and pending orders (pending: a badge, no receipt or review links).
+- Reviews, recommendations and admin totals count only `status = 'paid'`. My books lists paid and pending orders (pending: "Pending payment" + Pay now, which calls `POST /api/orders/:id/pay` to reopen the still-open Stripe session; no receipt or review links).
 - Express 5 wildcard syntax: `app.all('/api/auth/{*any}', ...)`.
 - `getMigrations` is imported from `better-auth/db/migration` (not `better-auth/db`) in v1.7.
 - Postgres `numeric` comes back as a string: convert `price` with `Number()`.

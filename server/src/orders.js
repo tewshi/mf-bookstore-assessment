@@ -124,6 +124,36 @@ orders.post('/', async (req, res) => {
   }
 })
 
+// POST /api/orders/12/pay: back to Stripe's page for an unpaid order, e.g.
+// after the customer pressed Back there. Answers { url }. A Checkout Session
+// stays open until it expires (30 minutes), so we ask Stripe for the same
+// one again. This only reads from Stripe: the order's status still only
+// changes in the webhook, and an expired session still cancels it there.
+orders.post('/:id/pay', async (req, res) => {
+  const orderId = Number.parseInt(req.params.id)
+  const { rows } = await pool.query(
+    `SELECT stripe_session_id FROM orders
+     WHERE id = $1 AND user_id = $2 AND status = 'pending'`,
+    [Number.isInteger(orderId) ? orderId : null, req.user.id],
+  )
+  if (rows.length === 0) {
+    return res.status(404).json({ error: 'There is no unpaid order with that number' })
+  }
+
+  const session = await stripe.checkout.sessions.retrieve(rows[0].stripe_session_id)
+  if (session.status === 'open') {
+    return res.json({ url: session.url })
+  }
+  // 'complete': paid, but the webhook hasn't arrived yet
+  if (session.status === 'complete') {
+    return res
+      .status(409)
+      .json({ error: 'This order is already paid. Stripe is still confirming it.' })
+  }
+  // 'expired': the webhook will cancel the order and put the books back
+  res.status(409).json({ error: 'This payment link has expired. Add the books to your cart again.' })
+})
+
 // One person's orders, newest first, each with its books: paid ones and
 // pending ones (still waiting for Stripe), but not cancelled ones. With
 // orderId, just that one order (still only if it is theirs), whatever its
