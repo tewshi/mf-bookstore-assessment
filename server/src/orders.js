@@ -124,7 +124,8 @@ orders.post('/', async (req, res) => {
   }
 })
 
-// One person's paid orders, newest first, each with its books. With
+// One person's orders, newest first, each with its books: paid ones and
+// pending ones (still waiting for Stripe), but not cancelled ones. With
 // orderId, just that one order (still only if it is theirs), whatever its
 // status, so the success page can watch a pending order turn paid.
 // myRating is their review of each book, or null if none yet.
@@ -138,7 +139,7 @@ async function findOrders(userId, orderId = null) {
      JOIN books ON books.id = order_items.book_id
      LEFT JOIN reviews ON reviews.book_id = books.id AND reviews.user_id = orders.user_id
      WHERE orders.user_id = $1
-       AND (orders.id = $2 OR ($2::int IS NULL AND orders.status = 'paid'))
+       AND (orders.id = $2 OR ($2::int IS NULL AND orders.status <> 'cancelled'))
      ORDER BY orders.created_at DESC, books.title`,
     [userId, orderId],
   )
@@ -172,7 +173,7 @@ async function findOrders(userId, orderId = null) {
   return list
 }
 
-// GET /api/orders: the signed-in person's paid orders
+// GET /api/orders: the signed-in person's paid and pending orders
 orders.get('/', async (req, res) => {
   res.json(await findOrders(req.user.id))
 })

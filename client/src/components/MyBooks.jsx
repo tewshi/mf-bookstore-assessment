@@ -5,7 +5,9 @@ import { Stars } from './StarRating'
 import { BookIcon } from './Icons'
 
 // The #my-books page: everything the signed-in person has bought,
-// one card per order, with a link to review each book.
+// one card per order, with a link to review each book. Orders still
+// waiting for Stripe's webhook show "Payment pending" instead, and get
+// no receipt or review links until they are paid.
 export function MyBooks() {
   const { data: session, isPending } = authClient.useSession()
   const userId = session?.user.id
@@ -110,12 +112,27 @@ export function MyBooks() {
                     year: 'numeric',
                   })}
                 </span>
-                <span className="text-muted">Card •••• {order.cardLast4}</span>
+                {/* Only the old demo orders have card digits; Stripe keeps the card now */}
+                {order.cardLast4 && (
+                  <span className="text-muted">Card •••• {order.cardLast4}</span>
+                )}
+                {order.status === 'pending' && (
+                  <span className="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                    Payment pending
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-4">
-                <a href={`#order/${order.id}`} className="text-accent hover:underline">
-                  Receipt
-                </a>
+                {/* #paid/<id> asks the server again, until the webhook has been */}
+                {order.status === 'paid' ? (
+                  <a href={`#order/${order.id}`} className="text-accent hover:underline">
+                    Receipt
+                  </a>
+                ) : (
+                  <a href={`#paid/${order.id}`} className="text-accent hover:underline">
+                    Check status
+                  </a>
+                )}
                 <span className="font-semibold">€{order.total.toFixed(2)}</span>
               </div>
             </div>
@@ -141,8 +158,9 @@ export function MyBooks() {
                         {item.author} &middot; {item.quantity} &times; €{item.price.toFixed(2)}
                       </p>
                     </div>
-                    {/* #book/<id>/reviews opens the book and jumps to its reviews */}
-                    {item.myRating ? (
+                    {/* #book/<id>/reviews opens the book and jumps to its reviews.
+                        Only buyers may review, so nothing until the order is paid. */}
+                    {order.status !== 'paid' ? null : item.myRating ? (
                       <a
                         href={`#book/${item.bookId}/reviews`}
                         className="flex shrink-0 items-center gap-2 text-sm text-muted hover:text-accent"

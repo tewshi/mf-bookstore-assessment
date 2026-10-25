@@ -82,7 +82,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `GET /api/books/:id/recommendations` | up to 4 books that this book's buyers also bought, most buyers first |
 | `POST /api/books/:id/reviews` | `{ rating, text }`: add or replace your review. Signed in, and only for books you bought |
 | `POST /api/orders` | `{ items }`: save a pending order and start a Stripe Checkout Session. Answers `{ id, url }`, the Stripe page to go to. Signed in |
-| `GET /api/orders` | your paid orders, newest first, with their books. Signed in |
+| `GET /api/orders` | your paid and pending orders (not cancelled ones), newest first, with their books. Signed in |
 | `GET /api/orders/:id` | one of your orders, with its `status`, for the success page and the receipt. Signed in |
 | `POST /api/webhooks/stripe` | Stripe's events. Only accepted with a valid `stripe-signature` header |
 | `GET /api/wishlist` | the ids of the books you saved. Signed in |
