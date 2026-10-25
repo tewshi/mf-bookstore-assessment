@@ -192,7 +192,7 @@ function App() {
       return <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
     }
     if (page === 'checkout') {
-      // #checkout/12: back from Stripe without paying for order 12
+      // #checkout/12: reuse unpaid order 12 if the cart still matches it
       return <Checkout books={books} cart={cart} orderId={param} />
     }
     if (page === 'paid') {

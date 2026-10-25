@@ -52,7 +52,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 
 - Plain SQL with `pg` and `$1` placeholders. No ORM.
 - Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/api.js`).
-- Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#checkout/<id>` (Stripe's cancel_url; Buy now reuses order <id> if the cart still matches), `#paid/<id>` (Stripe's success_url), `#my-books`, `#saved`, `#account`, `#order/<id>`, `#admin/<tab>`.
+- Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#checkout/<id>` (Buy now reuses order <id> if the cart still matches; nothing links here since cancel_url became `#my-books`), `#paid/<id>` (Stripe's success_url), `#my-books`, `#saved`, `#account`, `#order/<id>`, `#admin/<tab>`.
 - Comments explain *why* in plain English for a student reader; match the density of the existing files.
 - Commits: small, one-line messages, one logical step each.
 

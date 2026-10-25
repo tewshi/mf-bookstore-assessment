@@ -6,8 +6,8 @@ import { LockIcon } from './Icons'
 
 // The #checkout page: the order summary and a button that sends the
 // customer to Stripe's payment page. Stripe sends them back to #paid/<id>
-// (PaymentResult) afterwards, or to #checkout/<id> if they press Back.
-// orderId is that <id>: the unpaid order they came back from, if any.
+// (PaymentResult) afterwards, or to #my-books if they press Back.
+// orderId comes from #checkout/<id>: an unpaid order to reuse, if any.
 export function Checkout({ books, cart, orderId }) {
   const { data: session, isPending } = authClient.useSession()
   const [busy, setBusy] = useState(false)
