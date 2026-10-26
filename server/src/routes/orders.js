@@ -69,6 +69,11 @@ orders.post('/', async (req, res) => {
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' })
   }
+  // The cart holds each book once, with a quantity. The same book twice
+  // would break order_items' primary key (order_id, book_id) further down.
+  if (new Set(items.map((item) => item.bookId)).size !== items.length) {
+    return res.status(400).json({ error: 'Each book can only be in the order once' })
+  }
 
   // Before the stock check: a reused order already holds its books
   const orderId = Number.parseInt(req.body.orderId)
