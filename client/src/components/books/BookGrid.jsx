@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { getJson } from '../../lib/api'
 import { BookCard, StockNote } from './BookCard'
 import { Stars } from './StarRating'
-import { CartIcon, ChevronDownIcon, SearchIcon } from '../ui/Icons'
+import { CartIcon } from '../ui/Icons'
+import { Select } from '../ui/Select'
+import { SearchBox } from '../ui/SearchBox'
+import { Pagination } from '../ui/Pagination'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
 
@@ -70,28 +73,18 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
     setPageNumber(1)
   }
 
-  // Switch page, then scroll back up to the top of the grid
-  function goToPage(number) {
-    setPageNumber(number)
-    document.getElementById('books').scrollIntoView()
-  }
-
   // Before the first answer, pretend it's an empty first page
   const {
     books: pageBooks,
     total,
     page,
     perPage,
-    pageCount,
   } = result ?? {
     books: [],
     total: 0,
     page: 1,
     perPage: 8,
-    pageCount: 0,
   }
-  const first = (page - 1) * perPage
-  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1)
 
   return (
     <section id="books" className="mx-auto max-w-page scroll-mt-16 px-4 py-16">
@@ -100,34 +93,12 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
 
       {/* Search, sort and section filter: stacked on phones, one row from md */}
       <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center">
-        <label className="relative flex-1">
-          <span className="sr-only">Search by title, author or ISBN</span>
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by title, author or ISBN"
-            className="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 outline-none focus:border-accent focus:ring-4 focus:ring-accent-soft"
-          />
-        </label>
-        {/* appearance-none hides the browser's own arrow (each browser puts it
-            somewhere different); we draw a chevron instead, with room (pr-11) */}
-        <label className="relative">
-          <span className="sr-only">Sort by</span>
-          <select
-            value={sort}
-            onChange={(e) => changeSort(e.target.value)}
-            className="w-full cursor-pointer appearance-none rounded-full border border-line bg-surface py-2.5 pr-11 pl-4 outline-none focus:border-accent md:w-auto"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-muted" />
-        </label>
+        <SearchBox
+          value={query}
+          onChange={setQuery}
+          placeholder="Search by title, author or ISBN"
+        />
+        <Select label="Sort by" value={sort} onChange={changeSort} options={sortOptions} />
         <div className="flex w-fit gap-1 rounded-full border border-line bg-surface p-1">
           {sections.map((name) => (
             <button
@@ -192,48 +163,14 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
         ))}
       </ul>
 
-      {/* Only when there is more than one page */}
-      {pageCount > 1 && (
-        <nav aria-label="Pages" className="mt-10 flex flex-col items-center gap-3">
-          <p className="text-sm text-muted">
-            Showing {first + 1}–{first + pageBooks.length} of {total} books
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-1">
-            <button
-              type="button"
-              onClick={() => goToPage(page - 1)}
-              disabled={page === 1}
-              className="cursor-pointer rounded-full px-4 py-2 text-sm font-medium hover:bg-accent-soft hover:text-accent disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit"
-            >
-              &larr; Previous
-            </button>
-            {pageNumbers.map((number) => (
-              <button
-                key={number}
-                type="button"
-                onClick={() => goToPage(number)}
-                aria-label={`Page ${number}`}
-                aria-current={number === page ? 'page' : undefined}
-                className={`size-10 cursor-pointer rounded-full text-sm font-medium ${
-                  number === page
-                    ? 'bg-accent text-on-accent'
-                    : 'hover:bg-accent-soft hover:text-accent'
-                }`}
-              >
-                {number}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => goToPage(page + 1)}
-              disabled={page === pageCount}
-              className="cursor-pointer rounded-full px-4 py-2 text-sm font-medium hover:bg-accent-soft hover:text-accent disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit"
-            >
-              Next &rarr;
-            </button>
-          </div>
-        </nav>
-      )}
+      <Pagination
+        page={page}
+        perPage={perPage}
+        total={total}
+        noun="books"
+        onChange={setPageNumber}
+        scrollTo="books"
+      />
     </section>
   )
 }

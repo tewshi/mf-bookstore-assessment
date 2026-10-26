@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getJson } from '../../lib/api'
+import { usePages } from '../../lib/usePages'
+import { Select } from '../../components/ui/Select'
+import { SearchBox } from '../../components/ui/SearchBox'
+import { Pagination } from '../../components/ui/Pagination'
 
 // The badge colour for each order status
 const statusColors = {
@@ -7,6 +11,15 @@ const statusColors = {
   pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
   cancelled: 'bg-bg text-muted',
 }
+
+const statusOptions = [
+  { value: 'all', label: 'All statuses' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
+
+const perPage = 10
 
 // Every order in the shop, newest first, with a few totals on top.
 // The totals count paid orders only; pending and cancelled ones are listed
@@ -21,6 +34,27 @@ export function AdminOrders() {
     getJson('/api/admin/orders').then(setOrders, () => setOrders([]))
   }, [])
 
+  // Which orders the table shows: worked out here from the orders we
+  // already have, so filtering needs no new request. Before the early
+  // return below, because usePages is a hook (hooks run on every render).
+  const needle = search.trim().toLowerCase()
+  const shown = (orders ?? []).filter(
+    (order) =>
+      (status === 'all' || order.status === status) &&
+      (order.name.toLowerCase().includes(needle) || order.email.toLowerCase().includes(needle)),
+  )
+  const { page, setPage, pageItems } = usePages(shown, perPage)
+
+  // A new filter or search starts again at page 1
+  function changeStatus(value) {
+    setStatus(value)
+    setPage(1)
+  }
+  function changeSearch(value) {
+    setSearch(value)
+    setPage(1)
+  }
+
   if (!orders) return <p className="text-muted">Loading orders…</p>
 
   const paid = orders.filter((order) => order.status === 'paid')
@@ -32,17 +66,10 @@ export function AdminOrders() {
     ['Revenue', `€${revenue.toFixed(2)}`],
   ]
 
-  // The totals above are for the whole shop; only the table is filtered.
-  // Worked out here from the orders we already have, so no new request.
-  const needle = search.trim().toLowerCase()
-  const shown = orders.filter(
-    (order) =>
-      (status === 'all' || order.status === status) &&
-      (order.name.toLowerCase().includes(needle) || order.email.toLowerCase().includes(needle)),
-  )
-
   return (
-    <div>
+    // id: where the page buttons scroll back to
+    <div id="admin-orders" className="scroll-mt-24">
+      {/* The totals are for the whole shop; only the table is filtered */}
       <dl className="mb-8 grid gap-4 sm:grid-cols-3">
         {stats.map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-line bg-surface p-5">
@@ -52,28 +79,10 @@ export function AdminOrders() {
         ))}
       </dl>
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-muted">Status</span>
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            className="rounded-full border border-line bg-surface px-3 py-2"
-          >
-            <option value="all">All</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </label>
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search name or email"
-          aria-label="Search orders by customer name or email"
-          className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2 text-sm sm:max-w-xs"
-        />
+      {/* Stacked on phones, one row from md, like the book grid's */}
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center">
+        <SearchBox value={search} onChange={changeSearch} placeholder="Search name or email" />
+        <Select label="Status" value={status} onChange={changeStatus} options={statusOptions} />
         <p className="text-sm text-muted">
           {shown.length} of {orders.length} orders
         </p>
@@ -98,7 +107,7 @@ export function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {shown.map((order) => (
+              {pageItems.map((order) => (
                 <tr key={order.id}>
                   <td className="px-4 py-3 font-medium">#{order.id}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-muted">
@@ -127,6 +136,15 @@ export function AdminOrders() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={page}
+        perPage={perPage}
+        total={shown.length}
+        noun="orders"
+        onChange={setPage}
+        scrollTo="admin-orders"
+      />
     </div>
   )
 }
