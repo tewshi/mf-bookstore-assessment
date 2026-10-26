@@ -30,29 +30,35 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 - `dev.js`: `npm run dev`, which runs the API and the Vite dev server together
 
 - `client/`: the React app (Vite + Tailwind)
-  - `src/components/`: one component per part of the page, plus one per extra view: `AuthForm` (`#signin`, `#signup`), `Cart` (`#cart`), `Checkout` (`#checkout`), `PaymentResult` (`#paid/<id>`, where Stripe sends people back), `MyBooks` (`#my-books`), `Saved` (`#saved`), `Account` (`#account`) and `Receipt` (`#order/<id>`). `Reviews` and `Recommendations` are the sections under each book
-  - `src/components/admin/`: the `#admin` page and its Orders, Books and Events tabs
-  - `src/components/Header.jsx`: the top bar. `UserMenu` is the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button
-  - `src/components/BookGrid.jsx`: search, sort, section filter and pages, all asked of the API
-  - `src/components/Toast.jsx`: the short message at the bottom ("Added to your cart")
-  - `src/components/Icons.jsx`: the small SVG icons (cart, menu, close, ...)
-  - `src/api.js`: `getJson()`, `sendJson()` and `postJson()`, small `fetch` wrappers
-  - `src/cart.js`: turns the saved cart into a list of books and a total
-  - `src/accountLinks.js`: the links in the account menu (Admin only for admins)
-  - `src/resizeImage.js`: shrinks a profile picture to 160x160 before it is saved
-  - `src/auth.js`: the Better Auth client (`signIn`, `signUp`, `signOut`, `useSession`)
+  - `src/App.jsx`: the state the whole site shares (books, cart, saved books, toast) and the hash routing that picks a page
+  - `src/pages/`: one file per page App can show: `Home` (no hash), `BookDetails` (`#book/<id>`), `SignIn` (`#signin` and `#signup`), `Cart` (`#cart`), `Checkout` (`#checkout`), `Paid` (`#paid/<id>`, where Stripe sends people back), `MyBooks` (`#my-books`), `Saved` (`#saved`), `Account` (`#account`) and `Receipt` (`#order/<id>`)
+  - `src/pages/admin/`: the `#admin` page and its Orders, Books and Events tabs
+  - `src/components/`: the pieces the pages are built from, in four folders:
+    - `layout/`: on every page. `Header` is the top bar, `UserMenu` the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button, `Footer`, and `accountLinks.js` the links in the account menu (Admin only for admins)
+    - `books/`: `BookCard`, `BookGrid` (search, sort, section filter and pages, all asked of the API), `StarRating`, and `Reviews` and `Recommendations`, the sections under each book
+    - `home/`: the other parts of the home page: `Hero`, `StaffPicks` and `Events`
+    - `ui/`: small general pieces: `Icons` (the SVG icons), `Avatar`, `Toast` (the short message at the bottom, "Added to your cart") and `Reveal` (fades a section in)
+  - `src/lib/`: plain JavaScript, no components:
+    - `api.js`: `getJson()`, `sendJson()` and `postJson()`, small `fetch` wrappers
+    - `auth.js`: the Better Auth client (`signIn`, `signUp`, `signOut`, `useSession`)
+    - `cart.js`: turns the saved cart into a list of books and a total
+    - `resizeImage.js`: shrinks a profile picture to 160x160 before it is saved
 - `server/`: the Express API
   - `src/index.js`: starts Express, mounts auth and the API, serves `client/dist`
-  - `src/api.js`: the book, review and recommendation routes, and where the other routers are mounted
-  - `src/orders.js`: `/api/orders`: starts a Stripe Checkout Session, order history and receipts
-  - `src/webhook.js`: `/api/webhooks/stripe`, where Stripe confirms payments. The only code that marks an order paid
-  - `src/stripe.js`: the Stripe client, made with `STRIPE_SECRET_KEY`
-  - `src/wishlist.js`: `/api/wishlist`, the saved books
-  - `src/events.js`: `/api/events` and seat reservations
-  - `src/admin.js`: `/api/admin`, for admins only
-  - `src/session.js`: `currentUser()`, `requireUser` and `requireAdmin`, which find the signed-in person from the session cookie
-  - `src/auth.js`: Better Auth setup (email and password, plus a `role` field on users)
-  - `src/db.js`: one `pg` connection pool, shared by everything
+  - `src/routes/`: one file per part of the API
+    - `api.js`: the `/api` router. It has the health check and mounts the files below
+    - `books.js`: `/api/books`, one book, and its recommendations
+    - `reviews.js`: `/api/books/:id/reviews`
+    - `orders.js`: `/api/orders`: starts a Stripe Checkout Session, order history and receipts
+    - `webhook.js`: `/api/webhooks/stripe`, where Stripe confirms payments. The only code that marks an order paid
+    - `wishlist.js`: `/api/wishlist`, the saved books
+    - `events.js`: `/api/events` and seat reservations
+    - `admin.js`: `/api/admin`, for admins only. It checks the role, then mounts `admin/orders.js`, `admin/books.js` and `admin/events.js` (one per admin tab)
+  - `src/lib/`: the setup the routes share
+    - `db.js`: one `pg` connection pool, shared by everything
+    - `auth.js`: Better Auth setup (email and password, plus a `role` field on users)
+    - `session.js`: `currentUser()`, `requireUser` and `requireAdmin`, which find the signed-in person from the session cookie
+    - `stripe.js`: the Stripe client, made with `STRIPE_SECRET_KEY`
   - `db/schema.sql`: the shop's tables (see below)
   - `db/migrate.js`: creates Better Auth's tables, then runs `schema.sql`
   - `db/seed.js`: copies the arrays in `db/data/` (24 books, 7 events) into the database. Rows are updated in place, so orders, reviews and reservations survive a re-seed
@@ -98,17 +104,17 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 
 ## The cart
 
-The cart lives in the browser, not the database. `App` keeps it in state as `{ bookId: quantity }` and saves it to `localStorage` whenever it changes, so it survives a refresh. The header badge, the Add buttons and the `#cart` page all read the same state. After a successful payment, `Checkout` empties it.
+The cart lives in the browser, not the database. `App` keeps it in state as `{ bookId: quantity }` and saves it to `localStorage` whenever it changes, so it survives a refresh. The header badge, the Add buttons and the `#cart` page all read the same state. After a successful payment, the `Paid` page empties it.
 
 ## Payment (Stripe Checkout, test mode)
 
 Stripe runs in test mode: the keys start with `sk_test_`, Stripe's page says "Sandbox", and only test cards work. Pay with `4242 4242 4242 4242`, any future date and any CVC.
 
 1. **Buy now** (`#checkout`, signed in only): `Checkout` sends the cart's book ids and quantities to `POST /api/orders`. The route sits behind `requireUser`, so every order belongs to a signed-in user.
-2. **The checkout route** (`server/src/orders.js`) looks the prices up in the database itself, so the browser can't change what it pays. In one transaction (`BEGIN` ... `COMMIT`) it takes the books off the shelf (`UPDATE books SET stock = stock - n WHERE ... AND stock >= n`), saves the order as `pending` with its `order_items`, and asks Stripe for a Checkout Session with those books and prices (in cents). It saves the session's id on the order and answers with the session's `url`. If anything fails, Stripe included, `ROLLBACK` undoes it all.
+2. **The checkout route** (`server/src/routes/orders.js`) looks the prices up in the database itself, so the browser can't change what it pays. In one transaction (`BEGIN` ... `COMMIT`) it takes the books off the shelf (`UPDATE books SET stock = stock - n WHERE ... AND stock >= n`), saves the order as `pending` with its `order_items`, and asks Stripe for a Checkout Session with those books and prices (in cents). It saves the session's id on the order and answers with the session's `url`. If anything fails, Stripe included, `ROLLBACK` undoes it all.
 3. **Stripe's page**: the browser goes to that `url`, and the customer types the card in there, so our site never sees it.
-4. **The webhook** (`server/src/webhook.js`): when the payment completes, Stripe sends `checkout.session.completed` to `POST /api/webhooks/stripe`. `stripe.webhooks.constructEvent` checks the `stripe-signature` header with `STRIPE_WEBHOOK_SECRET_KEY`, so a fake request is refused with 400. Then it finds the order by its session id and sets `status = 'paid'`. This is the only place an order becomes paid. If the payment fails (`async_payment_failed`) or the customer never pays and the session expires after 30 minutes (`checkout.session.expired`), it sets `cancelled` and puts the books back. Every update has `AND status = 'pending'`, so when Stripe sends the same event twice, the second one changes nothing.
-5. **The success page**: Stripe sends the browser to `#paid/<id>`. `PaymentResult` asks `GET /api/orders/<id>` for the status. The webhook can arrive a moment after the customer, so while the order is still `pending` it asks again every 2 seconds (up to 6 times). Once it's `paid`, the page says so and the cart is emptied. Afterwards there is a printable receipt at `#order/<id>`.
+4. **The webhook** (`server/src/routes/webhook.js`): when the payment completes, Stripe sends `checkout.session.completed` to `POST /api/webhooks/stripe`. `stripe.webhooks.constructEvent` checks the `stripe-signature` header with `STRIPE_WEBHOOK_SECRET_KEY`, so a fake request is refused with 400. Then it finds the order by its session id and sets `status = 'paid'`. This is the only place an order becomes paid. If the payment fails (`async_payment_failed`) or the customer never pays and the session expires after 30 minutes (`checkout.session.expired`), it sets `cancelled` and puts the books back. Every update has `AND status = 'pending'`, so when Stripe sends the same event twice, the second one changes nothing.
+5. **The success page**: Stripe sends the browser to `#paid/<id>`. `Paid` asks `GET /api/orders/<id>` for the status. The webhook can arrive a moment after the customer, so while the order is still `pending` it asks again every 2 seconds (up to 6 times). Once it's `paid`, the page says so and the cart is emptied. Afterwards there is a printable receipt at `#order/<id>`.
 6. **Pressing Back on Stripe's page** brings the customer back to My books (`#my-books`) without paying. The order stays `pending` and shows there with a Pay now button (step 7). Checkout opened as `#checkout/<id>` also sends that `orderId` along with the cart on Buy now, and the server (`reuseOrder` in `orders.js`) compares the cart with the order's saved items. The same books in the same quantities: it sends them back to the same Stripe page, so there is no second order. A different cart: it expires the old session (`stripe.checkout.sessions.expire`), so the webhook cancels the old order and puts its books back, and then it makes a new order as usual. The comparison happens on the server, so the browser can't claim a match that isn't there.
 7. **Paying later from My books**: an unpaid order shows "Pending payment" there, with a **Pay now** button that calls `POST /api/orders/:id/pay`, which asks Stripe for the same session (`stripe.checkout.sessions.retrieve`) and, while it is still open, sends the customer back to its page. If it is already paid (the webhook is on its way) or expired, the button shows why instead. This route only reads from Stripe; the status still only changes in the webhook, and the 30-minute expiry still cancels the order and puts the books back.
 
@@ -126,7 +132,7 @@ Only people who bought a book can review it: the server checks `order_items` bef
 
 ## Recommendations
 
-Under each book, "Readers who bought this also bought" comes from `GET /api/books/:id/recommendations`. The query in `server/src/api.js` works in three steps (a `WITH` query):
+Under each book, "Readers who bought this also bought" comes from `GET /api/books/:id/recommendations`. The query in `server/src/routes/books.js` works in three steps (a `WITH` query):
 
 1. `buyers`: everyone who has ordered this book.
 2. `also_bought`: the other books those people ordered, and how many of them ordered each one.
@@ -138,7 +144,7 @@ When nobody has bought the book yet, the list is empty, and the page shows "More
 
 Admins see an Admin link in the account menu. `#admin` has three tabs: every order (with totals), the books (add, edit, change stock, delete unordered ones) and the events (add, edit, delete). Every `/api/admin` route checks `role === 'admin'` on the server with `requireAdmin`; hiding the link is only for looks.
 
-`role` is an extra field on Better Auth's `user` table (`additionalFields` in `server/src/auth.js`) with `input: false`, so nobody can give themselves a role when signing up. To make someone an admin:
+`role` is an extra field on Better Auth's `user` table (`additionalFields` in `server/src/lib/auth.js`) with `input: false`, so nobody can give themselves a role when signing up. To make someone an admin:
 
 ```bash
 npm run make-admin -w server -- you@example.com          # locally
@@ -157,7 +163,7 @@ The homepage hero fades up when it loads (`animate-fade-up`, a keyframe in `inde
 
 ## How login works
 
-1. `AuthForm` calls `authClient.signUp.email()` or `authClient.signIn.email()`.
+1. `SignIn` calls `authClient.signUp.email()` or `authClient.signIn.email()`.
 2. Better Auth on the server checks the password, adds a row to `session` and sends back a cookie holding the session token, signed with `BETTER_AUTH_SECRET`.
 3. The browser sends that cookie with every request. `useSession()` in `Header` asks `/api/auth/get-session` who it belongs to, so after a refresh you are still signed in.
 4. Sign out deletes the session row and the cookie.

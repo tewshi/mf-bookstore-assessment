@@ -35,23 +35,24 @@ There are no automated tests. Check a change with lint + build, then by running 
 npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No lockfile: the instructor asked for none, so `.npmrc` has `package-lock=false` and `.gitignore` lists `package-lock.json`. Don't add one back.
 
 - `server/src/index.js`: mounts Better Auth and the Stripe webhook (raw body), then `express.json()`, then `/api`, then serves `client/dist`
-- `server/src/db.js`: the single `pg` pool everything shares
-- `server/src/auth.js`: Better Auth config (email + password)
-- `server/src/api.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/api/books/:id`, reviews, recommendations; mounts the routers below
-- `server/src/orders.js`: `/api/orders` (pending order + stock decrement + Stripe Checkout Session in one transaction, paid history, `/:id` with status)
-- `server/src/webhook.js`: `/api/webhooks/stripe`, the only code that sets `status = 'paid'` (or `cancelled` + stock back on failed/expired); `server/src/stripe.js`: the client
-- `server/src/wishlist.js`, `server/src/events.js` (seat sign-up), `server/src/admin.js` (`requireAdmin`)
-- `server/src/session.js`: `currentUser(req)`, `requireUser`, `requireAdmin` (Better Auth `getSession`)
+- `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client)
+- `server/src/routes/api.js`: the `/api` router: health check, then mounts every router in `routes/`
+- `server/src/routes/books.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/:id`, `/:id/recommendations`; `reviews.js`: `/api/books/:id/reviews` (`Router({ mergeParams: true })` to read `:id`)
+- `server/src/routes/orders.js`: `/api/orders` (pending order + stock decrement + Stripe Checkout Session in one transaction, paid history, `/:id` with status)
+- `server/src/routes/webhook.js`: `/api/webhooks/stripe`, the only code that sets `status = 'paid'` (or `cancelled` + stock back on failed/expired)
+- `server/src/routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, one per admin tab)
 - Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
-- `client/src/api.js`: `getJson()`, `postJson()`; `client/src/auth.js`: Better Auth React client
+- `client/src/App.jsx`: shared state + hash routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `MyBooks`, `Saved`, `Account`, `Receipt`, `admin/`)
+- `client/src/components/`: `layout/` (Header, menus, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal)
+- `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `resizeImage.js`
 - Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres
 - Dark mode: `.dark` overrides the `--color-*` tokens in `index.css`; use `text-on-accent` (not `text-white`) on `bg-accent`
 
 ## Conventions
 
 - Plain SQL with `pg` and `$1` placeholders. No ORM.
-- Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/api.js`).
+- Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/routes/books.js`).
 - Hash routing in `App.jsx`, no router library. The hash splits at `/` into page/param/anchor: `#book/<id>`, `#book/<id>/reviews`, `#signin/checkout` (sign in, then go to `#checkout`), `#cart`, `#checkout`, `#checkout/<id>` (Buy now reuses order <id> if the cart still matches; nothing links here since cancel_url became `#my-books`), `#paid/<id>` (Stripe's success_url), `#my-books`, `#saved`, `#account`, `#order/<id>`, `#admin/<tab>`.
 - Comments explain *why* in plain English for a student reader; match the density of the existing files.
 - Commits: small, one-line messages, one logical step each.
@@ -70,7 +71,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - In zsh, an unquoted `$VAR` holding several curl flags is NOT split into words; spell flags out or use a function.
 - oxlint's React rules flag `Date.now()` in render scope, `setState` straight inside an effect, and writing `window.location` in a component; use a ref, derive the value during render, or render a link instead.
 - `pool.on('error')` is required: Neon/Railway close idle connections and an unhandled pool error crashes the process.
-- Better Auth throws at startup in production without `BETTER_AUTH_SECRET`. `db.js` and `auth.js` check the three env vars and name the missing one.
+- Better Auth throws at startup in production without `BETTER_AUTH_SECRET`. `lib/db.js` and `lib/auth.js` check the three env vars and name the missing one.
 
 ## Deployment (Railway)
 
@@ -87,7 +88,7 @@ Build/start/pre-deploy commands live in the **service settings on Railway**, not
 | Pre-deploy | `npm run migrate -w server` |
 | Start | `npm start` |
 
-Variables on `bookstore-assessment`: `DATABASE_URL=${{bookstore-pgdb.DATABASE_URL}}`, `BETTER_AUTH_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`, `BETTER_AUTH_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET_KEY`. `stripe.js` throws at startup if either Stripe one is missing.
+Variables on `bookstore-assessment`: `DATABASE_URL=${{bookstore-pgdb.DATABASE_URL}}`, `BETTER_AUTH_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`, `BETTER_AUTH_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET_KEY`. `lib/stripe.js` throws at startup if either Stripe one is missing.
 
 Live URL: https://mayerfeld-bookstore-assessment.up.railway.app
 
@@ -101,3 +102,4 @@ Seeding production is a manual step the student runs themselves (Railway service
 - **Local dev uses a local Postgres** installed on the student's Mac, migrated and seeded separately from production. The Railway database stays private.
 - **`npm run dev` runs `dev.js`**: the old `a & b` script left Express running after Ctrl+C, so the next run hit "port in use". `concurrently` fixed that, then was replaced (Oct 2026) by `dev.js`, which uses Node's `child_process` so the project needs no extra package. It stops both servers on Ctrl+C, on `kill`, or when either one exits. `node --watch` keeps the API process alive after an app crash (it waits for a file change), the same as before.
 - **No `package-lock.json` (Oct 2026)**: the instructor asked for it to be removed. Railway then installs with `npm install` instead of `npm ci`, so versions float within the `^` ranges in `package.json`.
+- **Folders by kind (Oct 2026)**: `server/src` split into `lib/` (setup) and `routes/` (one router per URL prefix, admin one per tab); `client/src` into `pages/` (what App.jsx routes to), `components/{layout,books,home,ui}` and `lib/` (plain JS). Files were moved with `git mv`, so `git log --follow` still shows their history.
