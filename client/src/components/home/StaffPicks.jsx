@@ -2,8 +2,8 @@ import { usePages } from '../../lib/usePages'
 import { BookCard } from '../books/BookCard'
 import { Pagination } from '../ui/Pagination'
 
-// One row of the 3-column grid at a time
-const perPage = 3
+// Two rows of the 3-column grid at a time
+const perPage = 6
 
 export function StaffPicks({ books }) {
   const picks = books.filter((book) => book.staffPick)

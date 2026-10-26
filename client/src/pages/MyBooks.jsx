@@ -6,8 +6,8 @@ import { usePages } from '../lib/usePages'
 import { BookIcon } from '../components/ui/Icons'
 import { Pagination } from '../components/ui/Pagination'
 
-// Orders per page: each one is a tall card with its books inside
-const perPage = 5
+// Orders per page (each one is a card with its books inside)
+const perPage = 10
 
 // The /my-books page: everything the signed-in person has bought,
 // one card per order, with a link to review each book. Unpaid orders

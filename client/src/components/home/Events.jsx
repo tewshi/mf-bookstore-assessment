@@ -5,8 +5,8 @@ import { usePages } from '../../lib/usePages'
 import { CheckIcon } from '../ui/Icons'
 import { Pagination } from '../ui/Pagination'
 
-// One row of the 3-column grid at a time
-const perPage = 3
+// Two rows of the 3-column grid at a time
+const perPage = 6
 
 export function Events() {
   // Fetched again when someone signs in or out: "going" depends on who asks
