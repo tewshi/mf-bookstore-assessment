@@ -1,18 +1,23 @@
 // `npm run dev`: starts the API (Express on :3000) and the React dev server
 // (Vite on :5173) together, using only what comes with Node.
-// Ctrl+C stops both. If one of them stops on its own (a crash, a port
-// already in use), the other is stopped too, so nothing is left running.
+// `make dev` runs `node dev.js --stripe`, which also starts the Stripe
+// listener (`make stripe`), so payments turn 'paid' without a second terminal.
+// Ctrl+C stops them all. If one stops on its own (a crash, a port
+// already in use), the others are stopped too, so nothing is left running.
 import { spawn } from 'node:child_process'
 
 // The same as typing `npm run dev -w server` and `npm run dev -w client`
 // in two terminals
 const commands = [
-  ['run', 'dev', '-w', 'server'],
-  ['run', 'dev', '-w', 'client'],
+  ['npm', 'run', 'dev', '-w', 'server'],
+  ['npm', 'run', 'dev', '-w', 'client'],
 ]
 
-const children = commands.map((args) =>
-  spawn('npm', args, {
+// -s: make doesn't print the commands it runs, only their output
+if (process.argv.includes('--stripe')) commands.push(['make', '-s', 'stripe'])
+
+const children = commands.map(([command, ...args]) =>
+  spawn(command, args, {
     // Their output goes straight into this terminal
     stdio: 'inherit',
     // Windows calls npm "npm.cmd", which only a shell can find
