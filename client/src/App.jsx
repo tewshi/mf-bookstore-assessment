@@ -14,8 +14,25 @@ import { Saved } from './pages/Saved'
 import { Receipt } from './pages/Receipt'
 import { Account } from './pages/Account'
 import { Admin } from './pages/admin/Admin'
+import { NotFound } from './pages/NotFound'
 import { Footer } from './components/layout/Footer'
 import { Toast } from './components/ui/Toast'
+
+// The browser tab's title for each page, by the first part of the path.
+// It also lists which pages exist: any other address is "not found".
+// The home page ("") and book pages ("book") get theirs in App.
+const pageTitles = {
+  signin: 'Sign in',
+  signup: 'Create an account',
+  cart: 'Your cart',
+  checkout: 'Checkout',
+  paid: 'Payment',
+  'my-books': 'My books',
+  order: 'Receipt',
+  admin: 'Admin',
+  account: 'Your account',
+  saved: 'Saved for later',
+}
 
 // The cart this browser saved last time, or an empty one. try/catch in
 // case the saved text was changed by hand and is no longer valid JSON.
@@ -175,6 +192,19 @@ function App() {
   const book = page === 'book' ? books?.find((b) => b.id === param) : null
   const booksLoaded = books !== null
 
+  // Not a page we have, or a book id that isn't in the shop. Object.hasOwn
+  // rather than pageTitles[page], so "/constructor" doesn't count as a page.
+  const notFound =
+    (page === 'book' && booksLoaded && !book) ||
+    (page !== '' && page !== 'book' && !Object.hasOwn(pageTitles, page))
+
+  // e.g. "Your cart · MayerfeldBooks", or the book's title on a book page
+  const title = notFound ? 'Page not found' : book ? book.title : pageTitles[page]
+  const fullTitle = title ? `${title} · MayerfeldBooks` : 'MayerfeldBooks | Independent Bookstore'
+  useEffect(() => {
+    document.title = fullTitle
+  }, [fullTitle])
+
   // After moving to another page, start at its top, or at the section the
   // hash names (e.g. a book's #reviews). It runs again once the books
   // arrive, because the book page and the home page's #books section
@@ -190,6 +220,9 @@ function App() {
 
   // Which view goes in <main>, picked from the first part of the path
   function renderPage() {
+    if (notFound) {
+      return <NotFound />
+    }
     if (page === 'signin' || page === 'signup') {
       // param is where to go after signing in, e.g. back to "checkout"
       return <SignIn key={path} mode={page} next={param} />
@@ -228,6 +261,11 @@ function App() {
           onAdd={addToCart}
         />
       )
+    }
+    // A book page before the books arrive: wait before deciding it exists.
+    // (If they can't load at all, the home page below shows the error.)
+    if (page === 'book' && !booksLoaded && !error) {
+      return <p className="mx-auto max-w-page px-4 py-16 text-muted">Loading…</p>
     }
     if (book) {
       return (
