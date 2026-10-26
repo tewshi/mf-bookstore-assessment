@@ -17,6 +17,8 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe   # in a second te
 npm run make-admin -w server -- you@example.com   # optional: make your account an admin
 ```
 
+The root `Makefile` has short names for the everyday ones: `make dev`, `make stripe`, `make build`, `make start`, `make lint` (`make` alone lists them). `make dev` is `npm run dev` plus the Stripe listener in the same terminal (`node dev.js --stripe`), so it needs the Stripe CLI installed and logged in; if `stripe` stops, the other two stop as well. `make stripe` on its own runs `stripe listen --all-snapshot` and forwards to whichever port the running API is listening on (found with `pgrep` + `lsof`; it waits up to 10 seconds for the API to start), falling back to `PORT` in `server/.env`, then 3000.
+
 Open **http://localhost:5173**, not :3000. In dev, Express on :3000 only answers `/api`; Vite serves the page and passes every `/api` request on to Express. `dev.js` (in the repo root) starts both with Node's built-in `child_process`, so no extra package is needed; Ctrl+C stops both, and if one of them stops on its own, so does the other.
 
 For local development, `DATABASE_URL` points at a Postgres on your machine (e.g. `postgresql://localhost:5432/mayerfeld`) and `BETTER_AUTH_URL` is `http://localhost:5173`.
@@ -27,7 +29,8 @@ Payments need the [Stripe CLI](https://docs.stripe.com/stripe-cli) running `stri
 
 The repo is an npm workspace with two packages, so one `npm install` at the root installs both. There is no `package-lock.json`: `.npmrc` turns it off (`package-lock=false`), so `npm install` takes the newest versions that `package.json` allows.
 
-- `dev.js`: `npm run dev`, which runs the API and the Vite dev server together
+- `Makefile`: short names for `npm run dev`, `stripe listen`, build, start and lint
+- `dev.js`: `npm run dev`, which runs the API and the Vite dev server together (`--stripe`, used by `make dev`, adds `make stripe`)
 
 - `client/`: the React app (Vite + Tailwind)
   - `src/App.jsx`: the state the whole site shares (books, cart, saved books, toast) and the routing that picks a page from the address (see [Page addresses](#page-addresses))

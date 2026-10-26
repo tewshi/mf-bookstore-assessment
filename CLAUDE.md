@@ -26,6 +26,8 @@ npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
 npm run seed -w server       # upserts the 24 books and 7 events (orders, reviews, reservations survive)
 npm run make-admin -w server -- you@example.com   # role = 'admin' (--undo to reverse)
+make dev                     # node dev.js --stripe: the two servers above + make stripe, one terminal
+make stripe | build | start | lint   # root Makefile; make stripe waits up to 10s for the running API's port (pgrep + lsof), else PORT in server/.env, else 3000
 ```
 
 There are no automated tests. Check a change with lint + build, then by running the server and hitting the API (curl) or the page.
