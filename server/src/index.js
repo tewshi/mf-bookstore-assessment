@@ -37,6 +37,22 @@ if (isProduction) {
   })
 }
 
+// Any error a route didn't catch itself, e.g. the database being down.
+// Express 5 sends errors from async routes here too. Without this, Express
+// answers with an HTML error page, which the React app can't read as JSON.
+// The real error goes to the log; the visitor only sees a short message.
+app.use((err, req, res, next) => {
+  // The answer already started (rare): let Express close the connection
+  if (res.headersSent) return next(err)
+  // express.json() gives a broken request body status 400. Anything
+  // without a status is a mistake on our side: 500, and log it.
+  const status = err.status ?? 500
+  if (status === 500) console.error(err)
+  res.status(status).json({
+    error: status === 500 ? 'Something went wrong. Please try again.' : 'That request was not valid',
+  })
+})
+
 const port = process.env.PORT || 3000
 app.listen(port, () => {
   if (isProduction) {

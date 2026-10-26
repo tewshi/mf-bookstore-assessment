@@ -15,7 +15,9 @@ export async function sendJson(method, path, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  const data = await response.json()
+  // {} if the answer isn't JSON (e.g. Railway's own error page while the
+  // server restarts), so we still throw a readable message below
+  const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(data.error ?? `${path} answered ${response.status}`)
   return data
 }
