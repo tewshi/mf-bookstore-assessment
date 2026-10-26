@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { pool } from './lib/db.js'
-import { requireAdmin } from './lib/session.js'
+import { pool } from '../lib/db.js'
+import { requireAdmin } from '../lib/session.js'
 
 // Mounted at /api/admin. Every route here is for admins only.
 export const admin = Router()

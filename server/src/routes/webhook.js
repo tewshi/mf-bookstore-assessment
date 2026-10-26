@@ -1,5 +1,5 @@
-import { pool } from './lib/db.js'
-import { stripe } from './lib/stripe.js'
+import { pool } from '../lib/db.js'
+import { stripe } from '../lib/stripe.js'
 
 // POST /api/webhooks/stripe: Stripe calls this when something happens to
 // a checkout session. It is the only code that marks an order paid.

@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { pool } from './lib/db.js'
-import { requireUser } from './lib/session.js'
-import { stripe } from './lib/stripe.js'
+import { pool } from '../lib/db.js'
+import { requireUser } from '../lib/session.js'
+import { stripe } from '../lib/stripe.js'
 
 // Mounted at /api/orders. Every route here needs someone signed in,
 // so every order belongs to a real user.

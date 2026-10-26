@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { pool } from './lib/db.js'
-import { requireUser } from './lib/session.js'
+import { pool } from '../lib/db.js'
+import { requireUser } from '../lib/session.js'
 
 // Mounted at /api/wishlist: the books the signed-in person saved for later
 export const wishlist = Router()

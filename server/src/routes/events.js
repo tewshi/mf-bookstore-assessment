@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { pool } from './lib/db.js'
-import { currentUser, requireUser } from './lib/session.js'
+import { pool } from '../lib/db.js'
+import { currentUser, requireUser } from '../lib/session.js'
 
 // Mounted at /api/events
 export const events = Router()
