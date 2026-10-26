@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { authClient } from '../lib/auth'
 
 // One form for both #signin and #signup. Sign up also asks for a name.
 // next is where to go afterwards, e.g. "checkout" for #signin/checkout.
 export function SignIn({ mode, next }) {
   const isSignUp = mode === 'signup'
+  const { data: session, isPending } = authClient.useSession()
+  // Where to go once signed in. location.replace() (instead of setting the
+  // hash) swaps #signin out of the history, so Back doesn't return here.
+  const nextHash = `#${next ?? ''}`
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,8 +28,21 @@ export function SignIn({ mode, next }) {
     if (error) {
       setError(error.message)
     } else {
-      window.location.hash = next ?? ''
+      window.location.replace(nextHash)
     }
+  }
+
+  // Already signed in (an old link, a bookmark, or Back): there is nothing
+  // to do here, so go straight on. Signing in with the form also ends up
+  // here once the session arrives, and goes to the same place.
+  useEffect(() => {
+    if (session) window.location.replace(nextHash)
+  }, [session, nextHash])
+
+  // Don't show the form while we're still finding out who is signed in,
+  // or in the moment before the effect above moves a signed-in person on
+  if (isPending || session) {
+    return <p className="mx-auto max-w-page px-4 py-16 text-muted">Loading…</p>
   }
 
   const input =
