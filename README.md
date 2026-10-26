@@ -40,11 +40,12 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `layout/`: on every page. `Header` is the top bar, `UserMenu` the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button, `Footer`, and `accountLinks.js` the links in the account menu (Admin only for admins)
     - `books/`: `BookCard`, `BookGrid` (search, sort, section filter and pages, all asked of the API), `StarRating`, and `Reviews` and `Recommendations`, the sections under each book
     - `home/`: the other parts of the home page: `Hero`, `StaffPicks` and `Events`
-    - `ui/`: small general pieces: `Icons` (the SVG icons), `Avatar`, `Toast` (the short message at the bottom, "Added to your cart") and `Reveal` (fades a section in)
+    - `ui/`: small general pieces: `Icons` (the SVG icons), `Avatar`, `Toast` (the short message at the bottom, "Added to your cart"), `Reveal` (fades a section in), and the pieces every list shares: `Select` (the round dropdown), `SearchBox` and `Pagination` (Previous, page numbers, Next; hidden when there is only one page)
   - `src/lib/`: plain JavaScript, no components:
     - `api.js`: `getJson()`, `sendJson()` and `postJson()`, small `fetch` wrappers
     - `auth.js`: the Better Auth client (`signIn`, `signUp`, `signOut`, `useSession`)
     - `cart.js`: turns the saved cart into a list of books and a total
+    - `usePages.js`: splits a list the page already has (orders, events, staff picks) into pages. The book grid instead asks the server for one page at a time
     - `navigate.js`: `navigate()`, which changes the page without loading it again, and the click handler that sends our links through it
     - `resizeImage.js`: shrinks a profile picture to 160x160 before it is saved
 - `server/`: the Express API
