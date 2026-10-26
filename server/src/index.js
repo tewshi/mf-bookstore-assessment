@@ -24,7 +24,17 @@ app.use('/api', api)
 // so the site and its API share one URL. In dev, Vite does this instead,
 // so an old build in client/dist can't be mistaken for the live code.
 if (isProduction) {
-  app.use(express.static(new URL('../../client/dist', import.meta.url).pathname))
+  const dist = new URL('../../client/dist', import.meta.url).pathname
+  app.use(express.static(dist))
+
+  // Pages have real addresses (/cart, /book/slow-maps), but there is only
+  // one HTML file: React picks the page from the address. So any other GET
+  // gets index.html, e.g. after a refresh on /my-books. /api is left out,
+  // so a wrong API address still answers 404 instead of a web page.
+  app.get('/{*any}', (req, res, next) => {
+    if (req.path.startsWith('/api/')) return next()
+    res.sendFile(`${dist}/index.html`)
+  })
 }
 
 const port = process.env.PORT || 3000
