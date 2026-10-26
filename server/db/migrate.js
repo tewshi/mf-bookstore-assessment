@@ -1,8 +1,8 @@
 // Creates every table. Safe to run again: only missing tables are added.
 import { readFile } from 'node:fs/promises'
 import { getMigrations } from 'better-auth/db/migration'
-import { auth } from '../src/auth.js'
-import { pool } from '../src/db.js'
+import { auth } from '../src/lib/auth.js'
+import { pool } from '../src/lib/db.js'
 
 // 1. Better Auth's own tables: user, session, account, verification
 const { runMigrations } = await getMigrations(auth.options)

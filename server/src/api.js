@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { pool } from './db.js'
-import { currentUser, requireUser } from './session.js'
+import { pool } from './lib/db.js'
+import { currentUser, requireUser } from './lib/session.js'
 import { orders } from './orders.js'
 import { wishlist } from './wishlist.js'
 import { events } from './events.js'

@@ -1,6 +1,6 @@
 import express from 'express'
 import { toNodeHandler } from 'better-auth/node'
-import { auth } from './auth.js'
+import { auth } from './lib/auth.js'
 import { api } from './api.js'
 import { stripeWebhook } from './webhook.js'
 

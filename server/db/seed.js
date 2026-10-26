@@ -1,7 +1,7 @@
 // Copies the Week 2 arrays into the database. Safe to run again.
 // Rows are updated in place rather than deleted: orders, reviews and seat
 // reservations point at them, so deleting would fail (or lose history).
-import { pool } from '../src/db.js'
+import { pool } from '../src/lib/db.js'
 import { books } from './data/books.js'
 import { events } from './data/events.js'
 

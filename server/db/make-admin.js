@@ -2,7 +2,7 @@
 //   npm run make-admin -w server -- you@example.com
 // Add --undo to make them a customer again. The person has to sign out
 // and in again (or refresh) to see the Admin link.
-import { pool } from '../src/db.js'
+import { pool } from '../src/lib/db.js'
 
 const email = process.argv[2]
 const role = process.argv.includes('--undo') ? 'customer' : 'admin'
