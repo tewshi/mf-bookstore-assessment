@@ -109,7 +109,7 @@ export function Checkout({ books, cart, orderId }) {
             {busy ? (
               <>
                 {/* A ring with one see-through side, spinning */}
-                <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span className="size-4 animate-spin rounded-full border-2 border-on-accent border-t-transparent" />
                 Opening Stripe…
               </>
             ) : (

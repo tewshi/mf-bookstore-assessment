@@ -1,7 +1,7 @@
 -- The shop's own tables. The login tables (user, session, account,
 -- verification) belong to Better Auth, which creates them in migrate.js.
 
--- One row per book. id is the slug used in links, e.g. #book/slow-maps.
+-- One row per book. id is the slug used in links, e.g. /book/slow-maps.
 CREATE TABLE IF NOT EXISTS books (
   id               text PRIMARY KEY,
   title            text NOT NULL,

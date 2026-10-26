@@ -1,5 +1,6 @@
-// `npm run dev`: starts the API (Express on :3000) and the React dev server
-// (Vite on :5173) together, using only what comes with Node.
+// `npm run dev`: starts the API (Express on PORT from server/.env, or
+// 3000) and the React dev server (Vite on :5173) together, using only
+// what comes with Node.
 // `make dev` runs `node dev.js --stripe`, which also starts the Stripe
 // listener (`make stripe`), so payments turn 'paid' without a second terminal.
 // Ctrl+C stops them all. If one stops on its own (a crash, a port
