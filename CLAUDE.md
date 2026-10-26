@@ -36,7 +36,7 @@ There are no automated tests. Check a change with lint + build, then by running 
 
 npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No lockfile: the instructor asked for none, so `.npmrc` has `package-lock=false` and `.gitignore` lists `package-lock.json`. Don't add one back.
 
-- `server/src/index.js`: mounts Better Auth and the Stripe webhook (raw body), then `express.json()`, then `/api`, then serves `client/dist`
+- `server/src/index.js`: mounts Better Auth and the Stripe webhook (raw body), then `express.json()`, then `/api`, then serves `client/dist`, and last an error handler that answers `{ error }` as JSON (500, or the error's own status such as 400 for broken JSON)
 - `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client)
 - `server/src/routes/api.js`: the `/api` router: health check, then mounts every router in `routes/`
 - `server/src/routes/books.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/:id`, `/:id/recommendations`; `reviews.js`: `/api/books/:id/reviews` (`Router({ mergeParams: true })` to read `:id`)
@@ -45,7 +45,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - `server/src/routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, one per admin tab)
 - Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
-- `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `MyBooks`, `Saved`, `Account`, `Receipt`, `admin/`)
+- `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `MyBooks`, `Saved`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
 - `client/src/components/`: `layout/` (Header, menus, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal)
 - `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`)
 - Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres

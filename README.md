@@ -34,7 +34,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 
 - `client/`: the React app (Vite + Tailwind)
   - `src/App.jsx`: the state the whole site shares (books, cart, saved books, toast) and the routing that picks a page from the address (see [Page addresses](#page-addresses))
-  - `src/pages/`: one file per page App can show: `Home` (`/`), `BookDetails` (`/book/<id>`), `SignIn` (`/signin` and `/signup`), `Cart` (`/cart`), `Checkout` (`/checkout`), `Paid` (`/paid/<id>`, where Stripe sends people back), `MyBooks` (`/my-books`), `Saved` (`/saved`), `Account` (`/account`) and `Receipt` (`/order/<id>`)
+  - `src/pages/`: one file per page App can show: `Home` (`/`), `BookDetails` (`/book/<id>`), `SignIn` (`/signin` and `/signup`), `Cart` (`/cart`), `Checkout` (`/checkout`), `Paid` (`/paid/<id>`, where Stripe sends people back), `MyBooks` (`/my-books`), `Saved` (`/saved`), `Account` (`/account`), `Receipt` (`/order/<id>`) and `NotFound` (any other address, or a book id that doesn't exist)
   - `src/pages/admin/`: the `/admin` page and its Orders, Books and Events tabs
   - `src/components/`: the pieces the pages are built from, in four folders:
     - `layout/`: on every page. `Header` is the top bar, `UserMenu` the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button, `Footer`, and `accountLinks.js` the links in the account menu (Admin only for admins)
@@ -159,7 +159,7 @@ When nobody has bought the book yet, the list is empty, and the page shows "More
 
 ## Admin
 
-Admins see an Admin link in the account menu. `/admin` has three tabs: every order (with totals), the books (add, edit, change stock, delete unordered ones) and the events (add, edit, delete). Every `/api/admin` route checks `role === 'admin'` on the server with `requireAdmin`; hiding the link is only for looks.
+Admins see an Admin link in the account menu. `/admin` has three tabs: every order (with totals, a status filter and a name/email search), the books (add, edit, change stock, delete unordered ones; books with 3 or fewer copies are listed at the top as running low) and the events (add, edit, delete). Every `/api/admin` route checks `role === 'admin'` on the server with `requireAdmin`; hiding the link is only for looks.
 
 `role` is an extra field on Better Auth's `user` table (`additionalFields` in `server/src/lib/auth.js`) with `input: false`, so nobody can give themselves a role when signing up. To make someone an admin:
 
