@@ -2,10 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getJson, sendJson } from './lib/api'
 import { authClient } from './lib/auth'
 import { Header } from './components/layout/Header'
-import { Hero } from './components/home/Hero'
-import { BookGrid, BookGridSkeleton } from './components/books/BookGrid'
-import { StaffPicks } from './components/home/StaffPicks'
-import { Events } from './components/home/Events'
+import { Home } from './pages/Home'
 import { BookDetails } from './pages/BookDetails'
 import { SignIn } from './pages/SignIn'
 import { Cart } from './pages/Cart'
@@ -18,7 +15,6 @@ import { Account } from './pages/Account'
 import { Admin } from './pages/admin/Admin'
 import { Footer } from './components/layout/Footer'
 import { Toast } from './components/ui/Toast'
-import { Reveal } from './components/ui/Reveal'
 
 // The cart this browser saved last time, or an empty one. try/catch in
 // case the saved text was changed by hand and is no longer valid JSON.
@@ -237,33 +233,13 @@ function App() {
       )
     }
     return (
-      <>
-        <Hero />
-        {error && (
-          <p role="alert" className="mx-auto max-w-page px-4 py-8 text-accent">
-            Could not load the books. Please try again later.
-          </p>
-        )}
-        {!books && !error && <BookGridSkeleton />}
-        {books && (
-          <>
-            <Reveal>
-              <BookGrid
-                books={books}
-                onAdd={addToCart}
-                savedIds={savedIds}
-                onToggleSave={toggleSaved}
-              />
-            </Reveal>
-            <Reveal>
-              <StaffPicks books={books} />
-            </Reveal>
-          </>
-        )}
-        <Reveal>
-          <Events />
-        </Reveal>
-      </>
+      <Home
+        books={books}
+        error={error}
+        savedIds={savedIds}
+        onAdd={addToCart}
+        onToggleSave={toggleSaved}
+      />
     )
   }
 
