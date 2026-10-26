@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { authClient } from '../../lib/auth'
 import { getJson, sendJson } from '../../lib/api'
+import { usePages } from '../../lib/usePages'
 import { CheckIcon } from '../ui/Icons'
+import { Pagination } from '../ui/Pagination'
+
+// One row of the 3-column grid at a time
+const perPage = 3
 
 export function Events() {
   // Fetched again when someone signs in or out: "going" depends on who asks
@@ -13,6 +18,7 @@ export function Events() {
   // The id of the event whose button is busy, and the last error
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState(null)
+  const { page, setPage, pageItems } = usePages(events, perPage)
 
   function load() {
     getJson('/api/events').then(setEvents, () => {})
@@ -44,7 +50,7 @@ export function Events() {
       {events.length === 0 && <p className="text-muted">No events planned right now.</p>}
       {/* One card per row on phones, 2 from md, 3 from lg */}
       <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {events.map((event) => (
+        {pageItems.map((event) => (
           <li
             key={event.id}
             className="flex flex-col rounded-2xl border border-line bg-surface p-6 shadow-sm"
@@ -103,6 +109,15 @@ export function Events() {
           </li>
         ))}
       </ul>
+
+      <Pagination
+        page={page}
+        perPage={perPage}
+        total={events.length}
+        noun="events"
+        onChange={setPage}
+        scrollTo="events"
+      />
     </section>
   )
 }

@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { getJson, sendJson } from '../../lib/api'
+import { usePages } from '../../lib/usePages'
+import { Pagination } from '../../components/ui/Pagination'
 
 const emptyEvent = { id: '', datetime: '', title: '', text: '', seats: '20' }
+
+const perPage = 10
 
 // Every event, past ones too, with a form to add or edit one
 export function AdminEvents() {
@@ -22,10 +26,14 @@ export function AdminEvents() {
     load()
   }
 
+  // Before the early return below: usePages is a hook, so it runs every render
+  const { page, setPage, pageItems } = usePages(events ?? [], perPage)
+
   if (!events) return <p className="text-muted">Loading events…</p>
 
   return (
-    <div>
+    // id: where the page buttons scroll back to
+    <div id="admin-events" className="scroll-mt-24">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted">{events.length} events</p>
         <button
@@ -59,7 +67,7 @@ export function AdminEvents() {
       )}
 
       <ul className="flex flex-col gap-3">
-        {events.map((event) => (
+        {pageItems.map((event) => (
           <li
             key={event.id}
             className={`flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-line bg-surface p-4 ${
@@ -88,6 +96,15 @@ export function AdminEvents() {
           </li>
         ))}
       </ul>
+
+      <Pagination
+        page={page}
+        perPage={perPage}
+        total={events.length}
+        noun="events"
+        onChange={setPage}
+        scrollTo="admin-events"
+      />
     </div>
   )
 }

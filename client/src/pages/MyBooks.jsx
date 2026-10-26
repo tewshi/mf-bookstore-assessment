@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { authClient } from '../lib/auth'
 import { getJson, postJson } from '../lib/api'
 import { Stars } from '../components/books/StarRating'
+import { usePages } from '../lib/usePages'
 import { BookIcon } from '../components/ui/Icons'
+import { Pagination } from '../components/ui/Pagination'
+
+// Orders per page: each one is a tall card with its books inside
+const perPage = 5
 
 // The /my-books page: everything the signed-in person has bought,
 // one card per order, with a link to review each book. Unpaid orders
@@ -20,6 +25,7 @@ export function MyBooks() {
   // The order whose Pay now was pressed, and why it didn't work, if it didn't
   const [paying, setPaying] = useState(null)
   const [payError, setPayError] = useState(null)
+  const { page, setPage, pageItems } = usePages(orders ?? [], perPage)
 
   // Fetch again if a different person signs in
   useEffect(() => {
@@ -115,7 +121,7 @@ export function MyBooks() {
       )}
 
       <ul className="flex flex-col gap-6">
-        {orders?.map((order) => (
+        {pageItems.map((order) => (
           <li key={order.id} className="overflow-hidden rounded-2xl border border-line bg-surface">
             {/* The order's details in a tinted strip across the top */}
             <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 bg-bg px-6 py-4 text-sm">
@@ -209,6 +215,15 @@ export function MyBooks() {
           </li>
         ))}
       </ul>
+
+      <Pagination
+        page={page}
+        perPage={perPage}
+        total={orders?.length ?? 0}
+        noun="orders"
+        onChange={setPage}
+        scrollTo="my-books"
+      />
     </section>
   )
 }

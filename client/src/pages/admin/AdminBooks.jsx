@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { sendJson } from '../../lib/api'
+import { usePages } from '../../lib/usePages'
+import { Pagination } from '../../components/ui/Pagination'
 
 // What a new book's form starts with
 const emptyBook = {
@@ -18,6 +20,8 @@ const emptyBook = {
   staffPickQuote: '',
   staffPickBy: '',
 }
+
+const perPage = 10
 
 // At or below this many copies, a book counts as running low
 const lowStock = 3
@@ -42,6 +46,9 @@ export function AdminBooks({ books, onChanged }) {
     onChanged()
   }
 
+  // Before the early return below: usePages is a hook, so it runs every render
+  const { page, setPage, pageItems } = usePages(books ?? [], perPage)
+
   if (!books) return <p className="text-muted">Loading books…</p>
 
   // The books to reorder soon, fewest copies first
@@ -50,7 +57,8 @@ export function AdminBooks({ books, onChanged }) {
     .toSorted((a, b) => a.stock - b.stock)
 
   return (
-    <div>
+    // id: where the page buttons scroll back to
+    <div id="admin-books" className="scroll-mt-24">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted">{books.length} books</p>
         <button
@@ -109,7 +117,7 @@ export function AdminBooks({ books, onChanged }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {books.map((book) => (
+            {pageItems.map((book) => (
               <tr key={book.id}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
@@ -152,6 +160,15 @@ export function AdminBooks({ books, onChanged }) {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={page}
+        perPage={perPage}
+        total={books.length}
+        noun="books"
+        onChange={setPage}
+        scrollTo="admin-books"
+      />
     </div>
   )
 }

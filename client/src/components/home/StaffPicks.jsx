@@ -1,7 +1,13 @@
+import { usePages } from '../../lib/usePages'
 import { BookCard } from '../books/BookCard'
+import { Pagination } from '../ui/Pagination'
+
+// One row of the 3-column grid at a time
+const perPage = 3
 
 export function StaffPicks({ books }) {
   const picks = books.filter((book) => book.staffPick)
+  const { page, setPage, pageItems } = usePages(picks, perPage)
 
   return (
     // A white band, so this section stands apart from the book grid above
@@ -13,7 +19,7 @@ export function StaffPicks({ books }) {
         </p>
         {/* Longer text, so one per row on phones, 3 from sm */}
         <ul className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {picks.map((book) => (
+          {pageItems.map((book) => (
             <li key={book.id}>
               <BookCard book={book}>
                 <blockquote className="mt-2 border-l-2 border-accent pl-3 text-sm text-muted italic">
@@ -24,6 +30,15 @@ export function StaffPicks({ books }) {
             </li>
           ))}
         </ul>
+
+        <Pagination
+          page={page}
+          perPage={perPage}
+          total={picks.length}
+          noun="staff picks"
+          onChange={setPage}
+          scrollTo="staff-picks"
+        />
       </div>
     </section>
   )
