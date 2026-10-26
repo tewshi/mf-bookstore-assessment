@@ -1,9 +1,22 @@
+import { usePages } from '../lib/usePages'
 import { BookCard } from '../components/books/BookCard'
 import { CartIcon, HeartIcon } from '../components/ui/Icons'
+import { Pagination } from '../components/ui/Pagination'
+
+// The same as the book grid on the home page: 3 rows of 4 on a laptop
+const perPage = 12
 
 // The /saved page: the books the signed-in person saved for later.
 // savedIds is newest first, so the list is too.
 export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
+  // Look each saved id up in books, skipping any that no longer exist.
+  // Before the early returns below, because usePages is a hook.
+  const savedBooks = savedIds
+    .map((id) => books?.find((book) => book.id === id))
+    .filter(Boolean)
+  // Un-saving the last book on a page moves back a page by itself (usePages)
+  const { page, setPage, pageItems } = usePages(savedBooks, perPage)
+
   if (!signedIn) {
     return (
       <section id="saved" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
@@ -22,9 +35,6 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
   if (!books) {
     return <p className="mx-auto max-w-page px-4 py-16 text-muted">Loading…</p>
   }
-
-  // Look each saved id up in books, skipping any that no longer exist
-  const savedBooks = savedIds.map((id) => books.find((book) => book.id === id)).filter(Boolean)
 
   return (
     <section id="saved" className="mx-auto max-w-page scroll-mt-16 px-4 py-12">
@@ -46,7 +56,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
         </div>
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
-          {savedBooks.map((book) => (
+          {pageItems.map((book) => (
             <li key={book.id}>
               <BookCard book={book} saved onToggleSave={() => onToggleSave(book.id)}>
                 <div className="flex items-center justify-between gap-2">
@@ -67,6 +77,15 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
           ))}
         </ul>
       )}
+
+      <Pagination
+        page={page}
+        perPage={perPage}
+        total={savedBooks.length}
+        noun="saved books"
+        onChange={setPage}
+        scrollTo="saved"
+      />
     </section>
   )
 }
