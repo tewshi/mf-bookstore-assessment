@@ -1,4 +1,4 @@
-import { authClient } from '../../auth'
+import { authClient } from '../../lib/auth'
 import { AdminOrders } from './AdminOrders'
 import { AdminBooks } from './AdminBooks'
 import { AdminEvents } from './AdminEvents'

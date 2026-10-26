@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getJson, sendJson } from './api'
-import { authClient } from './auth'
+import { getJson, sendJson } from './lib/api'
+import { authClient } from './lib/auth'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { BookGrid, BookGridSkeleton } from './components/BookGrid'

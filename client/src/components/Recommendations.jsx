@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getJson } from '../api'
+import { getJson } from '../lib/api'
 import { BookCard } from './BookCard'
 
 // "Readers who bought this also bought", under a book. books is the full

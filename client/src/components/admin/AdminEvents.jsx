@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getJson, sendJson } from '../../api'
+import { getJson, sendJson } from '../../lib/api'
 
 const emptyEvent = { id: '', datetime: '', title: '', text: '', seats: '20' }
 

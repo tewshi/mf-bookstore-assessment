@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getJson } from '../../api'
+import { getJson } from '../../lib/api'
 
 // The badge colour for each order status
 const statusColors = {

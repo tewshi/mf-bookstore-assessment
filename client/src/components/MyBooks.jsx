@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { authClient } from '../auth'
-import { getJson, postJson } from '../api'
+import { authClient } from '../lib/auth'
+import { getJson, postJson } from '../lib/api'
 import { Stars } from './StarRating'
 import { BookIcon } from './Icons'
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { authClient } from '../auth'
-import { postJson } from '../api'
-import { cartItems, cartTotal } from '../cart'
+import { authClient } from '../lib/auth'
+import { postJson } from '../lib/api'
+import { cartItems, cartTotal } from '../lib/cart'
 import { LockIcon } from './Icons'
 
 // The #checkout page: the order summary and a button that sends the

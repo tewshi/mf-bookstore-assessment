@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { authClient } from '../auth'
-import { getJson } from '../api'
+import { authClient } from '../lib/auth'
+import { getJson } from '../lib/api'
 import { PrintIcon } from './Icons'
 
 // The #order/<id> page: a receipt for one order, with a Print button.

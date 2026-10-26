@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { sendJson } from '../../api'
+import { sendJson } from '../../lib/api'
 
 // What a new book's form starts with
 const emptyBook = {

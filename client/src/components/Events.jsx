@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { authClient } from '../auth'
-import { getJson, sendJson } from '../api'
+import { authClient } from '../lib/auth'
+import { getJson, sendJson } from '../lib/api'
 import { CheckIcon } from './Icons'
 
 export function Events() {

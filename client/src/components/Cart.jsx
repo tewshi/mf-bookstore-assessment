@@ -1,4 +1,4 @@
-import { cartItems, cartTotal } from '../cart'
+import { cartItems, cartTotal } from '../lib/cart'
 import { CartIcon, TrashIcon } from './Icons'
 
 // The #cart page. cart only holds ids and quantities, so we look each

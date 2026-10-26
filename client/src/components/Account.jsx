@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { authClient } from '../auth'
-import { resizeImage } from '../resizeImage'
+import { authClient } from '../lib/auth'
+import { resizeImage } from '../lib/resizeImage'
 import { Avatar } from './UserMenu'
 
 const input =

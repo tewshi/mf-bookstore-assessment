@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { authClient } from '../auth'
+import { authClient } from '../lib/auth'
 import { accountLinksFor } from '../accountLinks'
 import { ChevronDownIcon, SignOutIcon } from './Icons'
 

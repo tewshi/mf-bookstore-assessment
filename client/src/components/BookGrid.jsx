@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getJson } from '../api'
+import { getJson } from '../lib/api'
 import { BookCard, StockNote } from './BookCard'
 import { Stars } from './StarRating'
 import { CartIcon, ChevronDownIcon, SearchIcon } from './Icons'

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { authClient } from '../auth'
+import { authClient } from '../lib/auth'
 
 // One form for both #signin and #signup. Sign up also asks for a name.
 // next is where to go afterwards, e.g. "checkout" for #signin/checkout.

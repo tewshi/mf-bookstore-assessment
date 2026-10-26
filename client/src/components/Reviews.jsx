@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { authClient } from '../auth'
-import { getJson, postJson } from '../api'
+import { authClient } from '../lib/auth'
+import { getJson, postJson } from '../lib/api'
 import { StarRating, Stars } from './StarRating'
 
 // The reviews under a book. People who bought the book also get a form

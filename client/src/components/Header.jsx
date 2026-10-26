@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { authClient } from '../auth'
+import { authClient } from '../lib/auth'
 import { UserMenu } from './UserMenu'
 import { MobileMenu } from './MobileMenu'
 import { ThemeToggle } from './ThemeToggle'
