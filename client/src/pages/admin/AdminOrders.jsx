@@ -13,6 +13,9 @@ const statusColors = {
 // with their status, but no money came in for them.
 export function AdminOrders() {
   const [orders, setOrders] = useState(null)
+  // What the list shows: one status (or 'all'), and a name or email search
+  const [status, setStatus] = useState('all')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     getJson('/api/admin/orders').then(setOrders, () => setOrders([]))
@@ -29,6 +32,15 @@ export function AdminOrders() {
     ['Revenue', `€${revenue.toFixed(2)}`],
   ]
 
+  // The totals above are for the whole shop; only the table is filtered.
+  // Worked out here from the orders we already have, so no new request.
+  const needle = search.trim().toLowerCase()
+  const shown = orders.filter(
+    (order) =>
+      (status === 'all' || order.status === status) &&
+      (order.name.toLowerCase().includes(needle) || order.email.toLowerCase().includes(needle)),
+  )
+
   return (
     <div>
       <dl className="mb-8 grid gap-4 sm:grid-cols-3">
@@ -40,8 +52,37 @@ export function AdminOrders() {
         ))}
       </dl>
 
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-muted">Status</span>
+          <select
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            className="rounded-full border border-line bg-surface px-3 py-2"
+          >
+            <option value="all">All</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </label>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search name or email"
+          aria-label="Search orders by customer name or email"
+          className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2 text-sm sm:max-w-xs"
+        />
+        <p className="text-sm text-muted">
+          {shown.length} of {orders.length} orders
+        </p>
+      </div>
+
       {orders.length === 0 ? (
         <p className="text-muted">No orders yet.</p>
+      ) : shown.length === 0 ? (
+        <p className="text-muted">No orders match.</p>
       ) : (
         // overflow-x-auto: on phones the table scrolls sideways inside its box
         <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
@@ -57,7 +98,7 @@ export function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {orders.map((order) => (
+              {shown.map((order) => (
                 <tr key={order.id}>
                   <td className="px-4 py-3 font-medium">#{order.id}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-muted">
