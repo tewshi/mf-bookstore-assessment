@@ -35,27 +35,49 @@ events.get('/', async (req, res) => {
   )
 })
 
-// POST /api/events/poetry-night/signup: reserve a seat
+// POST /api/events/poetry-night/signup: reserve a seat.
+// A transaction, so two people can't both take the last seat: FOR UPDATE
+// locks this event's row until COMMIT, so a second sign-up for the same
+// event waits at the SELECT, then counts the seat the first one took.
 events.post('/:id/signup', requireUser, async (req, res) => {
-  const { rows } = await pool.query(
-    `SELECT events.seats, events.starts_at < localtimestamp AS past,
-            (SELECT count(*)::int FROM event_signups WHERE event_id = events.id) AS taken
-     FROM events WHERE events.id = $1`,
-    [req.params.id],
-  )
-  const event = rows[0]
-  if (!event) return res.status(404).json({ error: 'Event not found' })
-  if (event.past) return res.status(400).json({ error: 'This event has already happened' })
-  if (event.taken >= event.seats) {
-    return res.status(409).json({ error: 'Sorry, this event is fully booked' })
-  }
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { rows } = await client.query(
+      `SELECT events.seats, events.starts_at < localtimestamp AS past,
+              (SELECT count(*)::int FROM event_signups WHERE event_id = events.id) AS taken
+       FROM events WHERE events.id = $1
+       FOR UPDATE`,
+      [req.params.id],
+    )
+    const event = rows[0]
+    // Each "no" ends the transaction with ROLLBACK, which also unlocks the row
+    if (!event) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Event not found' })
+    }
+    if (event.past) {
+      await client.query('ROLLBACK')
+      return res.status(400).json({ error: 'This event has already happened' })
+    }
+    if (event.taken >= event.seats) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'Sorry, this event is fully booked' })
+    }
 
-  // ON CONFLICT DO NOTHING: reserving twice still means one seat
-  await pool.query(
-    'INSERT INTO event_signups (user_id, event_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-    [req.user.id, req.params.id],
-  )
-  res.status(201).json({ ok: true })
+    // ON CONFLICT DO NOTHING: reserving twice still means one seat
+    await client.query(
+      'INSERT INTO event_signups (user_id, event_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [req.user.id, req.params.id],
+    )
+    await client.query('COMMIT')
+    res.status(201).json({ ok: true })
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 })
 
 // DELETE /api/events/poetry-night/signup: give the seat back
