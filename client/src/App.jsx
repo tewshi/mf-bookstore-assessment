@@ -7,10 +7,10 @@ import { BookGrid, BookGridSkeleton } from './components/books/BookGrid'
 import { StaffPicks } from './components/home/StaffPicks'
 import { Events } from './components/home/Events'
 import { BookDetails } from './pages/BookDetails'
-import { AuthForm } from './pages/AuthForm'
+import { SignIn } from './pages/SignIn'
 import { Cart } from './pages/Cart'
 import { Checkout } from './pages/Checkout'
-import { PaymentResult } from './pages/PaymentResult'
+import { Paid } from './pages/Paid'
 import { MyBooks } from './pages/MyBooks'
 import { Saved } from './pages/Saved'
 import { Receipt } from './pages/Receipt'
@@ -58,7 +58,7 @@ function App() {
   const [cart, setCart] = useState(loadCart)
 
   // After a paid order: empty the cart, and reload the books for the new
-  // stock. useCallback keeps it the same function, so PaymentResult doesn't
+  // stock. useCallback keeps it the same function, so Paid doesn't
   // check the order again every time App re-renders.
   const onPaid = useCallback(() => {
     setCart({})
@@ -186,7 +186,7 @@ function App() {
   function renderPage() {
     if (page === 'signin' || page === 'signup') {
       // param is where to go after signing in, e.g. back to "checkout"
-      return <AuthForm key={hash} mode={page} next={param} />
+      return <SignIn key={hash} mode={page} next={param} />
     }
     if (page === 'cart') {
       return <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
@@ -197,7 +197,7 @@ function App() {
     }
     if (page === 'paid') {
       // Where Stripe sends people back after paying, e.g. #paid/12
-      return <PaymentResult key={param} orderId={param} onPaid={onPaid} />
+      return <Paid key={param} orderId={param} onPaid={onPaid} />
     }
     if (page === 'my-books') {
       return <MyBooks />

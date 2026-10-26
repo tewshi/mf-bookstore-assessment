@@ -3,7 +3,7 @@ import { authClient } from '../lib/auth'
 
 // One form for both #signin and #signup. Sign up also asks for a name.
 // next is where to go afterwards, e.g. "checkout" for #signin/checkout.
-export function AuthForm({ mode, next }) {
+export function SignIn({ mode, next }) {
   const isSignUp = mode === 'signup'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

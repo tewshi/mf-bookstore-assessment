@@ -6,7 +6,7 @@ import { LockIcon } from '../components/ui/Icons'
 
 // The #checkout page: the order summary and a button that sends the
 // customer to Stripe's payment page. Stripe sends them back to #paid/<id>
-// (PaymentResult) afterwards, or to #my-books if they press Back.
+// (Paid) afterwards, or to #my-books if they press Back.
 // orderId comes from #checkout/<id>: an unpaid order to reuse, if any.
 export function Checkout({ books, cart, orderId }) {
   const { data: session, isPending } = authClient.useSession()

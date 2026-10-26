@@ -13,7 +13,7 @@ const maxTries = 6
 // changes. The webhook can arrive a moment after the customer does, so
 // while the order is still 'pending' it asks again every 2 seconds.
 // onPaid empties the cart once the order really is paid.
-export function PaymentResult({ orderId, onPaid }) {
+export function Paid({ orderId, onPaid }) {
   const { data: session, isPending } = authClient.useSession()
   const userId = session?.user.id
   // The order from the API, or 'missing' if it isn't there (or isn't ours)
