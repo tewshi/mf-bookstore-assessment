@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { authClient } from '../lib/auth'
-import { getJson, sendJson } from '../lib/api'
-import { CheckIcon } from './Icons'
+import { authClient } from '../../lib/auth'
+import { getJson, sendJson } from '../../lib/api'
+import { CheckIcon } from '../ui/Icons'
 
 export function Events() {
   // Fetched again when someone signs in or out: "going" depends on who asks

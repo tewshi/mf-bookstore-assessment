@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { authClient } from '../lib/auth'
-import { accountLinksFor } from '../accountLinks'
-import { ChevronDownIcon, SignOutIcon } from './Icons'
+import { authClient } from '../../lib/auth'
+import { accountLinksFor } from './accountLinks'
+import { ChevronDownIcon, SignOutIcon } from '../ui/Icons'
 
 // The person's picture, or our default one. Better Auth keeps it in the
 // user's `image` field; it's empty until they upload one on #account.

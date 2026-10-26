@@ -1,4 +1,4 @@
-import { BookCard } from './BookCard'
+import { BookCard } from '../books/BookCard'
 
 export function StaffPicks({ books }) {
   const picks = books.filter((book) => book.staffPick)

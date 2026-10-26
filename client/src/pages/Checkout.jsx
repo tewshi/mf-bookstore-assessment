@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { authClient } from '../lib/auth'
 import { postJson } from '../lib/api'
 import { cartItems, cartTotal } from '../lib/cart'
-import { LockIcon } from '../components/Icons'
+import { LockIcon } from '../components/ui/Icons'
 
 // The #checkout page: the order summary and a button that sends the
 // customer to Stripe's payment page. Stripe sends them back to #paid/<id>

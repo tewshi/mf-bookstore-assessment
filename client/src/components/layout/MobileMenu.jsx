@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
-import { authClient } from '../lib/auth'
+import { authClient } from '../../lib/auth'
 import { Avatar } from './UserMenu'
-import { accountLinksFor } from '../accountLinks'
-import { CloseIcon, SignOutIcon } from './Icons'
+import { accountLinksFor } from './accountLinks'
+import { CloseIcon, SignOutIcon } from '../ui/Icons'
 
 // The drawer the hamburger button opens on phones. It is always in the
 // page, just pushed off the right edge (translate-x-full) while closed,

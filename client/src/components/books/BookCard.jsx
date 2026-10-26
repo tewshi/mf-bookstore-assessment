@@ -1,4 +1,4 @@
-import { HeartIcon } from './Icons'
+import { HeartIcon } from '../ui/Icons'
 
 // One book in a grid. children is shown under the ISBN, so each
 // grid decides what goes there (a price, a staff quote, ...).

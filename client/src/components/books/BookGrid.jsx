@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getJson } from '../lib/api'
+import { getJson } from '../../lib/api'
 import { BookCard, StockNote } from './BookCard'
 import { Stars } from './StarRating'
-import { CartIcon, ChevronDownIcon, SearchIcon } from './Icons'
+import { CartIcon, ChevronDownIcon, SearchIcon } from '../ui/Icons'
 
 const sections = ['All', 'Fiction', 'Nonfiction']
 

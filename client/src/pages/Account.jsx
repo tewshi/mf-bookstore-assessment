@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { authClient } from '../lib/auth'
 import { resizeImage } from '../lib/resizeImage'
-import { Avatar } from '../components/UserMenu'
+import { Avatar } from '../components/layout/UserMenu'
 
 const input =
   'mt-1 w-full rounded-xl border border-line bg-bg px-4 py-3 font-normal outline-none focus:border-accent focus:ring-4 focus:ring-accent-soft'

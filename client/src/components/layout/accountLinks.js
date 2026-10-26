@@ -1,4 +1,4 @@
-import { BookIcon, HeartIcon, ShieldIcon, UserIcon } from './components/Icons'
+import { BookIcon, HeartIcon, ShieldIcon, UserIcon } from '../ui/Icons'
 
 // The links in the account menu (header dropdown and phone drawer).
 // page is the hash's first part when that link is open, for the highlight.

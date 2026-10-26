@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { authClient } from '../lib/auth'
+import { authClient } from '../../lib/auth'
 import { UserMenu } from './UserMenu'
 import { MobileMenu } from './MobileMenu'
 import { ThemeToggle } from './ThemeToggle'
-import { CartIcon, MenuIcon } from './Icons'
+import { CartIcon, MenuIcon } from '../ui/Icons'
 
 const links = [
   { href: '#books', label: 'Books' },

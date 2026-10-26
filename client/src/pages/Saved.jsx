@@ -1,5 +1,5 @@
-import { BookCard } from '../components/BookCard'
-import { CartIcon, HeartIcon } from '../components/Icons'
+import { BookCard } from '../components/books/BookCard'
+import { CartIcon, HeartIcon } from '../components/ui/Icons'
 
 // The #saved page: the books the signed-in person saved for later.
 // savedIds is newest first, so the list is too.

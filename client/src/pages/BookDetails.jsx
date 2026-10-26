@@ -1,8 +1,8 @@
-import { CartIcon, HeartIcon } from '../components/Icons'
-import { Stars } from '../components/StarRating'
-import { StockNote } from '../components/BookCard'
-import { Reviews } from '../components/Reviews'
-import { Recommendations } from '../components/Recommendations'
+import { CartIcon, HeartIcon } from '../components/ui/Icons'
+import { Stars } from '../components/books/StarRating'
+import { StockNote } from '../components/books/BookCard'
+import { Reviews } from '../components/books/Reviews'
+import { Recommendations } from '../components/books/Recommendations'
 
 // quantity is how many of this book are already in the cart.
 // books is every book, for the recommendations' fallback.

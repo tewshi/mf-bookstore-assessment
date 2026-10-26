@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { authClient } from '../lib/auth'
 import { getJson, postJson } from '../lib/api'
-import { Stars } from '../components/StarRating'
-import { BookIcon } from '../components/Icons'
+import { Stars } from '../components/books/StarRating'
+import { BookIcon } from '../components/ui/Icons'
 
 // The #my-books page: everything the signed-in person has bought,
 // one card per order, with a link to review each book. Unpaid orders

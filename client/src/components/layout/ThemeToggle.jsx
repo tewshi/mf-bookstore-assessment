@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MoonIcon, SunIcon } from './Icons'
+import { MoonIcon, SunIcon } from '../ui/Icons'
 
 // The sun/moon button in the header. index.html already set the starting
 // theme (the dark class on <html>); this reads it and switches it.

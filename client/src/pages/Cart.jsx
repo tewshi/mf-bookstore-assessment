@@ -1,5 +1,5 @@
 import { cartItems, cartTotal } from '../lib/cart'
-import { CartIcon, TrashIcon } from '../components/Icons'
+import { CartIcon, TrashIcon } from '../components/ui/Icons'
 
 // The #cart page. cart only holds ids and quantities, so we look each
 // id up in books to get the title, cover and price.
