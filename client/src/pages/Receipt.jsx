@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { authClient } from '../lib/auth'
 import { getJson } from '../lib/api'
-import { PrintIcon } from './Icons'
+import { PrintIcon } from '../components/Icons'
 
 // The #order/<id> page: a receipt for one order, with a Print button.
 // The header and footer have print:hidden, so only the receipt is printed.

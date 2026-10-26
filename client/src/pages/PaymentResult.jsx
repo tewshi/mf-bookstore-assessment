@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { authClient } from '../lib/auth'
 import { getJson } from '../lib/api'
-import { AlertIcon, CheckIcon } from './Icons'
+import { AlertIcon, CheckIcon } from '../components/Icons'
 
 // How often to ask again while the order is still pending, and how many times
 const retryDelay = 2000
