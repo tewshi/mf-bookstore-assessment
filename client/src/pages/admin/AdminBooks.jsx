@@ -19,6 +19,9 @@ const emptyBook = {
   staffPickBy: '',
 }
 
+// At or below this many copies, a book counts as running low
+const lowStock = 3
+
 // "The Glass Harbour" -> "the-glass-harbour", the suggested id for links
 function slugify(text) {
   return text
@@ -41,6 +44,11 @@ export function AdminBooks({ books, onChanged }) {
 
   if (!books) return <p className="text-muted">Loading books…</p>
 
+  // The books to reorder soon, fewest copies first
+  const runningLow = books
+    .filter((book) => book.stock <= lowStock)
+    .toSorted((a, b) => a.stock - b.stock)
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -56,6 +64,19 @@ export function AdminBooks({ books, onChanged }) {
           Add a book
         </button>
       </div>
+
+      {runningLow.length > 0 && (
+        <div className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          <p className="font-medium">
+            {runningLow.length} {runningLow.length === 1 ? 'book is' : 'books are'} running low
+          </p>
+          <p>
+            {runningLow
+              .map((book) => `${book.title} (${book.stock === 0 ? 'sold out' : book.stock})`)
+              .join(', ')}
+          </p>
+        </div>
+      )}
 
       {message && (
         <p
@@ -109,9 +130,9 @@ export function AdminBooks({ books, onChanged }) {
                 <td className="px-4 py-3">{book.section}</td>
                 <td className="px-4 py-3 text-right">€{book.price.toFixed(2)}</td>
                 <td
-                  className={`px-4 py-3 text-right font-medium ${book.stock <= 3 ? 'text-amber-700 dark:text-amber-400' : ''}`}
+                  className={`px-4 py-3 text-right font-medium ${book.stock <= lowStock ? 'text-amber-700 dark:text-amber-400' : ''}`}
                 >
-                  {book.stock}
+                  {book.stock === 0 ? 'Sold out' : book.stock}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
