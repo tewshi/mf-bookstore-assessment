@@ -48,7 +48,7 @@ const sortOrders = {
 // GET /api/books: every book, fiction first, then by title.
 // GET /api/books?page=2&q=river&section=Fiction&sort=price-low: one page of
 // books that match, as { books, total, page, perPage, pageCount }. q searches the
-// title, author and ISBN (with or without dashes). 8 books per page.
+// title, author and ISBN (with or without dashes). 12 books per page.
 books.get('/', async (req, res) => {
   if (!req.query.page) {
     const { rows } = await pool.query(
@@ -57,7 +57,7 @@ books.get('/', async (req, res) => {
     return res.json(rows.map(toBook))
   }
 
-  const perPage = 8
+  const perPage = 12
   const page = Math.max(1, Number.parseInt(req.query.page) || 1)
   const q = String(req.query.q ?? '').trim()
   const section =

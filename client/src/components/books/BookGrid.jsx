@@ -83,7 +83,7 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
     books: [],
     total: 0,
     page: 1,
-    perPage: 8,
+    perPage: 12,
   }
 
   return (
@@ -178,7 +178,8 @@ export function BookGrid({ books, onAdd, savedIds, onToggleSave }) {
 // Grey placeholder cards shown while the books load, so the page has its
 // shape straight away instead of a gap. animate-pulse fades them in and out.
 export function BookGridSkeleton() {
-  const placeholders = [1, 2, 3, 4, 5, 6, 7, 8]
+  // One per book on the first page (the server sends 12 at a time)
+  const placeholders = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
   return (
     <section aria-busy="true" aria-label="Loading books" className="mx-auto max-w-page px-4 py-16">
