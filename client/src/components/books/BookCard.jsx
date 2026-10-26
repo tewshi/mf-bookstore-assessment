@@ -36,7 +36,7 @@ export function BookCard({ book, children, saved, onToggleSave }) {
         <h3 className="mb-1 leading-snug font-semibold">
           {/* after:inset-0 stretches the link over the whole card */}
           <a
-            href={`#book/${book.id}`}
+            href={`/book/${book.id}`}
             className="after:absolute after:inset-0 group-hover:text-accent"
           >
             {book.title}

@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { authClient } from '../lib/auth'
+import { navigate } from '../lib/navigate'
 
-// One form for both #signin and #signup. Sign up also asks for a name.
-// next is where to go afterwards, e.g. "checkout" for #signin/checkout.
+// One form for both /signin and /signup. Sign up also asks for a name.
+// next is where to go afterwards, e.g. "checkout" for /signin/checkout.
 export function SignIn({ mode, next }) {
   const isSignUp = mode === 'signup'
   const { data: session, isPending } = authClient.useSession()
-  // Where to go once signed in. location.replace() (instead of setting the
-  // hash) swaps #signin out of the history, so Back doesn't return here.
-  const nextHash = `#${next ?? ''}`
+  // Where to go once signed in. replace: true swaps /signin out of the
+  // history, so pressing Back afterwards doesn't return to this form.
+  const nextPath = `/${next ?? ''}`
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,7 +29,7 @@ export function SignIn({ mode, next }) {
     if (error) {
       setError(error.message)
     } else {
-      window.location.replace(nextHash)
+      navigate(nextPath, { replace: true })
     }
   }
 
@@ -36,8 +37,8 @@ export function SignIn({ mode, next }) {
   // to do here, so go straight on. Signing in with the form also ends up
   // here once the session arrives, and goes to the same place.
   useEffect(() => {
-    if (session) window.location.replace(nextHash)
-  }, [session, nextHash])
+    if (session) navigate(nextPath, { replace: true })
+  }, [session, nextPath])
 
   // Don't show the form while we're still finding out who is signed in,
   // or in the moment before the effect above moves a signed-in person on
@@ -115,7 +116,7 @@ export function SignIn({ mode, next }) {
           {isSignUp ? 'Already have an account? ' : 'New here? '}
           <a
             // Keep next when switching between sign in and sign up
-            href={`${isSignUp ? '#signin' : '#signup'}${next ? `/${next}` : ''}`}
+            href={`${isSignUp ? '/signin' : '/signup'}${next ? `/${next}` : ''}`}
             className="font-medium text-accent hover:underline"
           >
             {isSignUp ? 'Sign in' : 'Create an account'}

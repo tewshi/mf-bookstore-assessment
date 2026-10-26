@@ -88,7 +88,7 @@ export function Events() {
                 </button>
               ) : (
                 <a
-                  href="#signin"
+                  href="/signin"
                   className="rounded-full border border-line px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent"
                 >
                   Sign in to reserve

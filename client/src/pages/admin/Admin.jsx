@@ -9,7 +9,7 @@ const tabs = [
   { id: 'events', label: 'Events' },
 ]
 
-// The #admin page, for staff. tab comes from the hash: #admin/books, ...
+// The /admin page, for staff. tab comes from the address: /admin/books, ...
 // books is App's list; onBooksChanged reloads it after an edit.
 export function Admin({ tab = 'orders', books, onBooksChanged }) {
   const { data: session, isPending } = authClient.useSession()
@@ -33,7 +33,7 @@ export function Admin({ tab = 'orders', books, onBooksChanged }) {
       <h1 className="text-3xl font-bold sm:text-4xl">Admin</h1>
       <p className="mb-6 text-muted">Orders, books and events for the whole shop.</p>
 
-      {/* The tabs are plain links that change the hash */}
+      {/* The tabs are plain links to /admin/orders, /admin/books, ... */}
       <nav
         aria-label="Admin"
         className="mb-8 flex w-fit gap-1 rounded-full border border-line bg-surface p-1"
@@ -41,7 +41,7 @@ export function Admin({ tab = 'orders', books, onBooksChanged }) {
         {tabs.map((t) => (
           <a
             key={t.id}
-            href={`#admin/${t.id}`}
+            href={`/admin/${t.id}`}
             aria-current={tab === t.id ? 'page' : undefined}
             className={`rounded-full px-4 py-1.5 text-sm font-medium ${
               tab === t.id ? 'bg-accent text-on-accent' : 'text-muted hover:text-accent'

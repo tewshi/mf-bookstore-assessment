@@ -4,7 +4,7 @@ import { getJson, postJson } from '../lib/api'
 import { Stars } from '../components/books/StarRating'
 import { BookIcon } from '../components/ui/Icons'
 
-// The #my-books page: everything the signed-in person has bought,
+// The /my-books page: everything the signed-in person has bought,
 // one card per order, with a link to review each book. Unpaid orders
 // (pending) show "Pending payment" and a Pay now button instead, and get
 // no receipt or review links until the webhook marks them paid.
@@ -54,7 +54,7 @@ export function MyBooks() {
         <h1 className="mb-2 text-3xl font-bold">Sign in to see your books</h1>
         <p className="mb-8 text-muted">Your orders and reviews are kept in your account.</p>
         <a
-          href="#signin/my-books"
+          href="/signin/my-books"
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
@@ -86,7 +86,7 @@ export function MyBooks() {
               </li>
             ))}
           </ul>
-          <a href="#events" className="mt-3 inline-block text-sm text-accent hover:underline">
+          <a href="/#events" className="mt-3 inline-block text-sm text-accent hover:underline">
             See all events
           </a>
         </div>
@@ -106,7 +106,7 @@ export function MyBooks() {
           </div>
           <p className="mb-6 text-muted">You haven't bought any books yet.</p>
           <a
-            href="#books"
+            href="/#books"
             className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
           >
             Browse books
@@ -140,7 +140,7 @@ export function MyBooks() {
               </div>
               <div className="flex items-center gap-4">
                 {order.status === 'paid' ? (
-                  <a href={`#order/${order.id}`} className="text-accent hover:underline">
+                  <a href={`/order/${order.id}`} className="text-accent hover:underline">
                     Receipt
                   </a>
                 ) : (
@@ -176,7 +176,7 @@ export function MyBooks() {
                   <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <h2 className="leading-snug font-semibold">
-                        <a href={`#book/${item.bookId}`} className="hover:text-accent">
+                        <a href={`/book/${item.bookId}`} className="hover:text-accent">
                           {item.title}
                         </a>
                       </h2>
@@ -184,11 +184,11 @@ export function MyBooks() {
                         {item.author} &middot; {item.quantity} &times; €{item.price.toFixed(2)}
                       </p>
                     </div>
-                    {/* #book/<id>/reviews opens the book and jumps to its reviews.
+                    {/* /book/<id>#reviews opens the book and jumps to its reviews.
                         Only buyers may review, so nothing until the order is paid. */}
                     {order.status !== 'paid' ? null : item.myRating ? (
                       <a
-                        href={`#book/${item.bookId}/reviews`}
+                        href={`/book/${item.bookId}#reviews`}
                         className="flex shrink-0 items-center gap-2 text-sm text-muted hover:text-accent"
                       >
                         <Stars rating={item.myRating} />
@@ -196,7 +196,7 @@ export function MyBooks() {
                       </a>
                     ) : (
                       <a
-                        href={`#book/${item.bookId}/reviews`}
+                        href={`/book/${item.bookId}#reviews`}
                         className="w-fit shrink-0 rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-accent hover:bg-accent hover:text-on-accent"
                       >
                         Write a review

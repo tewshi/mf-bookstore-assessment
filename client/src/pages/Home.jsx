@@ -4,7 +4,7 @@ import { StaffPicks } from '../components/home/StaffPicks'
 import { Events } from '../components/home/Events'
 import { Reveal } from '../components/ui/Reveal'
 
-// The home page (no hash, or a section link like #events). books is null
+// The home page: / (or /#events for one of its sections). books is null
 // while they load; error is set if they couldn't be loaded.
 export function Home({ books, error, savedIds, onAdd, onToggleSave }) {
   return (

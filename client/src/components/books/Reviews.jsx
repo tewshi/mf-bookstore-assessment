@@ -22,7 +22,7 @@ export function Reviews({ book, onReviewed }) {
   // Load again when someone signs in or out: canReview depends on who asks
   useEffect(load, [book.id, userId])
 
-  // The section is there even while loading, so a #book/<id>/reviews
+  // The section is there even while loading, so a /book/<id>#reviews
   // link has something to scroll to straight away
   const section = 'mt-16 scroll-mt-20 border-t border-line pt-12'
   if (!data) {
@@ -105,7 +105,7 @@ export function Reviews({ book, onReviewed }) {
             ) : (
               <>
                 Reviews are written by people who bought the book.{' '}
-                <a href="#signin" className="font-medium underline">
+                <a href="/signin" className="font-medium underline">
                   Sign in
                 </a>{' '}
                 to write yours.

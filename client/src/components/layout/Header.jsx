@@ -6,30 +6,31 @@ import { ThemeToggle } from './ThemeToggle'
 import { CartIcon, MenuIcon } from '../ui/Icons'
 
 const links = [
-  { href: '#books', label: 'Books' },
-  { href: '#staff-picks', label: 'Staff Picks' },
-  { href: '#events', label: 'Events' },
+  { href: '/#books', label: 'Books' },
+  { href: '/#staff-picks', label: 'Staff Picks' },
+  { href: '/#events', label: 'Events' },
 ]
 
-// Which home page section is on screen, as a link href like '#events':
+// Which home page section is on screen, as a link href like '/#events':
 // the last section whose top has scrolled above a line 40% down the screen.
 function sectionInView() {
   // At the very bottom, the last section (Events) can't scroll up that far.
-  // So if a link was clicked (the hash) and its section is on screen,
-  // trust that one.
-  const hash = window.location.hash
+  // So if a link was clicked (the hash, e.g. #events) and its section is
+  // on screen, trust that one.
+  const clicked = `/${window.location.hash}`
   const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2
-  const clicked = links.some((link) => link.href === hash)
-    ? document.getElementById(hash.slice(1))
+  const clickedSection = links.some((link) => link.href === clicked)
+    ? document.getElementById(window.location.hash.slice(1))
     : null
-  if (atBottom && clicked) {
-    const { top, bottom } = clicked.getBoundingClientRect()
-    if (top < window.innerHeight && bottom > 0) return hash
+  if (atBottom && clickedSection) {
+    const { top, bottom } = clickedSection.getBoundingClientRect()
+    if (top < window.innerHeight && bottom > 0) return clicked
   }
 
   let current = null
   for (const link of links) {
-    const section = document.getElementById(link.href.slice(1))
+    // '/#events' → the element with id="events"
+    const section = document.getElementById(link.href.slice(2))
     if (section && section.getBoundingClientRect().top < window.innerHeight * 0.4) {
       current = link.href
     }
@@ -37,7 +38,7 @@ function sectionInView() {
   return current
 }
 
-// page is the first part of the hash (see App.jsx), e.g. 'book' or 'cart'
+// page is the first part of the path (see App.jsx), e.g. 'book' or 'cart'
 export function Header({ cartCount, page }) {
   // Asks the server who is signed in (by the session cookie), and
   // re-renders the header when someone signs in or out.
@@ -49,23 +50,23 @@ export function Header({ cartCount, page }) {
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   // Work out the section on screen again every time the page scrolls,
-  // and when the hash changes (clicking Events at the bottom doesn't scroll)
+  // and when the address changes (clicking Events at the bottom doesn't scroll)
   const [inView, setInView] = useState(null)
   useEffect(() => {
     const update = () => setInView(sectionInView())
     update()
     window.addEventListener('scroll', update)
-    window.addEventListener('hashchange', update)
+    window.addEventListener('popstate', update)
     return () => {
       window.removeEventListener('scroll', update)
-      window.removeEventListener('hashchange', update)
+      window.removeEventListener('popstate', update)
     }
   }, [])
 
   // The link to highlight: Books on a book's own page, the section on
-  // screen on the home page (no hash, or one of the sections), else none.
-  const onHomePage = page === '' || page === 'top' || links.some((link) => link.href === `#${page}`)
-  const activeHref = page === 'book' ? '#books' : onHomePage ? inView : null
+  // screen on the home page, else none.
+  const onHomePage = page === ''
+  const activeHref = page === 'book' ? '/#books' : onHomePage ? inView : null
   const cartActive = page === 'cart' || page === 'checkout'
 
   return (
@@ -75,7 +76,7 @@ export function Header({ cartCount, page }) {
       {/* sticky: the header stays at the top while the page scrolls */}
       <header className="sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur print:hidden">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4">
-          <a href="#top" className="font-serif text-2xl font-bold text-ink">
+          <a href="/" className="font-serif text-2xl font-bold text-ink">
             Mayerfeld<span className="text-accent">Books</span>
           </a>
 
@@ -102,7 +103,7 @@ export function Header({ cartCount, page }) {
           <div className="flex items-center gap-1">
             <ThemeToggle />
             <a
-              href="#cart"
+              href="/cart"
               aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
               aria-current={cartActive ? 'page' : undefined}
               className={`relative rounded-full p-2 hover:bg-accent-soft hover:text-accent ${
@@ -125,7 +126,7 @@ export function Header({ cartCount, page }) {
                   <UserMenu user={session.user} page={page} />
                 ) : (
                   <a
-                    href="#signin"
+                    href="/signin"
                     className="ml-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-dark"
                   >
                     Sign in

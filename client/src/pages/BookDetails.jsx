@@ -19,7 +19,7 @@ export function BookDetails({ book, books, quantity, onAdd, onReviewed, saved, o
   return (
     <section className="mx-auto max-w-page px-4 py-8 sm:py-12">
       <p className="mb-6">
-        <a href="#books" className="text-sm font-medium text-muted hover:text-accent">
+        <a href="/#books" className="text-sm font-medium text-muted hover:text-accent">
           &larr; Back to all books
         </a>
       </p>
@@ -42,7 +42,7 @@ export function BookDetails({ book, books, quantity, onAdd, onReviewed, saved, o
           <p className="mb-2 text-lg text-muted">by {book.author}</p>
           {book.reviewCount > 0 && (
             <a
-              href={`#book/${book.id}/reviews`}
+              href={`/book/${book.id}#reviews`}
               className="mb-2 flex w-fit items-center gap-2 text-sm text-muted hover:text-accent"
             >
               <Stars rating={book.rating} className="text-lg" />
@@ -81,7 +81,7 @@ export function BookDetails({ book, books, quantity, onAdd, onReviewed, saved, o
               {saved ? 'Saved' : 'Save'}
             </button>
             {quantity > 0 && (
-              <a href="#cart" className="text-sm text-muted hover:text-accent">
+              <a href="/cart" className="text-sm text-muted hover:text-accent">
                 {quantity} in your cart &middot; <span className="underline">View cart</span>
               </a>
             )}

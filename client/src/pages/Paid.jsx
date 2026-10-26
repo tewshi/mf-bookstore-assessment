@@ -7,7 +7,7 @@ import { AlertIcon, CheckIcon } from '../components/ui/Icons'
 const retryDelay = 2000
 const maxTries = 6
 
-// The #paid/<id> page, where Stripe sends the customer after paying.
+// The /paid/<id> page, where Stripe sends the customer after paying.
 // Being sent here doesn't prove anything (anyone can type the address),
 // so it asks our API for the order's status, which only the webhook
 // changes. The webhook can arrive a moment after the customer does, so
@@ -69,7 +69,7 @@ export function Paid({ orderId, onPaid }) {
             ? 'There is no order with that number in your account.'
             : 'Sign in to see your order.'}
         </p>
-        <a href={session ? '#my-books' : '#signin/my-books'} className={button}>
+        <a href={session ? '/my-books' : '/signin/my-books'} className={button}>
           {session ? 'Go to My books' : 'Sign in'}
         </a>
       </section>
@@ -88,13 +88,13 @@ export function Paid({ orderId, onPaid }) {
           where you can review what you bought.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          <a href="#my-books" className={button}>
+          <a href="/my-books" className={button}>
             Go to My books
           </a>
-          <a href={`#order/${order.id}`} className={secondButton}>
+          <a href={`/order/${order.id}`} className={secondButton}>
             View receipt
           </a>
-          <a href="#books" className={secondButton}>
+          <a href="/#books" className={secondButton}>
             Keep shopping
           </a>
         </div>
@@ -112,7 +112,7 @@ export function Paid({ orderId, onPaid }) {
         <p className="mb-8 text-muted">
           Order #{order.id} was cancelled and nothing was charged. Your cart is still here.
         </p>
-        <a href="#checkout" className={button}>
+        <a href="/checkout" className={button}>
           Try again
         </a>
       </section>

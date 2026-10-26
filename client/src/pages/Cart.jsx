@@ -1,7 +1,7 @@
 import { cartItems, cartTotal } from '../lib/cart'
 import { CartIcon, TrashIcon } from '../components/ui/Icons'
 
-// The #cart page. cart only holds ids and quantities, so we look each
+// The /cart page. cart only holds ids and quantities, so we look each
 // id up in books to get the title, cover and price.
 export function Cart({ books, cart, onChangeQuantity }) {
   if (!books) {
@@ -20,7 +20,7 @@ export function Cart({ books, cart, onChangeQuantity }) {
         <h1 className="mb-2 text-3xl font-bold">Your cart is empty</h1>
         <p className="mb-8 text-muted">Find something good to read and add it here.</p>
         <a
-          href="#books"
+          href="/#books"
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Browse books
@@ -52,7 +52,7 @@ export function Cart({ books, cart, onChangeQuantity }) {
                 <div className="flex justify-between gap-4">
                   <div className="min-w-0">
                     <h2 className="leading-snug font-semibold">
-                      <a href={`#book/${book.id}`} className="hover:text-accent">
+                      <a href={`/book/${book.id}`} className="hover:text-accent">
                         {book.title}
                       </a>
                     </h2>
@@ -116,12 +116,12 @@ export function Cart({ books, cart, onChangeQuantity }) {
             <span>€{total.toFixed(2)}</span>
           </div>
           <a
-            href="#checkout"
+            href="/checkout"
             className="block rounded-full bg-accent px-6 py-3 text-center font-medium text-on-accent hover:bg-accent-dark"
           >
             Checkout
           </a>
-          <a href="#books" className="mt-3 block text-center text-sm text-muted hover:text-accent">
+          <a href="/#books" className="mt-3 block text-center text-sm text-muted hover:text-accent">
             Continue shopping
           </a>
         </aside>

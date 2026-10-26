@@ -3,7 +3,7 @@ import { authClient } from '../lib/auth'
 import { getJson } from '../lib/api'
 import { PrintIcon } from '../components/ui/Icons'
 
-// The #order/<id> page: a receipt for one order, with a Print button.
+// The /order/<id> page: a receipt for one order, with a Print button.
 // The header and footer have print:hidden, so only the receipt is printed.
 export function Receipt({ orderId }) {
   const { data: session, isPending } = authClient.useSession()
@@ -32,7 +32,7 @@ export function Receipt({ orderId }) {
             : 'Sign in to see your receipts.'}
         </p>
         <a
-          href={session ? '#my-books' : '#signin/my-books'}
+          href={session ? '/my-books' : '/signin/my-books'}
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           {session ? 'Go to My books' : 'Sign in'}
@@ -53,7 +53,7 @@ export function Receipt({ orderId }) {
   return (
     <section className="mx-auto max-w-2xl px-4 py-12 print:py-0">
       <div className="mb-6 flex items-center justify-between print:hidden">
-        <a href="#my-books" className="text-sm font-medium text-muted hover:text-accent">
+        <a href="/my-books" className="text-sm font-medium text-muted hover:text-accent">
           &larr; Back to My books
         </a>
         {/* window.print() opens the browser's print dialog (or "Save as PDF") */}

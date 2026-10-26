@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getJson, sendJson } from './lib/api'
 import { authClient } from './lib/auth'
+import { handleLinkClick } from './lib/navigate'
 import { Header } from './components/layout/Header'
 import { Home } from './pages/Home'
 import { BookDetails } from './pages/BookDetails'
@@ -27,14 +28,25 @@ function loadCart() {
 }
 
 function App() {
-  // The part of the URL after #, e.g. "#book/slow-maps" or "#events".
-  // Book cards link to #book/<id>, which swaps the home page for that book.
+  // The page's address: the path picks the page ("/book/slow-maps"), the
+  // hash is a section to scroll to ("#reviews", or "#events" on "/").
+  const [path, setPath] = useState(window.location.pathname)
   const [hash, setHash] = useState(window.location.hash)
 
+  // popstate: the address changed (a link went through navigate(), or
+  // Back/Forward). Clicks on our own links are caught here and sent to
+  // navigate() (see lib/navigate.js), so the page isn't loaded again.
   useEffect(() => {
-    const onHashChange = () => setHash(window.location.hash)
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
+    const onAddressChange = () => {
+      setPath(window.location.pathname)
+      setHash(window.location.hash)
+    }
+    window.addEventListener('popstate', onAddressChange)
+    document.addEventListener('click', handleLinkClick)
+    return () => {
+      window.removeEventListener('popstate', onAddressChange)
+      document.removeEventListener('click', handleLinkClick)
+    }
   }, [])
 
   // Books come from our API now. null until they arrive.
@@ -49,7 +61,7 @@ function App() {
   useEffect(loadBooks, [])
 
   // The cart: how many of each book, e.g. { 'slow-maps': 2 }. It lives
-  // here because the header, the book pages and #cart all need it.
+  // here because the header, the book pages and /cart all need it.
   // Passing a function to useState means loadCart only runs once.
   const [cart, setCart] = useState(loadCart)
 
@@ -97,7 +109,7 @@ function App() {
       return
     }
     setCart({ ...cart, [bookId]: inCart + 1 })
-    showToast({ text: `Added "${book.title}" to your cart`, link: '#cart', linkText: 'View cart' })
+    showToast({ text: `Added "${book.title}" to your cart`, link: '/cart', linkText: 'View cart' })
   }
 
   // A quantity of 0 takes the book out of the cart
@@ -130,7 +142,7 @@ function App() {
     if (!userId) {
       showToast({
         text: 'Sign in to save books',
-        link: '#signin',
+        link: '/signin',
         linkText: 'Sign in',
         warning: true,
       })
@@ -143,7 +155,7 @@ function App() {
     sendJson(wasSaved ? 'DELETE' : 'PUT', `/api/wishlist/${bookId}`).then(
       () => {
         if (!wasSaved) {
-          showToast({ text: 'Saved for later', link: '#saved', linkText: 'View saved' })
+          showToast({ text: 'Saved for later', link: '/saved', linkText: 'View saved' })
         }
       },
       () => {
@@ -156,43 +168,41 @@ function App() {
   // Total number of books, for the badge on the cart icon
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
 
-  // Split the hash at each /, e.g. "#book/slow-maps/reviews" gives
-  // page "book", param "slow-maps" and anchor "reviews".
-  // "#signin/checkout" gives page "signin" and param "checkout".
-  const [page, param, anchor] = hash.slice(1).split('/')
+  // Split the path at each /, e.g. "/book/slow-maps" gives page "book"
+  // and param "slow-maps". "/signin/checkout" gives page "signin" and
+  // param "checkout". The home page "/" gives page "".
+  const [page, param] = path.slice(1).split('/')
   const book = page === 'book' ? books?.find((b) => b.id === param) : null
+  const booksLoaded = books !== null
 
-  // After switching views, jump to the top of a book (or to its reviews),
-  // or to the section the link pointed at (it did not exist yet when the
-  // browser looked for it).
+  // After moving to another page, start at its top, or at the section the
+  // hash names (e.g. a book's #reviews). It runs again once the books
+  // arrive, because the book page and the home page's #books section
+  // aren't there until then.
   useEffect(() => {
-    if (book) {
-      const target = anchor ? document.getElementById(anchor) : null
-      if (target) {
-        target.scrollIntoView()
-      } else {
-        window.scrollTo(0, 0)
-      }
-    } else if (hash) {
-      document.getElementById(hash.slice(1))?.scrollIntoView()
+    const target = hash ? document.getElementById(hash.slice(1)) : null
+    if (target) {
+      target.scrollIntoView()
+    } else {
+      window.scrollTo(0, 0)
     }
-  }, [hash, book, anchor])
+  }, [path, hash, booksLoaded])
 
-  // Which view goes in <main>, picked from the page part of the hash
+  // Which view goes in <main>, picked from the first part of the path
   function renderPage() {
     if (page === 'signin' || page === 'signup') {
       // param is where to go after signing in, e.g. back to "checkout"
-      return <SignIn key={hash} mode={page} next={param} />
+      return <SignIn key={path} mode={page} next={param} />
     }
     if (page === 'cart') {
       return <Cart books={books} cart={cart} onChangeQuantity={setQuantity} />
     }
     if (page === 'checkout') {
-      // #checkout/12: reuse unpaid order 12 if the cart still matches it
+      // /checkout/12: reuse unpaid order 12 if the cart still matches it
       return <Checkout books={books} cart={cart} orderId={param} />
     }
     if (page === 'paid') {
-      // Where Stripe sends people back after paying, e.g. #paid/12
+      // Where Stripe sends people back after paying, e.g. /paid/12
       return <Paid key={param} orderId={param} onPaid={onPaid} />
     }
     if (page === 'my-books') {

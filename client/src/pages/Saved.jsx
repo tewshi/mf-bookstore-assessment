@@ -1,7 +1,7 @@
 import { BookCard } from '../components/books/BookCard'
 import { CartIcon, HeartIcon } from '../components/ui/Icons'
 
-// The #saved page: the books the signed-in person saved for later.
+// The /saved page: the books the signed-in person saved for later.
 // savedIds is newest first, so the list is too.
 export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
   if (!signedIn) {
@@ -10,7 +10,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
         <h1 className="mb-2 text-3xl font-bold">Sign in to see saved books</h1>
         <p className="mb-8 text-muted">Tap the heart on any book to keep it for later.</p>
         <a
-          href="#signin/saved"
+          href="/signin/saved"
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
@@ -38,7 +38,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
           </div>
           <p className="mb-6 text-muted">Nothing saved yet.</p>
           <a
-            href="#books"
+            href="/#books"
             className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
           >
             Browse books

@@ -4,10 +4,10 @@ import { postJson } from '../lib/api'
 import { cartItems, cartTotal } from '../lib/cart'
 import { LockIcon } from '../components/ui/Icons'
 
-// The #checkout page: the order summary and a button that sends the
-// customer to Stripe's payment page. Stripe sends them back to #paid/<id>
-// (Paid) afterwards, or to #my-books if they press Back.
-// orderId comes from #checkout/<id>: an unpaid order to reuse, if any.
+// The /checkout page: the order summary and a button that sends the
+// customer to Stripe's payment page. Stripe sends them back to /paid/<id>
+// (Paid) afterwards, or to /my-books if they press Back.
+// orderId comes from /checkout/<id>: an unpaid order to reuse, if any.
 export function Checkout({ books, cart, orderId }) {
   const { data: session, isPending } = authClient.useSession()
   const [busy, setBusy] = useState(false)
@@ -18,14 +18,14 @@ export function Checkout({ books, cart, orderId }) {
   }
 
   // Orders belong to an account, so ask visitors to sign in first.
-  // #signin/checkout brings them straight back here afterwards.
+  // /signin/checkout brings them straight back here afterwards.
   if (!session) {
     return (
       <section id="checkout" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
         <h1 className="mb-2 text-3xl font-bold">Sign in to check out</h1>
         <p className="mb-8 text-muted">Your cart is kept while you sign in.</p>
         <a
-          href="#signin/checkout"
+          href="/signin/checkout"
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
@@ -43,7 +43,7 @@ export function Checkout({ books, cart, orderId }) {
         <h1 className="mb-2 text-3xl font-bold">Nothing to pay for</h1>
         <p className="mb-8 text-muted">Your cart is empty.</p>
         <a
-          href="#books"
+          href="/#books"
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Browse books
@@ -145,7 +145,7 @@ export function Checkout({ books, cart, orderId }) {
             <span>Total</span>
             <span>€{total.toFixed(2)}</span>
           </div>
-          <a href="#cart" className="mt-4 block text-center text-sm text-muted hover:text-accent">
+          <a href="/cart" className="mt-4 block text-center text-sm text-muted hover:text-accent">
             Edit cart
           </a>
         </aside>

@@ -18,7 +18,7 @@ function outOfStock(book) {
     : `Sorry, only ${book.stock} of "${book.title}" left. Lower the quantity to continue.`
 }
 
-// When Checkout is opened as #checkout/<id>, it sends that unpaid order's
+// When Checkout is opened as /checkout/<id>, it sends that unpaid order's
 // id along with the cart. If the cart is exactly what
 // that unpaid order holds, we send them back to the same Stripe page
 // instead of making a second order. Answers { id, url } to reuse it,
@@ -150,10 +150,10 @@ orders.post('/', async (req, res) => {
       })),
       // Where Stripe sends the browser afterwards. BETTER_AUTH_URL is the
       // address of the site (Vite in dev, the Railway URL in production).
-      success_url: `${siteUrl}/#paid/${orderId}`,
+      success_url: `${siteUrl}/paid/${orderId}`,
       // Back (without paying) returns to My books, where this order shows
       // "Pending payment" and a Pay now button
-      cancel_url: `${siteUrl}/#my-books`,
+      cancel_url: `${siteUrl}/my-books`,
       // Unpaid sessions expire after 30 minutes (the shortest Stripe allows).
       // Stripe then sends checkout.session.expired and the books go back.
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,

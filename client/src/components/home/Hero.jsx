@@ -53,13 +53,13 @@ export function Hero() {
           </p>
           <div className="flex flex-wrap gap-3">
             <a
-              href="#staff-picks"
+              href="/#staff-picks"
               className="rounded-full bg-accent px-6 py-3 font-medium text-on-accent shadow-sm hover:bg-accent-dark"
             >
               See this month's staff picks
             </a>
             <a
-              href="#books"
+              href="/#books"
               className="rounded-full border border-line bg-surface px-6 py-3 font-medium hover:border-accent hover:text-accent"
             >
               Browse all books

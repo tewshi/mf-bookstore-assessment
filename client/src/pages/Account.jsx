@@ -8,7 +8,7 @@ const input =
 const button =
   'cursor-pointer rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark disabled:opacity-50'
 
-// The #account page: picture, name and password. Better Auth does the
+// The /account page: picture, name and password. Better Auth does the
 // saving; after each change it refreshes the session, so the header's
 // avatar and name update by themselves.
 export function Account() {
@@ -23,7 +23,7 @@ export function Account() {
       <section className="mx-auto max-w-md px-4 py-24 text-center">
         <h1 className="mb-2 text-3xl font-bold">Sign in to see your account</h1>
         <a
-          href="#signin/account"
+          href="/signin/account"
           className="mt-6 inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
