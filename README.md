@@ -40,7 +40,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `layout/`: on every page. `Header` is the top bar, `UserMenu` the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button, `Footer`, and `accountLinks.js` the links in the account menu (Admin only for admins)
     - `books/`: `BookCard`, `BookGrid` (search, sort, section filter and pages, all asked of the API), `StarRating`, and `Reviews` and `Recommendations`, the sections under each book
     - `home/`: the other parts of the home page: `Hero`, `StaffPicks` and `Events`
-    - `ui/`: small general pieces: `Icons` (the SVG icons), `Avatar`, `Toast` (the short message at the bottom, "Added to your cart"), `Reveal` (fades a section in), and the pieces every list shares: `Select` (the round dropdown), `SearchBox` and `Pagination` (Previous, page numbers, Next; hidden when there is only one page)
+    - `ui/`: small general pieces: `Icons` (the SVG icons), `Avatar`, `Toast` (the short message at the bottom, "Added to your cart"), `Reveal` (fades a section in), and the pieces every list shares: `Select` (the round dropdown), `SearchBox`, `Pagination` (Previous, page numbers, Next; hidden when there is only one page) and `RefreshButton` (fetches the list again, on the admin tabs, Orders and Wishlist)
   - `src/lib/`: plain JavaScript, no components:
     - `api.js`: `getJson()`, `sendJson()` and `postJson()`, small `fetch` wrappers
     - `auth.js`: the Better Auth client (`signIn`, `signUp`, `signOut`, `useSession`)

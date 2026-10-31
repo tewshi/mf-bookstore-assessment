@@ -165,3 +165,13 @@ export function MoonIcon({ className }) {
     </Icon>
   )
 }
+
+// Two arrows going round: reload a list
+export function RefreshIcon({ className }) {
+  return (
+    <Icon className={className}>
+      <path d="M20 12a8 8 0 0 1-14.3 4.9M4 12a8 8 0 0 1 14.3-4.9" />
+      <path d="M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2" />
+    </Icon>
+  )
+}
