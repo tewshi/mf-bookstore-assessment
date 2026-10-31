@@ -67,6 +67,8 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `auth.js`: Better Auth setup (email and password, plus a `role` field on users)
     - `session.js`: `currentUser()`, `requireUser` and `requireAdmin`, which find the signed-in person from the session cookie
     - `stripe.js`: the Stripe client, made with `STRIPE_SECRET_KEY`
+    - `mail.js`: the SMTP connection (nodemailer) and `sendEmail()`, which logs instead of sending when the `SMTP_` settings are missing
+    - `emails.js`: the three emails the shop sends: `sendReceipt`, `sendRefundEmail` and `sendPasswordReset` (see [Emails](#emails))
     - `notifications.js`: `sendNotification`, `sendToAdmins` and `sendBackInStock`, which save messages for the bell (see [Notifications](#notifications))
     - `live.js`: the open `/api/live` connections (with who opened each), and `notifyEveryone`, `notifyUser`, `notifyAdmins` and `notifyUserAndAdmins`, which the routes call after they change something
   - `db/schema.sql`: the shop's tables (see below)
@@ -215,6 +217,20 @@ After saving, `notifyUser('notifications', userId)` tells that person's open tab
 
 To know whether a book was sold out, the admin edit uses `UPDATE books ... FROM books AS before`: `before` is the same row as it was before the update, so `RETURNING before.stock` gives the old stock. The cancel and refund code works it out from `RETURNING`: the new stock minus the quantity put back.
 
+## Emails
+
+The server sends three emails over SMTP with [nodemailer](https://nodemailer.com), using the Mailtrap sandbox: Mailtrap accepts them like a real mail server but keeps them in an inbox on mailtrap.io, so nothing reaches a real person while testing.
+
+| Email | When | Sent from |
+| --- | --- | --- |
+| Your receipt for order #12 (the books, the total, a link to `/order/12`) | the order is paid | `markPaid` in `webhook.js` |
+| Order #12 has been refunded | a refund, from the admin page or the Stripe dashboard | `refundOrder` in `webhook.js` |
+| Reset your MayerfeldBooks password (the one-time link) | someone asks on `/forgot-password` | `sendResetPassword` in `lib/auth.js` |
+
+- `lib/mail.js` sets up the connection once (like the `pg` pool). Mailtrap starts each connection unencrypted and then switches to TLS (STARTTLS), on every port, so `secure` is off unless `SMTP_SECURE=true`, and `requireTLS` makes sure the switch happens before the password is sent.
+- `lib/emails.js` writes each email twice: plain text, and simple HTML with inline styles (mail apps ignore `<style>` sheets and our Tailwind). Names and book titles go through `escapeHtml`, so a name like `<b>Ada</b>` shows as text instead of changing the email.
+- Emails are an extra, like notifications: `sendEmail` logs a failure instead of throwing, the webhook doesn't wait for them (Stripe waits for its answer), and without the `SMTP_` variables the server still starts and only logs what it would have sent.
+
 ## Recommendations
 
 Under each book, "Readers who bought this also bought" comes from `GET /api/books/:id/recommendations`. The query in `server/src/routes/books.js` works in three steps (a `WITH` query):
@@ -253,11 +269,18 @@ The homepage hero fades up when it loads (`animate-fade-up`, a keyframe in `inde
 3. The browser sends that cookie with every request. `useSession()` in `Header` asks `/api/auth/get-session` who it belongs to, so after a refresh you are still signed in.
 4. Sign out deletes the session row and the cookie.
 
+**Forgot password.** Under the password on `/signin` there is a "Forgot password?" link:
+
+1. `/forgot-password` asks for the email and calls `authClient.requestPasswordReset({ email, redirectTo: '/reset-password' })`. The answer is the same whether or not the email has an account, so the form can't be used to find out who shops here.
+2. If it does, Better Auth saves a one-time token (in `verification`, valid for an hour) and calls `sendResetPassword` in `lib/auth.js`, which emails the link. The email isn't awaited: waiting for the mail server would make the answer slower for real accounts than for unknown ones, which would give them away.
+3. The link goes to Better Auth (`/api/auth/reset-password/<token>`), which checks the token and sends the browser on to `/reset-password?token=...`, or `?error=INVALID_TOKEN` when it has expired or was used.
+4. `ResetPassword` sends the new password with the token (`authClient.resetPassword`). The token works once, and `revokeSessionsOnPasswordReset` signs the account out everywhere, in case someone else had the old password.
+
 On `/account` people can change their name and password, and upload a picture. The picture is shrunk to 160x160 in the browser and saved as text (a data URL) in the user's `image` field, so no file storage is needed.
 
 ## Secrets
 
-`server/.env` holds `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET_KEY`. It is listed in `.gitignore` and never committed; `server/.env.example` shows the names. In production the same values are set as Railway variables.
+`server/.env` holds `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET_KEY`, and `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASS` for email. It is listed in `.gitignore` and never committed; `server/.env.example` shows the names. In production the same values are set as Railway variables.
 
 ## Deployment
 

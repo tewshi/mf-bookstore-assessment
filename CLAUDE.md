@@ -5,7 +5,7 @@ Course project for a bookstore site, built up over weekly assignments. The stude
 - Assignment 1: plain HTML/CSS
 - Assignment 2: Vite + React + Tailwind (hardcoded data)
 - Assignment 3: Express API, Postgres, Better Auth, deployed on Railway
-- Assignment 4: Stripe Checkout (test mode), webhook marks orders paid; admin refunds; in-app notifications
+- Assignment 4: Stripe Checkout (test mode), webhook marks orders paid; admin refunds; in-app notifications; emails (receipt, refund, password reset) via Mailtrap
 
 `README.md` documents the folder structure, the schema, the API and how login works. Keep it up to date when any of those change.
 
@@ -37,7 +37,7 @@ There are no automated tests. Check a change with lint + build, then by running 
 npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No lockfile: the instructor asked for none, so `.npmrc` has `package-lock=false` and `.gitignore` lists `package-lock.json`. Don't add one back.
 
 - `server/src/index.js`: mounts Better Auth and the Stripe webhook (raw body), then `express.json()`, then `/api`, then serves `client/dist`, and last an error handler that answers `{ error }` as JSON (500, or the error's own status such as 400 for broken JSON)
-- `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client), `notifications.js` (`sendNotification(userIds, text, link)`, `sendToAdmins`, `sendBackInStock`: rows in `notifications`, then a live `notifications` topic to those people), `live.js` (SSE: open `/api/live` tabs with `userId`/`isAdmin`, and `notifyEveryone` / `notifyUser` / `notifyAdmins` / `notifyUserAndAdmins`; the route is `routes/live.js`)
+- `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client), `mail.js` (nodemailer transport + `sendEmail()`, logs instead of sending without SMTP vars), `emails.js` (`sendReceipt`, `sendRefundEmail`, `sendPasswordReset`; text + inline-styled HTML, `escapeHtml` on names/titles), `notifications.js` (`sendNotification(userIds, text, link)`, `sendToAdmins`, `sendBackInStock`: rows in `notifications`, then a live `notifications` topic to those people), `live.js` (SSE: open `/api/live` tabs with `userId`/`isAdmin`, and `notifyEveryone` / `notifyUser` / `notifyAdmins` / `notifyUserAndAdmins`; the route is `routes/live.js`)
 - `server/src/routes/api.js`: the `/api` router: health check, then mounts every router in `routes/`
 - `server/src/routes/books.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/:id`, `/:id/recommendations`; `reviews.js`: `/api/books/:id/reviews` (`Router({ mergeParams: true })` to read `:id`)
 - `server/src/routes/orders.js`: `/api/orders` (pending order + stock decrement + Stripe Checkout Session in one transaction, paid history, `/:id` with status)
@@ -45,7 +45,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - `server/src/routes/notifications.js` (the bell: list, mark read), `routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, `GET /counts` for the tab badges, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, `users.js` (read only), one per admin tab)
 - Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
-- `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `Orders`, `Wishlist`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
+- `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `ForgotPassword`, `ResetPassword`, `Cart`, `Checkout`, `Paid`, `Orders`, `Wishlist`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
 - `client/src/components/`: `layout/` (Header, menus, NotificationBell, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal, and Select, SearchBox, Pagination, RefreshButton for every list)
 - `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `usePages.js` (client-side paging: Orders 10, Wishlist 12, admin lists 10, staff picks and events 6; the book grid's 12 is `perPage` in `routes/books.js`; `Pagination` renders nothing for one page), `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`), `useLive.js` (`useLive(topic, load)`: one shared `EventSource` per tab)
 - Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres
@@ -55,7 +55,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 
 - Plain SQL with `pg` and `$1` placeholders. No ORM.
 - Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/routes/books.js`).
-- Path routing in `App.jsx`, no router library: `history.pushState` via `navigate()` in `lib/navigate.js`, and `App` listens for `popstate`. A document click listener (`handleLinkClick`) sends our own `<a href="/...">` links through `navigate()`, so plain `<a>` tags are fine. The path splits at `/` into page/param: `/book/<id>`, `/signin/checkout` (sign in, then go to `/checkout`), `/cart`, `/checkout`, `/checkout/<id>` (Buy now reuses order <id> if the cart still matches; nothing links here since cancel_url became `/orders`), `/paid/<id>` (Stripe's success_url), `/orders`, `/wishlist`, `/account`, `/order/<id>`, `/admin/<tab>`. `#` is only for scrolling to a section: `/#books`, `/#staff-picks`, `/#events`, `/book/<id>#reviews`.
+- Path routing in `App.jsx`, no router library: `history.pushState` via `navigate()` in `lib/navigate.js`, and `App` listens for `popstate`. A document click listener (`handleLinkClick`) sends our own `<a href="/...">` links through `navigate()`, so plain `<a>` tags are fine. The path splits at `/` into page/param: `/book/<id>`, `/signin/checkout` (sign in, then go to `/checkout`), `/forgot-password`, `/reset-password?token=` (Better Auth's email link redirects here; the only page that reads `location.search`), `/cart`, `/checkout`, `/checkout/<id>` (Buy now reuses order <id> if the cart still matches; nothing links here since cancel_url became `/orders`), `/paid/<id>` (Stripe's success_url), `/orders`, `/wishlist`, `/account`, `/order/<id>`, `/admin/<tab>`. `#` is only for scrolling to a section: `/#books`, `/#staff-picks`, `/#events`, `/book/<id>#reviews`.
 - Comments explain *why* in plain English for a student reader; match the density of the existing files.
 - Commits: small, one-line messages, one logical step each.
 
@@ -74,6 +74,8 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - oxlint's React rules flag `Date.now()` in render scope, `setState` straight inside an effect, and writing `window.location` in a component; use a ref, derive the value during render, or render a link instead.
 - In production, Express answers any non-`/api` GET with `client/dist/index.html` (after `express.static`), or a refresh on `/orders` would 404. Vite does this by itself in dev.
 - Live updates (SSE): a route that changes data must notify after the write (after `COMMIT` in a transaction), and a list that shows it needs `useLive('<topic>', load)`. Pick the audience: `notifyEveryone` for public data (books, events, reviews), `notifyUser` for one person's own (wishlist), `notifyUserAndAdmins` for orders, `notifyAdmins` for users. Only the topic is sent, never data. The tab's identity is fixed at connect, so `App` calls `liveSignedInAs(userId)` to reconnect on sign-in/out. `EventSource` gives up for good after an HTTP error (Vite/Railway while Express restarts), and Vite's proxy can keep a dead stream open, so `useLive.js` reconnects itself (5s after CLOSED, or after 60s without the 25s `ping`). Chrome's network panel may not list the refetches; `performance.getEntriesByType('resource')` does.
+- Mailtrap's sandbox uses STARTTLS on every port, 465 included: nodemailer's default (`secure: true` on 465) fails with `SSL ... wrong version number`. `lib/mail.js` sets `secure` only when `SMTP_SECURE=true`, plus `requireTLS`.
+- Emails and notifications never fail the action that caused them: `sendEmail` logs errors, and the webhook doesn't await emails (Stripe waits for its answer). Better Auth's `sendResetPassword` isn't awaited either (timing would reveal which emails have accounts).
 - `pool.on('error')` is required: Neon/Railway close idle connections and an unhandled pool error crashes the process.
 - Better Auth throws at startup in production without `BETTER_AUTH_SECRET`. `lib/db.js` and `lib/auth.js` check the three env vars and name the missing one.
 
@@ -92,7 +94,7 @@ Build/start/pre-deploy commands live in the **service settings on Railway**, not
 | Pre-deploy | `npm run migrate -w server` |
 | Start | `npm start` |
 
-Variables on `bookstore-assessment`: `DATABASE_URL=${{bookstore-pgdb.DATABASE_URL}}`, `BETTER_AUTH_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`, `BETTER_AUTH_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET_KEY`. `lib/stripe.js` throws at startup if either Stripe one is missing.
+Variables on `bookstore-assessment`: `DATABASE_URL=${{bookstore-pgdb.DATABASE_URL}}`, `BETTER_AUTH_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`, `BETTER_AUTH_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET_KEY`, and for email `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (Mailtrap). `lib/stripe.js` throws at startup if either Stripe one is missing; missing SMTP vars only log a warning (emails are then logged, not sent).
 
 Live URL: https://mayerfeld-bookstore-assessment.up.railway.app
 
