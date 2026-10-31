@@ -2,6 +2,7 @@ import { pool } from '../lib/db.js'
 import { stripe } from '../lib/stripe.js'
 import { notifyEveryone, notifyUserAndAdmins } from '../lib/live.js'
 import { sendBackInStock, sendNotification, sendToAdmins } from '../lib/notifications.js'
+import { sendReceipt, sendRefundEmail } from '../lib/emails.js'
 
 // POST /api/webhooks/stripe: Stripe calls this when something happens to
 // a checkout session or a payment. Every change of an order's status after
@@ -69,14 +70,14 @@ export async function stripeWebhook(req, res) {
 // event both call refundOrder, and only the first one counts.
 
 async function markPaid(sessionId) {
-  // UPDATE ... FROM "user": RETURNING can then also give the buyer's name,
-  // for the admins' notification
+  // UPDATE ... FROM "user": RETURNING can then also give the buyer's name
+  // (for the admins' notification) and email (for the receipt)
   const { rows } = await pool.query(
     `UPDATE orders SET status = 'paid', paid_at = now()
      FROM "user"
      WHERE orders.stripe_session_id = $1 AND orders.status = 'pending'
        AND "user".id = orders.user_id
-     RETURNING orders.id, orders.user_id, orders.total, "user".name`,
+     RETURNING orders.id, orders.user_id, orders.total, "user".name, "user".email`,
     [sessionId],
   )
   // Only when something changed (not for a repeated event)
@@ -95,6 +96,17 @@ async function markPaid(sessionId) {
     `/order/${order.id}`,
   )
   await sendToAdmins(`New order #${order.id} from ${order.name}, ${total}.`, '/admin/orders')
+
+  // The receipt by email, with the books in it. Not awaited: Stripe waits
+  // for our answer, and an email can take a few seconds. sendEmail logs
+  // it if it fails.
+  const { rows: items } = await pool.query(
+    `SELECT books.title, order_items.quantity, order_items.price
+     FROM order_items JOIN books ON books.id = order_items.book_id
+     WHERE order_items.order_id = $1 ORDER BY books.title`,
+    [order.id],
+  )
+  void sendReceipt({ user: order, order, items })
 }
 
 // Adds an order's books back to the shelf, inside the caller's
@@ -152,9 +164,13 @@ export async function refundOrder(sessionId) {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    // FROM "user": the buyer's name and email too, for the email below
     const { rows } = await client.query(
       `UPDATE orders SET status = 'refunded', refunded_at = now()
-       WHERE stripe_session_id = $1 AND status = 'paid' RETURNING id, user_id, total`,
+       FROM "user"
+       WHERE orders.stripe_session_id = $1 AND orders.status = 'paid'
+         AND "user".id = orders.user_id
+       RETURNING orders.id, orders.user_id, orders.total, "user".name, "user".email`,
       [sessionId],
     )
     const backInStock = rows.length > 0 ? await putBooksBack(client, rows[0].id) : []
@@ -170,6 +186,8 @@ export async function refundOrder(sessionId) {
       '/orders',
     )
     await sendBackInStock(backInStock)
+    // Not awaited, like the receipt
+    void sendRefundEmail({ user: order, order })
   } catch (err) {
     await client.query('ROLLBACK')
     throw err
