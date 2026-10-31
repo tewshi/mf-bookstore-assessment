@@ -15,9 +15,10 @@ npm run seed -w server               # fill books and events
 npm run dev                          # Express on :3000, Vite on :5173
 stripe listen --all-snapshot --forward-to localhost:3000/api/webhooks/stripe   # in a second terminal, for payments
 npm run make-admin -w server -- you@example.com   # optional: make your account an admin
+npm test                             # the tests, server and client (see Tests)
 ```
 
-The root `Makefile` has short names for the everyday ones: `make dev`, `make stripe`, `make build`, `make start`, `make lint` (`make` alone lists them). `make dev` is `npm run dev` plus the Stripe listener in the same terminal (`node dev.js --stripe`), so it needs the Stripe CLI installed and logged in; if `stripe` stops, the other two stop as well. `make stripe` on its own runs `stripe listen --all-snapshot` and forwards to whichever port the running API is listening on (found with `pgrep` + `lsof`; it waits up to 10 seconds for the API to start), falling back to `PORT` in `server/.env`, then 3000.
+The root `Makefile` has short names for the everyday ones: `make dev`, `make stripe`, `make build`, `make start`, `make lint`, `make test` (`make` alone lists them). `make dev` is `npm run dev` plus the Stripe listener in the same terminal (`node dev.js --stripe`), so it needs the Stripe CLI installed and logged in; if `stripe` stops, the other two stop as well. `make stripe` on its own runs `stripe listen --all-snapshot` and forwards to whichever port the running API is listening on (found with `pgrep` + `lsof`; it waits up to 10 seconds for the API to start), falling back to `PORT` in `server/.env`, then 3000.
 
 Open **http://localhost:5173**, not :3000. In dev, Express on :3000 only answers `/api`; Vite serves the page and passes every `/api` request on to Express. `dev.js` (in the repo root) starts both with Node's built-in `child_process`, so no extra package is needed; Ctrl+C stops both, and if one of them stops on its own, so does the other.
 
@@ -49,6 +50,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `useLive.js`: `useLive(topic, load)`, which runs a list's `load()` again when the server says that kind of data changed (see [Live updates](#live-updates))
     - `navigate.js`: `navigate()`, which changes the page without loading it again, and the click handler that sends our links through it
     - `resizeImage.js`: shrinks a profile picture to 160x160 before it is saved
+  - `test/`: the client's unit and smoke tests (see [Tests](#tests))
 - `server/`: the Express API
   - `src/index.js`: starts Express, mounts auth and the API, serves `client/dist`
   - `src/routes/`: one file per part of the API
@@ -73,6 +75,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `live.js`: the open `/api/live` connections (with who opened each), and `notifyEveryone`, `notifyUser`, `notifyAdmins` and `notifyUserAndAdmins`, which the routes call after they change something
   - `db/schema.sql`: the shop's tables (see below)
   - `db/migrate.js`: creates Better Auth's tables, then runs `schema.sql`
+  - `test/`: the server's unit tests (see [Tests](#tests))
   - `db/seed.js`: copies the arrays in `db/data/` (24 books, 7 events) into the database. Rows are updated in place, so orders, reviews and reservations survive a re-seed
   - `db/make-admin.js`: makes an account an admin (`--undo` to reverse)
 
@@ -230,6 +233,36 @@ The server sends three emails over SMTP with [nodemailer](https://nodemailer.com
 - `lib/mail.js` sets up the connection once (like the `pg` pool). Mailtrap starts each connection unencrypted and then switches to TLS (STARTTLS), on every port, so `secure` is off unless `SMTP_SECURE=true`, and `requireTLS` makes sure the switch happens before the password is sent.
 - `lib/emails.js` writes each email twice: plain text, and simple HTML with inline styles (mail apps ignore `<style>` sheets and our Tailwind). Names and book titles go through `escapeHtml`, so a name like `<b>Ada</b>` shows as text instead of changing the email.
 - Emails are an extra, like notifications: `sendEmail` logs a failure instead of throwing, the webhook doesn't wait for them (Stripe waits for its answer), and without the `SMTP_` variables the server still starts and only logs what it would have sent.
+
+## Tests
+
+`npm test` (or `make test`) runs both: `npm test -w server` and `npm test -w client` run one side. Both use [Vitest](https://vitest.dev); `npm run test:watch -w client` keeps it running and re-tests on every save. The tests need no database, no Stripe, no mail server and no `.env`: whatever would reach the outside world is swapped for a fake.
+
+**Server, `server/test/`: unit tests**
+
+| File | What it checks |
+| --- | --- |
+| `live.test.js` | who hears each live update: everyone, one person's tabs, admins, the buyer and admins |
+| `validation.test.js` | the admin forms' checks (`readBook`, `readEvent`) and `toBook` (numbers from Postgres strings, `staffPick`, no rating = `null`) |
+| `emails.test.js` | what the receipt, refund and reset emails say, and that names and titles can't add HTML |
+| `webhook.test.js` | the Stripe webhook: a bad signature is refused before the database, a payment marks paid + notifies + emails, an unpaid bank debit and a repeated event change nothing, a partial refund is ignored, a full one is found through its session |
+| `refund.test.js` | the admin refund route, called over HTTP: refunds a paid Stripe order, refuses unpaid, demo and unknown orders, handles "already refunded in the dashboard" and Stripe saying no |
+
+**How the fakes work.** `vi.mock('../src/lib/db.js', ...)` tells Vitest: whenever any file imports `db.js`, hand it this object instead. The fake's functions are `vi.fn()`, which record every call, so a test can set what they answer (`pool.query.mockResolvedValueOnce({ rows: [order] })`) and check afterwards how they were called (`expect(stripe.refunds.create).toHaveBeenCalledWith({ payment_intent: 'pi_1' })`). The files under test are imported after the `vi.mock` lines with `await import(...)`, so they get the fakes. `readBook`, `readEvent` and `toBook` are exported only so the tests can call them.
+
+`refund.test.js` runs the real router in a small Express app of its own (`app.listen(0)` picks a free port) and calls it with `fetch`, the way the browser does.
+
+**Client, `client/test/`: unit and smoke tests**
+
+The tests run in jsdom, a browser written in JavaScript, set up in `vite.config.js` under `test`. `test/setup.js` adds the few things jsdom lacks (`IntersectionObserver` for `Reveal`, `EventSource` for live updates, scrolling) and clears the page after each test. Components are rendered with [Testing Library](https://testing-library.com), which finds things the way a person would: by their text or role (`screen.getByRole('button', { name: 'Refresh' })`).
+
+| File | What it checks |
+| --- | --- |
+| `lib.test.js` | `cart.js` (items and total), `api.js` (answers, the server's error message, the JSON body), `navigate.js` (our links go through `navigate()`; other sites, the API, `#` sections and Cmd-click are left to the browser) |
+| `components.test.jsx` | `usePages` (pages, staying in range when a list shrinks), `Pagination` (hidden for one page, "Showing 11–20 of 25", Previous/Next), `RefreshButton` (off while reloading, no double reload) |
+| `smoke.test.jsx` | the whole `<App />` opened on each main address shows the right page: home, a book, an unknown book or address (Page not found), the cart (empty, and filled from `localStorage`), sign in, sign up, forgot and reset password, and Orders, Wishlist and Admin asking a signed-out visitor to sign in. `fetch` answers like the API would, and nobody is signed in |
+
+A smoke test doesn't check details; it catches the big breaks, like a page that crashes, a route that no longer matches, or an import that went missing.
 
 ## Recommendations
 

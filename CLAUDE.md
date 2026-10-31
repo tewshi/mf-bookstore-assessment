@@ -22,15 +22,16 @@ npm install                  # root: installs both workspaces
 npm run dev                  # node dev.js: Express on :3000 (API only) + Vite on :5173 (open this)
 stripe listen --all-snapshot --forward-to localhost:3000/api/webhooks/stripe   # needed locally for payments to turn 'paid' (new CLIs refuse to start without an events flag)
 npm run lint                 # oxlint on the client
+npm test                     # Vitest: server/test (unit) + client/test (unit + smoke); -w server or -w client for one side
 npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
 npm run seed -w server       # upserts the 24 books and 7 events (orders, reviews, reservations survive)
 npm run make-admin -w server -- you@example.com   # role = 'admin' (--undo to reverse)
 make dev                     # node dev.js --stripe: the two servers above + make stripe, one terminal
-make stripe | build | start | lint   # root Makefile; make stripe waits up to 10s for the running API's port (pgrep + lsof), else PORT in server/.env, else 3000
+make stripe | build | start | lint | test   # root Makefile; make stripe waits up to 10s for the running API's port (pgrep + lsof), else PORT in server/.env, else 3000
 ```
 
-There are no automated tests. Check a change with lint + build, then by running the server and hitting the API (curl) or the page.
+Check a change with `npm test` + lint + build, then by running the server and hitting the API (curl) or the page. Tests need no database, Stripe, SMTP or `.env`: `vi.mock` swaps `lib/db.js`, `lib/stripe.js`, `lib/mail.js` etc. for `vi.fn()` fakes, and the module under test is loaded after with `await import()`. Client tests run in jsdom (settings under `test` in `vite.config.js`; `test/setup.js` stubs `IntersectionObserver`, `EventSource`, scrolling). Smoke tests render `<App />` per address with a fake `fetch` and `vi.mock('../src/lib/auth')`; a new page should get a line there. When adding a test, break the code once to see it fail.
 
 ## Layout
 
