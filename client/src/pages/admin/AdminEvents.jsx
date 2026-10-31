@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getJson, sendJson } from '../../lib/api'
 import { usePages } from '../../lib/usePages'
 import { Pagination } from '../../components/ui/Pagination'
+import { RefreshButton } from '../../components/ui/RefreshButton'
 
 const emptyEvent = { id: '', datetime: '', title: '', text: '', seats: '20' }
 
@@ -14,11 +15,14 @@ export function AdminEvents() {
   const [editing, setEditing] = useState(null)
   const [message, setMessage] = useState(null)
 
+  // Returns the promise, so the Refresh button can wait for it
   function load() {
-    getJson('/api/admin/events').then(setEvents, () => setEvents([]))
+    return getJson('/api/admin/events').then(setEvents, () => setEvents([]))
   }
 
-  useEffect(load, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   function closeForm(text) {
     setEditing(null)
@@ -36,16 +40,19 @@ export function AdminEvents() {
     <div id="admin-events" className="scroll-mt-24">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted">{events.length} events</p>
-        <button
-          type="button"
-          onClick={() => {
-            setEditing('new')
-            setMessage(null)
-          }}
-          className="cursor-pointer rounded-full bg-accent px-5 py-2 text-sm font-medium text-on-accent hover:bg-accent-dark"
-        >
-          Add an event
-        </button>
+        <div className="flex gap-2">
+          <RefreshButton onRefresh={load} />
+          <button
+            type="button"
+            onClick={() => {
+              setEditing('new')
+              setMessage(null)
+            }}
+            className="cursor-pointer rounded-full bg-accent px-5 py-2 text-sm font-medium text-on-accent hover:bg-accent-dark"
+          >
+            Add an event
+          </button>
+        </div>
       </div>
 
       {message && (

@@ -5,6 +5,7 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Select } from '../../components/ui/Select'
 import { SearchBox } from '../../components/ui/SearchBox'
 import { Pagination } from '../../components/ui/Pagination'
+import { RefreshButton } from '../../components/ui/RefreshButton'
 
 const roleOptions = [
   { value: 'all', label: 'All roles' },
@@ -22,8 +23,13 @@ export function AdminUsers() {
   const [role, setRole] = useState('all')
   const [search, setSearch] = useState('')
 
+  // Returns the promise, so the Refresh button can wait for it
+  function load() {
+    return getJson('/api/admin/users').then(setUsers, () => setUsers([]))
+  }
+
   useEffect(() => {
-    getJson('/api/admin/users').then(setUsers, () => setUsers([]))
+    load()
   }, [])
 
   // Filtered here from the users we already have, like the orders tab
@@ -56,6 +62,7 @@ export function AdminUsers() {
         <p className="text-sm text-muted">
           {shown.length} of {users.length} users
         </p>
+        <RefreshButton onRefresh={load} />
       </div>
 
       {shown.length === 0 ? (

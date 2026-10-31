@@ -4,6 +4,7 @@ import { usePages } from '../../lib/usePages'
 import { Select } from '../../components/ui/Select'
 import { SearchBox } from '../../components/ui/SearchBox'
 import { Pagination } from '../../components/ui/Pagination'
+import { RefreshButton } from '../../components/ui/RefreshButton'
 
 // The badge colour for each order status
 const statusColors = {
@@ -30,8 +31,13 @@ export function AdminOrders() {
   const [status, setStatus] = useState('all')
   const [search, setSearch] = useState('')
 
+  // Returns the promise, so the Refresh button can wait for it
+  function load() {
+    return getJson('/api/admin/orders').then(setOrders, () => setOrders([]))
+  }
+
   useEffect(() => {
-    getJson('/api/admin/orders').then(setOrders, () => setOrders([]))
+    load()
   }, [])
 
   // Which orders the table shows: worked out here from the orders we
@@ -86,6 +92,7 @@ export function AdminOrders() {
         <p className="text-sm text-muted">
           {shown.length} of {orders.length} orders
         </p>
+        <RefreshButton onRefresh={load} />
       </div>
 
       {orders.length === 0 ? (

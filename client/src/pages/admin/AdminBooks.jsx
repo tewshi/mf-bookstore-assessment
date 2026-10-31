@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { sendJson } from '../../lib/api'
 import { usePages } from '../../lib/usePages'
 import { Pagination } from '../../components/ui/Pagination'
+import { RefreshButton } from '../../components/ui/RefreshButton'
 
 // What a new book's form starts with
 const emptyBook = {
@@ -61,16 +62,20 @@ export function AdminBooks({ books, onChanged }) {
     <div id="admin-books" className="scroll-mt-24">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted">{books.length} books</p>
-        <button
-          type="button"
-          onClick={() => {
-            setEditing('new')
-            setMessage(null)
-          }}
-          className="cursor-pointer rounded-full bg-accent px-5 py-2 text-sm font-medium text-on-accent hover:bg-accent-dark"
-        >
-          Add a book
-        </button>
+        <div className="flex gap-2">
+          {/* onChanged is App's loadBooks: the books are App's list */}
+          <RefreshButton onRefresh={onChanged} />
+          <button
+            type="button"
+            onClick={() => {
+              setEditing('new')
+              setMessage(null)
+            }}
+            className="cursor-pointer rounded-full bg-accent px-5 py-2 text-sm font-medium text-on-accent hover:bg-accent-dark"
+          >
+            Add a book
+          </button>
+        </div>
       </div>
 
       {runningLow.length > 0 && (
