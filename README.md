@@ -46,6 +46,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `auth.js`: the Better Auth client (`signIn`, `signUp`, `signOut`, `useSession`)
     - `cart.js`: turns the saved cart into a list of books and a total
     - `usePages.js`: splits a list the page already has (orders, events, staff picks) into pages. The book grid instead asks the server for one page at a time
+    - `useLive.js`: `useLive(topic, load)`, which runs a list's `load()` again when the server says that kind of data changed (see [Live updates](#live-updates))
     - `navigate.js`: `navigate()`, which changes the page without loading it again, and the click handler that sends our links through it
     - `resizeImage.js`: shrinks a profile picture to 160x160 before it is saved
 - `server/`: the Express API
@@ -58,12 +59,14 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `webhook.js`: `/api/webhooks/stripe`, where Stripe confirms payments. The only code that marks an order paid
     - `wishlist.js`: `/api/wishlist`, the saved books
     - `events.js`: `/api/events` and seat reservations
+    - `live.js`: `/api/live`, the open connection each tab listens on for live updates
     - `admin.js`: `/api/admin`, for admins only. It checks the role, then mounts `admin/orders.js`, `admin/books.js`, `admin/events.js` and `admin/users.js` (one per admin tab)
   - `src/lib/`: the setup the routes share
     - `db.js`: one `pg` connection pool, shared by everything
     - `auth.js`: Better Auth setup (email and password, plus a `role` field on users)
     - `session.js`: `currentUser()`, `requireUser` and `requireAdmin`, which find the signed-in person from the session cookie
     - `stripe.js`: the Stripe client, made with `STRIPE_SECRET_KEY`
+    - `live.js`: the open `/api/live` connections, and `notify(topic)`, which the routes call after they change something
   - `db/schema.sql`: the shop's tables (see below)
   - `db/migrate.js`: creates Better Auth's tables, then runs `schema.sql`
   - `db/seed.js`: copies the arrays in `db/data/` (24 books, 7 events) into the database. Rows are updated in place, so orders, reviews and reservations survive a re-seed
@@ -106,6 +109,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `GET /api/admin/users` | everyone with an account: role, join date, paid orders and total spent. Admins |
 | `POST /api/admin/books`, `PUT` / `DELETE /api/admin/books/:id` | add, edit or delete a book (books that were ordered can't be deleted). Admins |
 | `GET /api/admin/events`, `POST /api/admin/events`, `PUT` / `DELETE /api/admin/events/:id` | all events, past ones too; add, edit or delete one. Admins |
+| `GET /api/live` | an event stream that stays open: a `data: <topic>` line whenever books, orders, events, wishlists, reviews or users change, and `data: ping` every 25 seconds. Never the data itself |
 | `/api/auth/*` | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
 
 ## Page addresses
@@ -148,6 +152,30 @@ The book grid asks the API for one page at a time: `GET /api/books?page=1&q=...&
 ## Reviews
 
 Only people who bought a book can review it: the server checks `order_items` before saving. Each book page loads its reviews from `GET /api/books/:id/reviews`, and buyers get a form with the `StarRating` component. Orders (`/orders`, in the account menu) lists every order with a "Write a review" link for each book, which opens `/book/<id>#reviews`.
+
+## Live updates
+
+Every list on the site updates by itself when someone changes it: stock when someone else checks out, an order turning paid when the webhook arrives, seats on the events, new reviews, and every admin tab. It uses Server-Sent Events (SSE), which browsers support with `EventSource`, so there is no extra package.
+
+1. **One connection per tab.** The first list on the page opens `GET /api/live` (`client/src/lib/useLive.js`), and every other list shares it: browsers allow only about 6 open requests per site.
+2. **The server remembers it.** `server/src/lib/live.js` keeps each open response in a `Set`, and takes it out when the tab closes.
+3. **A route changes something, then calls `notify()`.** For example, checkout calls `notify('orders')` and `notify('books')` after its `COMMIT`. Every open tab gets the lines `data: orders` and `data: books`. Sign-ups and profile changes go through Better Auth, so `databaseHooks` in `lib/auth.js` call `notify('users')`.
+4. **Each list fetches again.** A list says what it listens for next to its `load()`: `useLive('orders', load)`. Only the topic travels over `/api/live`; the list fetches the data through its usual route, so the usual sign-in and admin checks still decide who sees what.
+
+The topics and who listens:
+
+| Topic | Sent by | Fetched again by |
+| --- | --- | --- |
+| `books` | checkout, cancelled orders, reviews, admin books | App's book list (grid, staff picks, book pages, cart, wishlist, admin books) |
+| `orders` | checkout, the webhook (paid or cancelled) | Orders, admin orders and users, recommendations |
+| `events` | seat sign-ups, admin events | home page events, Orders' "Your events", admin events |
+| `wishlist` | saving or un-saving a book | the hearts and the wishlist |
+| `reviews` | a new or changed review | the reviews under a book |
+| `users` | sign-up, a new name or picture | admin users, the names on reviews |
+
+**Keeping it alive.** The server sends `data: ping` every 25 seconds, so proxies (Railway's, Vite's) don't close a quiet connection. The page also uses the ping to notice a dead connection. When Express restarts, Vite's proxy can keep the browser's side open with nothing behind it, so if no ping arrives for a minute, `useLive.js` connects again. `EventSource` reconnects by itself after a network error, but gives up after an error page (Vite or Railway while the server restarts); then `useLive.js` tries again every 5 seconds. After any reconnect, every list fetches again, in case something changed meanwhile.
+
+**Limits.** Every tab hears every change: a heart saved by anyone makes each signed-in tab fetch its own wishlist again. That's fine for a shop this size. The connections are kept in memory, which works because the site runs as one server; changes made outside it (`npm run seed`, `make-admin`) aren't announced, and show up on the next fetch or Refresh.
 
 ## Recommendations
 

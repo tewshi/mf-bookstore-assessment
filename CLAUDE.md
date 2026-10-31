@@ -37,7 +37,7 @@ There are no automated tests. Check a change with lint + build, then by running 
 npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No lockfile: the instructor asked for none, so `.npmrc` has `package-lock=false` and `.gitignore` lists `package-lock.json`. Don't add one back.
 
 - `server/src/index.js`: mounts Better Auth and the Stripe webhook (raw body), then `express.json()`, then `/api`, then serves `client/dist`, and last an error handler that answers `{ error }` as JSON (500, or the error's own status such as 400 for broken JSON)
-- `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client)
+- `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client), `live.js` (SSE: open `/api/live` responses + `notify(topic)`; the route is `routes/live.js`)
 - `server/src/routes/api.js`: the `/api` router: health check, then mounts every router in `routes/`
 - `server/src/routes/books.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/:id`, `/:id/recommendations`; `reviews.js`: `/api/books/:id/reviews` (`Router({ mergeParams: true })` to read `:id`)
 - `server/src/routes/orders.js`: `/api/orders` (pending order + stock decrement + Stripe Checkout Session in one transaction, paid history, `/:id` with status)
@@ -47,7 +47,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
 - `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `Orders`, `Wishlist`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
 - `client/src/components/`: `layout/` (Header, menus, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal, and Select, SearchBox, Pagination, RefreshButton for every list)
-- `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `usePages.js` (client-side paging: Orders 10, Wishlist 12, admin lists 10, staff picks and events 6; the book grid's 12 is `perPage` in `routes/books.js`; `Pagination` renders nothing for one page), `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`)
+- `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `usePages.js` (client-side paging: Orders 10, Wishlist 12, admin lists 10, staff picks and events 6; the book grid's 12 is `perPage` in `routes/books.js`; `Pagination` renders nothing for one page), `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`), `useLive.js` (`useLive(topic, load)`: one shared `EventSource` per tab)
 - Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres
 - Dark mode: `.dark` overrides the `--color-*` tokens in `index.css`; use `text-on-accent` (not `text-white`) on `bg-accent`
 
@@ -73,6 +73,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - In zsh, an unquoted `$VAR` holding several curl flags is NOT split into words; spell flags out or use a function.
 - oxlint's React rules flag `Date.now()` in render scope, `setState` straight inside an effect, and writing `window.location` in a component; use a ref, derive the value during render, or render a link instead.
 - In production, Express answers any non-`/api` GET with `client/dist/index.html` (after `express.static`), or a refresh on `/orders` would 404. Vite does this by itself in dev.
+- Live updates (SSE): a route that changes data must call `notify('<topic>')` after the write (after `COMMIT` in a transaction), and a list that shows it needs `useLive('<topic>', load)`. Topics: books, orders, events, wishlist, reviews, users. Only the topic is sent, never data. `EventSource` gives up for good after an HTTP error (Vite/Railway while Express restarts), and Vite's proxy can keep a dead stream open, so `useLive.js` reconnects itself (5s after CLOSED, or after 60s without the 25s `ping`). Chrome's network panel may not list the refetches; `performance.getEntriesByType('resource')` does.
 - `pool.on('error')` is required: Neon/Railway close idle connections and an unhandled pool error crashes the process.
 - Better Auth throws at startup in production without `BETTER_AUTH_SECRET`. `lib/db.js` and `lib/auth.js` check the three env vars and name the missing one.
 
