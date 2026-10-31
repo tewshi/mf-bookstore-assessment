@@ -13,6 +13,7 @@
     "dev": "node dev.js",
     "build": "npm run build -w client",
     "start": "npm start -w server",
-    "lint": "npm run lint -w client"
+    "lint": "npm run lint -w client",
+    "test": "npm test --workspaces"
   }
 }

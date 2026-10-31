@@ -6,9 +6,10 @@
 #   make build    build the React app into client/dist
 #   make start    run the production server (after make build)
 #   make lint     oxlint on the client
+#   make test     the server's and the client's tests (Vitest)
 
 # These are command names, not files that make should look for
-.PHONY: help dev stripe build start lint
+.PHONY: help dev stripe build start lint test
 
 # `make` on its own prints the list above
 help:
@@ -26,6 +27,9 @@ start:
 
 lint:
 	npm run lint
+
+test:
+	npm test
 
 # The API's port can change (PORT in server/.env), so instead of writing
 # 3000 here we ask the computer which port the running API is using:
