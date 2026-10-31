@@ -19,5 +19,12 @@ export default defineConfig(({ mode }) => {
         '/api': `http://localhost:${backendPort}`,
       },
     },
+    // npm test (Vitest): the tests in test/ run in jsdom, a browser made
+    // of JavaScript, so React can render without opening a real one.
+    // setup.js adds the few browser pieces jsdom doesn't have.
+    test: {
+      environment: 'jsdom',
+      setupFiles: './test/setup.js',
+    },
   }
 })
