@@ -6,6 +6,7 @@ import { wishlist } from './wishlist.js'
 import { events } from './events.js'
 import { admin } from './admin.js'
 import { live } from './live.js'
+import { notifications } from './notifications.js'
 
 // Everything under /api (index.js mounts this). Each part of the API
 // lives in its own file in this folder.
@@ -23,4 +24,5 @@ api.use('/orders', orders)
 api.use('/wishlist', wishlist)
 api.use('/events', events)
 api.use('/admin', admin)
+api.use('/notifications', notifications)
 api.use('/live', live)
