@@ -35,7 +35,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 - `client/`: the React app (Vite + Tailwind)
   - `src/App.jsx`: the state the whole site shares (books, cart, saved books, toast) and the routing that picks a page from the address (see [Page addresses](#page-addresses))
   - `src/pages/`: one file per page App can show: `Home` (`/`), `BookDetails` (`/book/<id>`), `SignIn` (`/signin` and `/signup`), `Cart` (`/cart`), `Checkout` (`/checkout`), `Paid` (`/paid/<id>`, where Stripe sends people back), `Orders` (`/orders`), `Wishlist` (`/wishlist`), `Account` (`/account`), `Receipt` (`/order/<id>`) and `NotFound` (any other address, or a book id that doesn't exist)
-  - `src/pages/admin/`: the `/admin` page and its Orders, Books and Events tabs
+  - `src/pages/admin/`: the `/admin` page and its Orders, Books, Events and Users tabs
   - `src/components/`: the pieces the pages are built from, in four folders:
     - `layout/`: on every page. `Header` is the top bar, `UserMenu` the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button, `Footer`, and `accountLinks.js` the links in the account menu (Admin only for admins)
     - `books/`: `BookCard`, `BookGrid` (search, sort, section filter and pages, all asked of the API), `StarRating`, and `Reviews` and `Recommendations`, the sections under each book
@@ -58,7 +58,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `webhook.js`: `/api/webhooks/stripe`, where Stripe confirms payments. The only code that marks an order paid
     - `wishlist.js`: `/api/wishlist`, the saved books
     - `events.js`: `/api/events` and seat reservations
-    - `admin.js`: `/api/admin`, for admins only. It checks the role, then mounts `admin/orders.js`, `admin/books.js` and `admin/events.js` (one per admin tab)
+    - `admin.js`: `/api/admin`, for admins only. It checks the role, then mounts `admin/orders.js`, `admin/books.js`, `admin/events.js` and `admin/users.js` (one per admin tab)
   - `src/lib/`: the setup the routes share
     - `db.js`: one `pg` connection pool, shared by everything
     - `auth.js`: Better Auth setup (email and password, plus a `role` field on users)
@@ -103,6 +103,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `GET /api/events` | upcoming events, soonest first, with `seatsLeft` and whether you are `going` |
 | `POST /api/events/:id/signup`, `DELETE /api/events/:id/signup` | reserve or give back a seat. Signed in |
 | `GET /api/admin/orders` | every order, with the customer. Admins |
+| `GET /api/admin/users` | everyone with an account: role, join date, paid orders and total spent. Admins |
 | `POST /api/admin/books`, `PUT` / `DELETE /api/admin/books/:id` | add, edit or delete a book (books that were ordered can't be deleted). Admins |
 | `GET /api/admin/events`, `POST /api/admin/events`, `PUT` / `DELETE /api/admin/events/:id` | all events, past ones too; add, edit or delete one. Admins |
 | `/api/auth/*` | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
@@ -160,7 +161,7 @@ When nobody has bought the book yet, the list is empty, and the page shows "More
 
 ## Admin
 
-Admins see an Admin link in the account menu. `/admin` has three tabs: every order (with totals, a status filter and a name/email search), the books (add, edit, change stock, delete unordered ones; books with 3 or fewer copies are listed at the top as running low) and the events (add, edit, delete). Every `/api/admin` route checks `role === 'admin'` on the server with `requireAdmin`; hiding the link is only for looks.
+Admins see an Admin link in the account menu. `/admin` has four tabs: every order (with totals, a status filter and a name/email search), the books (add, edit, change stock, delete unordered ones; books with 3 or fewer copies are listed at the top as running low) the events (add, edit, delete) and the users (a read-only list with a role filter and a name/email search; roles change with `make-admin`). Every `/api/admin` route checks `role === 'admin'` on the server with `requireAdmin`; hiding the link is only for looks.
 
 `role` is an extra field on Better Auth's `user` table (`additionalFields` in `server/src/lib/auth.js`) with `input: false`, so nobody can give themselves a role when signing up. To make someone an admin:
 

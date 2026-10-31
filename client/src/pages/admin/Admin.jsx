@@ -2,11 +2,13 @@ import { authClient } from '../../lib/auth'
 import { AdminOrders } from './AdminOrders'
 import { AdminBooks } from './AdminBooks'
 import { AdminEvents } from './AdminEvents'
+import { AdminUsers } from './AdminUsers'
 
 const tabs = [
   { id: 'orders', label: 'Orders' },
   { id: 'books', label: 'Books' },
   { id: 'events', label: 'Events' },
+  { id: 'users', label: 'Users' },
 ]
 
 // The /admin page, for staff. tab comes from the address: /admin/books, ...
@@ -31,7 +33,7 @@ export function Admin({ tab = 'orders', books, onBooksChanged }) {
   return (
     <section className="mx-auto max-w-page px-4 py-12">
       <h1 className="text-3xl font-bold sm:text-4xl">Admin</h1>
-      <p className="mb-6 text-muted">Orders, books and events for the whole shop.</p>
+      <p className="mb-6 text-muted">Orders, books, events and users for the whole shop.</p>
 
       {/* The tabs are plain links to /admin/orders, /admin/books, ... */}
       <nav
@@ -55,6 +57,7 @@ export function Admin({ tab = 'orders', books, onBooksChanged }) {
       {tab === 'orders' && <AdminOrders />}
       {tab === 'books' && <AdminBooks books={books} onChanged={onBooksChanged} />}
       {tab === 'events' && <AdminEvents />}
+      {tab === 'users' && <AdminUsers />}
     </section>
   )
 }

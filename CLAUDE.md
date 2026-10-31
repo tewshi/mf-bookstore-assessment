@@ -42,7 +42,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - `server/src/routes/books.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/:id`, `/:id/recommendations`; `reviews.js`: `/api/books/:id/reviews` (`Router({ mergeParams: true })` to read `:id`)
 - `server/src/routes/orders.js`: `/api/orders` (pending order + stock decrement + Stripe Checkout Session in one transaction, paid history, `/:id` with status)
 - `server/src/routes/webhook.js`: `/api/webhooks/stripe`, the only code that sets `status = 'paid'` (or `cancelled` + stock back on failed/expired)
-- `server/src/routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, one per admin tab)
+- `server/src/routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, `users.js` (read only), one per admin tab)
 - Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
 - `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `Orders`, `Wishlist`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
