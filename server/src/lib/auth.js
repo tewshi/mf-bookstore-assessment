@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { pool } from './db.js'
 import { notifyAdmins, notifyEveryone } from './live.js'
+import { sendPasswordReset } from './emails.js'
 
 for (const name of ['BETTER_AUTH_SECRET', 'BETTER_AUTH_URL']) {
   if (!process.env[name]) {
@@ -13,7 +14,19 @@ for (const name of ['BETTER_AUTH_SECRET', 'BETTER_AUTH_URL']) {
 // BETTER_AUTH_URL (the address people open the site on) from the environment.
 export const auth = betterAuth({
   database: pool,
-  emailAndPassword: { enabled: true },
+  emailAndPassword: {
+    enabled: true,
+    // "Forgot password?": Better Auth makes a one-time link (valid for an
+    // hour) and we email it. Not awaited, as Better Auth advises: waiting
+    // for the mail server would make the answer slower for real accounts
+    // than for unknown emails, which would tell an attacker which exist.
+    sendResetPassword: async ({ user, url }) => {
+      void sendPasswordReset({ user, url })
+    },
+    // A new password signs the account out everywhere else, in case
+    // someone else was signed in with the old one
+    revokeSessionsOnPasswordReset: true,
+  },
   user: {
     // An extra column on the user table: 'customer' or 'admin'. migrate.js
     // adds it. input: false means sign up can't set it, so nobody can make

@@ -6,6 +6,8 @@ import { Header } from './components/layout/Header'
 import { Home } from './pages/Home'
 import { BookDetails } from './pages/BookDetails'
 import { SignIn } from './pages/SignIn'
+import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
 import { Cart } from './pages/Cart'
 import { Checkout } from './pages/Checkout'
 import { Paid } from './pages/Paid'
@@ -25,6 +27,8 @@ import { liveSignedInAs, useLive } from './lib/useLive'
 const pageTitles = {
   signin: 'Sign in',
   signup: 'Create an account',
+  'forgot-password': 'Forgot your password',
+  'reset-password': 'Choose a new password',
   cart: 'Your cart',
   checkout: 'Checkout',
   paid: 'Payment',
@@ -252,6 +256,13 @@ function App() {
   function renderPage() {
     if (notFound) {
       return <NotFound />
+    }
+    if (page === 'forgot-password') {
+      return <ForgotPassword />
+    }
+    if (page === 'reset-password') {
+      // Opened from the email, with ?token=... (see ResetPassword)
+      return <ResetPassword />
     }
     if (page === 'signin' || page === 'signup') {
       // param is where to go after signing in, e.g. back to "checkout"

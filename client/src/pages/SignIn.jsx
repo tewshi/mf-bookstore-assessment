@@ -96,6 +96,11 @@ export function SignIn({ mode, next }) {
               required
             />
           </label>
+          {!isSignUp && (
+            <a href="/forgot-password" className="-mt-2 w-fit text-sm text-accent hover:underline">
+              Forgot password?
+            </a>
+          )}
           {error && (
             <p
               role="alert"
