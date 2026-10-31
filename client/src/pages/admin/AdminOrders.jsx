@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getJson } from '../../lib/api'
+import { getJson, postJson } from '../../lib/api'
 import { usePages } from '../../lib/usePages'
 import { Select } from '../../components/ui/Select'
 import { SearchBox } from '../../components/ui/SearchBox'
@@ -12,6 +12,7 @@ const statusColors = {
   paid: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-400',
   pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
   cancelled: 'bg-bg text-muted',
+  refunded: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300',
 }
 
 const statusOptions = [
@@ -19,18 +20,26 @@ const statusOptions = [
   { value: 'paid', label: 'Paid' },
   { value: 'pending', label: 'Pending' },
   { value: 'cancelled', label: 'Cancelled' },
+  { value: 'refunded', label: 'Refunded' },
 ]
 
 const perPage = 10
 
 // Every order in the shop, newest first, with a few totals on top.
-// The totals count paid orders only; pending and cancelled ones are listed
-// with their status, but no money came in for them.
+// The totals count paid orders only; pending, cancelled and refunded ones
+// are listed with their status, but no money came in (or stayed) for them.
+// Paid orders have a Refund button.
 export function AdminOrders() {
   const [orders, setOrders] = useState(null)
   // What the list shows: one status (or 'all'), and a name or email search
   const [status, setStatus] = useState('all')
   const [search, setSearch] = useState('')
+  // Refunding takes two clicks, like deleting a book: the id of the order
+  // whose button now says "Really refund?", and the one being refunded
+  const [confirming, setConfirming] = useState(null)
+  const [refunding, setRefunding] = useState(null)
+  // What happened last: { text, error? }
+  const [message, setMessage] = useState(null)
 
   // Returns the promise, so the Refresh button can wait for it
   function load() {
@@ -53,6 +62,23 @@ export function AdminOrders() {
       (order.name.toLowerCase().includes(needle) || order.email.toLowerCase().includes(needle)),
   )
   const { page, setPage, pageItems } = usePages(shown, perPage)
+
+  // Stripe gives the money back, then the server marks the order refunded
+  // and puts its books back. The list reloads by itself: the server sends
+  // 'orders' over the live connection.
+  async function refund(order) {
+    setConfirming(null)
+    setRefunding(order.id)
+    setMessage(null)
+    try {
+      await postJson(`/api/admin/orders/${order.id}/refund`)
+      setMessage({ text: `Refunded order #${order.id}, €${order.total.toFixed(2)}.` })
+    } catch (err) {
+      setMessage({ text: err.message, error: true })
+    } finally {
+      setRefunding(null)
+    }
+  }
 
   // A new filter or search starts again at page 1
   function changeStatus(value) {
@@ -92,11 +118,21 @@ export function AdminOrders() {
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center">
         <SearchBox value={search} onChange={changeSearch} placeholder="Search name or email" />
         <Select label="Status" value={status} onChange={changeStatus} options={statusOptions} />
-        <p className="text-sm text-muted">
-          {shown.length} of {orders.length} orders
-        </p>
         <RefreshButton onRefresh={load} />
       </div>
+
+      {message && (
+        <p
+          role="status"
+          className={`mb-4 rounded-xl px-4 py-3 text-sm ${
+            message.error
+              ? 'bg-accent-soft text-accent-dark'
+              : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+          }`}
+        >
+          {message.text}
+        </p>
+      )}
 
       {orders.length === 0 ? (
         <p className="text-muted">No orders yet.</p>
@@ -105,7 +141,7 @@ export function AdminOrders() {
       ) : (
         // overflow-x-auto: on phones the table scrolls sideways inside its box
         <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
-          <table className="w-full min-w-[40rem] text-sm">
+          <table className="w-full min-w-[48rem] text-sm">
             <thead className="bg-bg text-left text-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Order</th>
@@ -114,6 +150,7 @@ export function AdminOrders() {
                 <th className="px-4 py-3 font-medium">Books</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 text-right font-medium">Total</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -140,6 +177,30 @@ export function AdminOrders() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right font-semibold">€{order.total.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right">
+                    {/* Paid through Stripe only: the old demo orders can't be refunded */}
+                    {order.refundable && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          confirming === order.id ? refund(order) : setConfirming(order.id)
+                        }
+                        onBlur={() => setConfirming(null)}
+                        disabled={refunding !== null}
+                        className={`cursor-pointer rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap disabled:cursor-wait disabled:opacity-60 ${
+                          confirming === order.id
+                            ? 'bg-accent-dark text-on-accent'
+                            : 'text-accent hover:bg-accent-soft'
+                        }`}
+                      >
+                        {refunding === order.id
+                          ? 'Refunding…'
+                          : confirming === order.id
+                            ? `Really refund €${order.total.toFixed(2)}?`
+                            : 'Refund'}
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

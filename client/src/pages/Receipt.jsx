@@ -20,9 +20,9 @@ export function Receipt({ orderId }) {
     return <p className="mx-auto max-w-page px-4 py-16 text-muted">Loading…</p>
   }
 
-  // Only paid orders have a receipt. A pending or cancelled one is
-  // treated like a missing one.
-  if (!session || order === 'missing' || order.status !== 'paid') {
+  // Only paid orders have a receipt (refunded ones too, marked as such).
+  // A pending or cancelled one is treated like a missing one.
+  if (!session || order === 'missing' || !['paid', 'refunded'].includes(order.status)) {
     return (
       <section className="mx-auto max-w-md px-4 py-24 text-center">
         <h1 className="mb-2 text-3xl font-bold">Receipt not found</h1>
@@ -80,6 +80,18 @@ export function Receipt({ orderId }) {
             <p className="text-sm text-muted">Order #{order.id}</p>
           </div>
         </div>
+
+        {order.status === 'refunded' && (
+          <p className="mb-8 rounded-xl bg-bg px-4 py-3 text-sm font-medium">
+            Refunded on{' '}
+            {new Date(order.refundedAt).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+            : the full amount went back to the card.
+          </p>
+        )}
 
         <dl className="mb-8 grid gap-4 text-sm sm:grid-cols-3">
           <div>

@@ -163,9 +163,15 @@ export function Orders() {
                     Pending payment
                   </span>
                 )}
+                {order.status === 'refunded' && (
+                  <span className="rounded-full bg-bg px-3 py-0.5 text-xs font-semibold text-muted ring-1 ring-line">
+                    Refunded
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-4">
-                {order.status === 'paid' ? (
+                {/* Pay now only for pending orders; refunded ones keep their receipt */}
+                {order.status !== 'pending' ? (
                   <a href={`/order/${order.id}`} className="text-accent hover:underline">
                     Receipt
                   </a>
