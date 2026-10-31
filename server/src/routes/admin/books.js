@@ -12,8 +12,8 @@ const UNIQUE_VIOLATION = '23505'
 const STILL_REFERENCED = '23503'
 
 // Checks a book from the admin form. Returns { book } with clean values,
-// or { error } with a message to show.
-function readBook(body) {
+// or { error } with a message to show. Exported for the tests.
+export function readBook(body) {
   const text = (name) => String(body[name] ?? '').trim()
   const book = {
     title: text('title'),

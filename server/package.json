@@ -7,7 +7,9 @@
     "start": "NODE_ENV=production node --env-file-if-exists=.env src/index.js",
     "migrate": "node --env-file-if-exists=.env db/migrate.js",
     "seed": "node --env-file-if-exists=.env db/seed.js",
-    "make-admin": "node --env-file-if-exists=.env db/make-admin.js"
+    "make-admin": "node --env-file-if-exists=.env db/make-admin.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "better-auth": "^1.7.12",
@@ -15,5 +17,8 @@
     "nodemailer": "^10.3.1",
     "pg": "^8.23.1",
     "stripe": "^23.0.1"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.5"
   }
 }

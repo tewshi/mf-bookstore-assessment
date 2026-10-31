@@ -7,7 +7,8 @@ export const books = Router()
 // Turns a books row (snake_case columns) into the shape the React app
 // has always used, with staffPick as null or { quote, by }.
 // rating is the average review (null if none), reviewCount how many.
-function toBook(row) {
+// Exported for the tests.
+export function toBook(row) {
   return {
     id: row.id,
     title: row.title,

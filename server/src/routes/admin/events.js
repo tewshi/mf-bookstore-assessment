@@ -24,8 +24,8 @@ adminEvents.get('/', async (req, res) => {
   res.json(rows)
 })
 
-// Checks an event from the admin form, like readBook
-function readEvent(body) {
+// Checks an event from the admin form, like readBook. Exported for the tests.
+export function readEvent(body) {
   const event = {
     datetime: String(body.datetime ?? ''),
     title: String(body.title ?? '').trim(),
