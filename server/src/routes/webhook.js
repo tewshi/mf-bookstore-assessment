@@ -1,5 +1,6 @@
 import { pool } from '../lib/db.js'
 import { stripe } from '../lib/stripe.js'
+import { notify } from '../lib/live.js'
 
 // POST /api/webhooks/stripe: Stripe calls this when something happens to
 // a checkout session. It is the only code that marks an order paid.
@@ -49,11 +50,14 @@ export async function stripeWebhook(req, res) {
 // event more than once, and the second time this changes nothing.
 
 async function markPaid(sessionId) {
-  await pool.query(
+  const { rowCount } = await pool.query(
     `UPDATE orders SET status = 'paid', paid_at = now()
      WHERE stripe_session_id = $1 AND status = 'pending'`,
     [sessionId],
   )
+  // Only when something changed (not for a repeated event). Recommendations
+  // and the admin totals count paid orders, so they listen for this too.
+  if (rowCount > 0) notify('orders')
 }
 
 // Cancels the order and puts its books back on the shelf, in one transaction
@@ -76,6 +80,11 @@ async function cancelOrder(sessionId) {
       )
     }
     await client.query('COMMIT')
+    // After COMMIT, so the tabs that fetch again see the new rows
+    if (rows.length > 0) {
+      notify('orders')
+      notify('books')
+    }
   } catch (err) {
     await client.query('ROLLBACK')
     throw err

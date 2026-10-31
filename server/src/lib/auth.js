@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { pool } from './db.js'
+import { notify } from './live.js'
 
 for (const name of ['BETTER_AUTH_SECRET', 'BETTER_AUTH_URL']) {
   if (!process.env[name]) {
@@ -19,6 +20,15 @@ export const auth = betterAuth({
     // themselves an admin; only db/make-admin.js changes it.
     additionalFields: {
       role: { type: 'string', defaultValue: 'customer', input: false },
+    },
+  },
+  // Better Auth writes the user table itself, so it tells us when it did:
+  // a new sign-up, or a new name or picture on /account. The admin users
+  // list and the names on reviews then fetch again (see live.js).
+  databaseHooks: {
+    user: {
+      create: { after: async () => notify('users') },
+      update: { after: async () => notify('users') },
     },
   },
 })

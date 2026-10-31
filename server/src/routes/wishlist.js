@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../lib/db.js'
 import { requireUser } from '../lib/session.js'
+import { notify } from '../lib/live.js'
 
 // Mounted at /api/wishlist: the books the signed-in person saved for later
 export const wishlist = Router()
@@ -26,6 +27,8 @@ wishlist.put('/:bookId', async (req, res) => {
      ON CONFLICT DO NOTHING`,
     [req.user.id, req.params.bookId],
   )
+  // So the same person's other tabs (or phone) update their hearts
+  notify('wishlist')
   res.json({ ok: true })
 })
 
@@ -35,5 +38,6 @@ wishlist.delete('/:bookId', async (req, res) => {
     req.user.id,
     req.params.bookId,
   ])
+  notify('wishlist')
   res.json({ ok: true })
 })

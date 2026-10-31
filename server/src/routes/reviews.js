@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../lib/db.js'
 import { currentUser, requireUser } from '../lib/session.js'
+import { notify } from '../lib/live.js'
 
 // Mounted at /api/books/:id/reviews (see api.js). mergeParams lets these
 // routes read :id, which is part of the path above this router.
@@ -65,5 +66,8 @@ reviews.post('/', requireUser, async (req, res) => {
      DO UPDATE SET rating = EXCLUDED.rating, text = EXCLUDED.text, created_at = now()`,
     [req.user.id, req.params.id, rating, text],
   )
+  // The review list, and the book's star average on every card
+  notify('reviews')
+  notify('books')
   res.status(201).json({ ok: true })
 })
