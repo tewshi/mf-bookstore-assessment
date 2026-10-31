@@ -64,6 +64,16 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
 -- Stripe keeps the card, so new orders have no card_last4
 ALTER TABLE orders ALTER COLUMN card_last4 DROP NOT NULL;
 
+-- Refunds (added later). An admin refunds a paid order from the admin
+-- page, or in the Stripe dashboard, and webhook.js then sets 'refunded'.
+-- A CHECK can't be changed in place, so drop it and add the new list;
+-- IF EXISTS keeps this safe to run again.
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders ADD CONSTRAINT orders_status_check
+  CHECK (status IN ('pending', 'paid', 'cancelled', 'refunded'));
+-- When it was refunded
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS refunded_at timestamptz;
+
 -- The books in each order. price is what the book cost at checkout,
 -- so an old order stays the same when a price changes later.
 CREATE TABLE IF NOT EXISTS order_items (
@@ -101,3 +111,17 @@ CREATE TABLE IF NOT EXISTS event_signups (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, event_id)
 );
+
+-- The messages under the bell in the header, e.g. "Payment received for
+-- order #12". One row per person per message; read_at stays null until
+-- they have seen it. link is where clicking it goes, e.g. /order/12.
+CREATE TABLE IF NOT EXISTS notifications (
+  id         serial PRIMARY KEY,
+  user_id    text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  text       text NOT NULL,
+  link       text,
+  read_at    timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+-- The bell asks for one person's newest messages every time it opens
+CREATE INDEX IF NOT EXISTS notifications_user_newest ON notifications (user_id, created_at DESC);
