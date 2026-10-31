@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getJson } from '../../lib/api'
 import { BookCard } from './BookCard'
+import { useLive } from '../../lib/useLive'
 
 // "Readers who bought this also bought", under a book. books is the full
 // list from App, used when nobody has bought this book yet: then we show
@@ -9,9 +10,13 @@ export function Recommendations({ book, books }) {
   // null until the API answers
   const [alsoBought, setAlsoBought] = useState(null)
 
-  useEffect(() => {
+  function load() {
     getJson(`/api/books/${book.id}/recommendations`).then(setAlsoBought, () => setAlsoBought([]))
-  }, [book.id])
+  }
+
+  useEffect(load, [book.id])
+  // Live: they come from paid orders, so a newly paid one can change them
+  useLive('orders', load)
 
   if (!alsoBought) return null
 

@@ -17,6 +17,7 @@ import { Admin } from './pages/admin/Admin'
 import { NotFound } from './pages/NotFound'
 import { Footer } from './components/layout/Footer'
 import { Toast } from './components/ui/Toast'
+import { useLive } from './lib/useLive'
 
 // The browser tab's title for each page, by the first part of the path.
 // It also lists which pages exist: any other address is "not found".
@@ -81,6 +82,9 @@ function App() {
   useEffect(() => {
     loadBooks()
   }, [])
+  // Live: new stock, prices or star averages, from anyone (see lib/useLive.js).
+  // Every book list (grid, staff picks, book pages, cart, admin) uses these.
+  useLive('books', loadBooks)
 
   // The cart: how many of each book, e.g. { 'slow-maps': 2 }. It lives
   // here because the header, the book pages and /cart all need it.
@@ -153,9 +157,17 @@ function App() {
   // ['slow-maps']. Fetched again whenever someone signs in.
   const [savedList, setSavedList] = useState([])
 
+  function loadSaved() {
+    return getJson('/api/wishlist').then(setSavedList, () => {})
+  }
+
   useEffect(() => {
-    if (userId) getJson('/api/wishlist').then(setSavedList, () => {})
+    if (userId) loadSaved()
   }, [userId])
+  // Live: a heart changed, maybe in this person's other tab
+  useLive('wishlist', () => {
+    if (userId) loadSaved()
+  })
 
   // Signed out: nothing is saved, whatever the last person's list was
   const savedIds = userId ? savedList : []
@@ -163,7 +175,7 @@ function App() {
   // The wishlist's Refresh button: the saved ids (maybe changed in another
   // tab) and the books (for new prices and stock)
   function refreshWishlist() {
-    return Promise.all([loadBooks(), getJson('/api/wishlist').then(setSavedList, () => {})])
+    return Promise.all([loadBooks(), loadSaved()])
   }
 
   function toggleSaved(bookId) {

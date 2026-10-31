@@ -4,6 +4,7 @@ import { getJson, sendJson } from '../../lib/api'
 import { usePages } from '../../lib/usePages'
 import { CheckIcon } from '../ui/Icons'
 import { Pagination } from '../ui/Pagination'
+import { useLive } from '../../lib/useLive'
 
 // Two rows of the 3-column grid at a time
 const perPage = 6
@@ -25,6 +26,8 @@ export function Events() {
   }
 
   useEffect(load, [userId])
+  // Live: seats taken or given back, or an event added or changed
+  useLive('events', load)
 
   // Reserve a seat (POST) or give it back (DELETE), then reload the list
   // so the seat counts are right

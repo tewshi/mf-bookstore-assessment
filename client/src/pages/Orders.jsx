@@ -6,6 +6,7 @@ import { usePages } from '../lib/usePages'
 import { BookIcon } from '../components/ui/Icons'
 import { Pagination } from '../components/ui/Pagination'
 import { RefreshButton } from '../components/ui/RefreshButton'
+import { useLive } from '../lib/useLive'
 
 // Orders per page (each one is a card with its books inside)
 const perPage = 10
@@ -44,6 +45,14 @@ export function Orders() {
   useEffect(() => {
     if (userId) load()
   }, [userId])
+  // Live: e.g. the webhook just marked a pending order paid, or this
+  // person took a seat in another tab
+  useLive('orders', () => {
+    if (userId) load()
+  })
+  useLive('events', () => {
+    if (userId) load()
+  })
 
   // Pay now: ask the server for the order's Stripe page and go there
   async function payNow(orderId) {

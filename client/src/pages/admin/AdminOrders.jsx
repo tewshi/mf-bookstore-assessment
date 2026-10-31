@@ -5,6 +5,7 @@ import { Select } from '../../components/ui/Select'
 import { SearchBox } from '../../components/ui/SearchBox'
 import { Pagination } from '../../components/ui/Pagination'
 import { RefreshButton } from '../../components/ui/RefreshButton'
+import { useLive } from '../../lib/useLive'
 
 // The badge colour for each order status
 const statusColors = {
@@ -39,6 +40,8 @@ export function AdminOrders() {
   useEffect(() => {
     load()
   }, [])
+  // Live: a new order, or one turning paid or cancelled
+  useLive('orders', load)
 
   // Which orders the table shows: worked out here from the orders we
   // already have, so filtering needs no new request. Before the early

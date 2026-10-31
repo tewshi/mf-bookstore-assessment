@@ -6,6 +6,7 @@ import { Select } from '../../components/ui/Select'
 import { SearchBox } from '../../components/ui/SearchBox'
 import { Pagination } from '../../components/ui/Pagination'
 import { RefreshButton } from '../../components/ui/RefreshButton'
+import { useLive } from '../../lib/useLive'
 
 const roleOptions = [
   { value: 'all', label: 'All roles' },
@@ -31,6 +32,9 @@ export function AdminUsers() {
   useEffect(() => {
     load()
   }, [])
+  // Live: a sign-up or profile change, and orders for the spent column
+  useLive('users', load)
+  useLive('orders', load)
 
   // Filtered here from the users we already have, like the orders tab
   const needle = search.trim().toLowerCase()

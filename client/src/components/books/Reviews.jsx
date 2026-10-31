@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { authClient } from '../../lib/auth'
 import { getJson, postJson } from '../../lib/api'
 import { StarRating, Stars } from './StarRating'
+import { useLive } from '../../lib/useLive'
 
 // The reviews under a book. People who bought the book also get a form
 // to write one (or to change the one they wrote).
@@ -21,6 +22,9 @@ export function Reviews({ book, onReviewed }) {
 
   // Load again when someone signs in or out: canReview depends on who asks
   useEffect(load, [book.id, userId])
+  // Live: a new review, or a reviewer changed their name or picture
+  useLive('reviews', load)
+  useLive('users', load)
 
   // The section is there even while loading, so a /book/<id>#reviews
   // link has something to scroll to straight away

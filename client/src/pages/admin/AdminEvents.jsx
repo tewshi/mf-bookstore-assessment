@@ -3,6 +3,7 @@ import { getJson, sendJson } from '../../lib/api'
 import { usePages } from '../../lib/usePages'
 import { Pagination } from '../../components/ui/Pagination'
 import { RefreshButton } from '../../components/ui/RefreshButton'
+import { useLive } from '../../lib/useLive'
 
 const emptyEvent = { id: '', datetime: '', title: '', text: '', seats: '20' }
 
@@ -23,6 +24,8 @@ export function AdminEvents() {
   useEffect(() => {
     load()
   }, [])
+  // Live: seats taken, or another admin changed an event
+  useLive('events', load)
 
   function closeForm(text) {
     setEditing(null)
