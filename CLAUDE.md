@@ -47,7 +47,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
 - `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `MyBooks`, `Saved`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
 - `client/src/components/`: `layout/` (Header, menus, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal, and Select, SearchBox, Pagination for every list)
-- `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `usePages.js` (client-side paging: My books 10, Saved 12, admin lists 10, staff picks and events 6; the book grid's 12 is `perPage` in `routes/books.js`; `Pagination` renders nothing for one page), `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`)
+- `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `usePages.js` (client-side paging: Orders 10, Wishlist 12, admin lists 10, staff picks and events 6; the book grid's 12 is `perPage` in `routes/books.js`; `Pagination` renders nothing for one page), `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`)
 - Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres
 - Dark mode: `.dark` overrides the `--color-*` tokens in `index.css`; use `text-on-accent` (not `text-white`) on `bg-accent`
 
@@ -64,7 +64,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - Better Auth must be mounted **before** `express.json()`, or it can't read the request body.
 - The Stripe webhook also goes before `express.json()`, with `express.raw()`: the signature check needs the exact bytes.
 - The `whsec_` from `stripe listen` (local `.env`) differs from the dashboard endpoint's (Railway). The env var is `STRIPE_WEBHOOK_SECRET_KEY` (the student's name for it).
-- Reviews, recommendations and admin totals count only `status = 'paid'`. My books lists paid and pending orders (pending: "Pending payment" + Pay now, which calls `POST /api/orders/:id/pay` to reopen the still-open Stripe session; no receipt or review links).
+- Reviews, recommendations and admin totals count only `status = 'paid'`. Orders (`/my-books`) lists paid and pending orders (pending: "Pending payment" + Pay now, which calls `POST /api/orders/:id/pay` to reopen the still-open Stripe session; no receipt or review links).
 - Express 5 wildcard syntax: `app.all('/api/auth/{*any}', ...)`.
 - `getMigrations` is imported from `better-auth/db/migration` (not `better-auth/db`) in v1.7.
 - Postgres `numeric` comes back as a string: convert `price` with `Number()`.

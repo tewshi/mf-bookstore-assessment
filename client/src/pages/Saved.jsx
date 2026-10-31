@@ -20,7 +20,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
   if (!signedIn) {
     return (
       <section id="saved" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
-        <h1 className="mb-2 text-3xl font-bold">Sign in to see saved books</h1>
+        <h1 className="mb-2 text-3xl font-bold">Sign in to see your wishlist</h1>
         <p className="mb-8 text-muted">Tap the heart on any book to keep it for later.</p>
         <a
           href="/signin/saved"
@@ -38,7 +38,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
 
   return (
     <section id="saved" className="mx-auto max-w-page scroll-mt-16 px-4 py-12">
-      <h1 className="text-3xl font-bold sm:text-4xl">Saved for later</h1>
+      <h1 className="text-3xl font-bold sm:text-4xl">Wishlist</h1>
       <p className="mb-8 text-muted">Books you liked the look of. Tap a heart to remove one.</p>
 
       {savedBooks.length === 0 ? (

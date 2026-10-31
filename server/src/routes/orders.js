@@ -156,7 +156,7 @@ orders.post('/', async (req, res) => {
       // Where Stripe sends the browser afterwards. BETTER_AUTH_URL is the
       // address of the site (Vite in dev, the Railway URL in production).
       success_url: `${siteUrl}/paid/${orderId}`,
-      // Back (without paying) returns to My books, where this order shows
+      // Back (without paying) returns to Orders, where this order shows
       // "Pending payment" and a Pay now button
       cancel_url: `${siteUrl}/my-books`,
       // Unpaid sessions expire after 30 minutes (the shortest Stripe allows).

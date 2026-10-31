@@ -27,11 +27,11 @@ const pageTitles = {
   cart: 'Your cart',
   checkout: 'Checkout',
   paid: 'Payment',
-  'my-books': 'My books',
+  'my-books': 'Your orders',
   order: 'Receipt',
   admin: 'Admin',
   account: 'Your account',
-  saved: 'Saved for later',
+  saved: 'Your wishlist',
 }
 
 // The cart this browser saved last time, or an empty one. try/catch in
@@ -172,7 +172,7 @@ function App() {
     sendJson(wasSaved ? 'DELETE' : 'PUT', `/api/wishlist/${bookId}`).then(
       () => {
         if (!wasSaved) {
-          showToast({ text: 'Saved for later', link: '/saved', linkText: 'View saved' })
+          showToast({ text: 'Added to your wishlist', link: '/saved', linkText: 'View wishlist' })
         }
       },
       () => {

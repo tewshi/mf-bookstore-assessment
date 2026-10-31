@@ -70,7 +70,7 @@ export function Paid({ orderId, onPaid }) {
             : 'Sign in to see your order.'}
         </p>
         <a href={session ? '/my-books' : '/signin/my-books'} className={button}>
-          {session ? 'Go to My books' : 'Sign in'}
+          {session ? 'Go to Orders' : 'Sign in'}
         </a>
       </section>
     )
@@ -84,12 +84,12 @@ export function Paid({ orderId, onPaid }) {
         </div>
         <h1 className="mb-2 text-3xl font-bold">Payment successful</h1>
         <p className="mb-8 text-muted">
-          Order #{order.id}, €{order.total.toFixed(2)}, is paid. It's saved under My books,
+          Order #{order.id}, €{order.total.toFixed(2)}, is paid. It's saved under Orders,
           where you can review what you bought.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <a href="/my-books" className={button}>
-            Go to My books
+            Go to Orders
           </a>
           <a href={`/order/${order.id}`} className={secondButton}>
             View receipt
