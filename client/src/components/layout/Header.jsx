@@ -3,6 +3,7 @@ import { authClient } from '../../lib/auth'
 import { UserMenu } from './UserMenu'
 import { MobileMenu } from './MobileMenu'
 import { ThemeToggle } from './ThemeToggle'
+import { NotificationBell } from './NotificationBell'
 import { CartIcon, MenuIcon } from '../ui/Icons'
 
 const links = [
@@ -102,6 +103,9 @@ export function Header({ cartCount, page }) {
 
           <div className="flex items-center gap-1">
             <ThemeToggle />
+            {/* On phones too, next to the cart. key: a fresh bell (and
+                fetch) when a different person signs in */}
+            {session && <NotificationBell key={session.user.id} />}
             <a
               href="/cart"
               aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}

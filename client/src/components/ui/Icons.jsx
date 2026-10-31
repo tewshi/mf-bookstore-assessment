@@ -175,3 +175,13 @@ export function RefreshIcon({ className }) {
     </Icon>
   )
 }
+
+// A bell: the notifications in the header
+export function BellIcon({ className }) {
+  return (
+    <Icon className={className}>
+      <path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9" />
+      <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+    </Icon>
+  )
+}
