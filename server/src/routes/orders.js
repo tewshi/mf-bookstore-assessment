@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { pool } from '../lib/db.js'
 import { requireUser } from '../lib/session.js'
 import { stripe } from '../lib/stripe.js'
-import { notify } from '../lib/live.js'
+import { notifyEveryone, notifyUserAndAdmins } from '../lib/live.js'
 
 // Mounted at /api/orders. Every route here needs someone signed in,
 // so every order belongs to a real user.
@@ -171,9 +171,10 @@ orders.post('/', async (req, res) => {
       orderId,
     ])
     await client.query('COMMIT')
-    // A new pending order, and less stock on the shelf
-    notify('orders')
-    notify('books')
+    // A new pending order (for this person's other tabs and the admins),
+    // and less stock on the shelf (for everyone)
+    notifyUserAndAdmins('orders', req.user.id)
+    notifyEveryone('books')
     res.status(201).json({ id: orderId, url: session.url })
   } catch (err) {
     await client.query('ROLLBACK')

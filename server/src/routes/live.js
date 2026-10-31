@@ -1,14 +1,19 @@
 import { Router } from 'express'
 import { addClient, removeClient } from '../lib/live.js'
+import { currentUser } from '../lib/session.js'
 
 // Mounted at /api/live
 export const live = Router()
 
 // GET /api/live: an answer that never ends. The browser's EventSource
 // opens it once per tab and reads each "data: <topic>" line as it comes
-// (see lib/live.js). Open to everyone: it only says what changed, never
-// the data, so signed-out visitors get live stock and events too.
-live.get('/', (req, res) => {
+// (see lib/live.js). Open to everyone: visitors get the public topics
+// (stock, events, reviews). Signed in, the tab also hears about its own
+// wishlist and orders, and an admin's about everyone's orders and users.
+live.get('/', async (req, res) => {
+  // Who is asking, from the session cookie, the same as any other route
+  const user = await currentUser(req)
+
   res.writeHead(200, {
     // What makes the browser treat this as an event stream
     'Content-Type': 'text/event-stream',
@@ -20,7 +25,8 @@ live.get('/', (req, res) => {
   // the stream is open before anything has changed
   res.write(': connected\n\n')
 
-  addClient(res)
-  // The tab was closed or moved to another site
-  req.on('close', () => removeClient(res))
+  const client = { res, userId: user?.id ?? null, isAdmin: user?.role === 'admin' }
+  addClient(client)
+  // The tab was closed, moved to another site, or is connecting again
+  req.on('close', () => removeClient(client))
 })

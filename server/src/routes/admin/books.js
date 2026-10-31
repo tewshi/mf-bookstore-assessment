@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { pool } from '../../lib/db.js'
-import { notify } from '../../lib/live.js'
+import { notifyEveryone } from '../../lib/live.js'
 
 // Mounted at /api/admin/books (see ../admin.js, which checks for an admin first)
 export const adminBooks = Router()
@@ -87,7 +87,7 @@ adminBooks.post('/', async (req, res) => {
     throw err
   }
   // Every book list on the site (and carts, for the stock) fetches again
-  notify('books')
+  notifyEveryone('books')
   res.status(201).json({ id })
 })
 
@@ -110,7 +110,7 @@ adminBooks.put('/:id', async (req, res) => {
     }
     throw err
   }
-  notify('books')
+  notifyEveryone('books')
   res.json({ ok: true })
 })
 
@@ -129,6 +129,6 @@ adminBooks.delete('/:id', async (req, res) => {
     }
     throw err
   }
-  notify('books')
+  notifyEveryone('books')
   res.json({ ok: true })
 })

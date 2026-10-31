@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { pool } from './db.js'
-import { notify } from './live.js'
+import { notifyAdmins, notifyEveryone } from './live.js'
 
 for (const name of ['BETTER_AUTH_SECRET', 'BETTER_AUTH_URL']) {
   if (!process.env[name]) {
@@ -23,12 +23,18 @@ export const auth = betterAuth({
     },
   },
   // Better Auth writes the user table itself, so it tells us when it did:
-  // a new sign-up, or a new name or picture on /account. The admin users
-  // list and the names on reviews then fetch again (see live.js).
+  // a new sign-up, or a new name or picture on /account. The users list
+  // is for admins only; a new name or picture also shows on the person's
+  // reviews, which everyone sees (see live.js).
   databaseHooks: {
     user: {
-      create: { after: async () => notify('users') },
-      update: { after: async () => notify('users') },
+      create: { after: async () => notifyAdmins('users') },
+      update: {
+        after: async () => {
+          notifyAdmins('users')
+          notifyEveryone('reviews')
+        },
+      },
     },
   },
 })

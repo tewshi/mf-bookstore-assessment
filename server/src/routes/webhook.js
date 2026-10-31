@@ -1,6 +1,6 @@
 import { pool } from '../lib/db.js'
 import { stripe } from '../lib/stripe.js'
-import { notify } from '../lib/live.js'
+import { notifyEveryone, notifyUserAndAdmins } from '../lib/live.js'
 
 // POST /api/webhooks/stripe: Stripe calls this when something happens to
 // a checkout session. It is the only code that marks an order paid.
@@ -50,14 +50,19 @@ export async function stripeWebhook(req, res) {
 // event more than once, and the second time this changes nothing.
 
 async function markPaid(sessionId) {
-  const { rowCount } = await pool.query(
+  // RETURNING user_id: whose order it is, for the live update below
+  const { rows } = await pool.query(
     `UPDATE orders SET status = 'paid', paid_at = now()
-     WHERE stripe_session_id = $1 AND status = 'pending'`,
+     WHERE stripe_session_id = $1 AND status = 'pending' RETURNING user_id`,
     [sessionId],
   )
-  // Only when something changed (not for a repeated event). Recommendations
-  // and the admin totals count paid orders, so they listen for this too.
-  if (rowCount > 0) notify('orders')
+  // Only when something changed (not for a repeated event): the buyer's
+  // tabs and the admins. 'books' to everyone too: the recommendations
+  // under each book count paid orders.
+  if (rows.length > 0) {
+    notifyUserAndAdmins('orders', rows[0].user_id)
+    notifyEveryone('books')
+  }
 }
 
 // Cancels the order and puts its books back on the shelf, in one transaction
@@ -67,7 +72,7 @@ async function cancelOrder(sessionId) {
     await client.query('BEGIN')
     const { rows } = await client.query(
       `UPDATE orders SET status = 'cancelled'
-       WHERE stripe_session_id = $1 AND status = 'pending' RETURNING id`,
+       WHERE stripe_session_id = $1 AND status = 'pending' RETURNING id, user_id`,
       [sessionId],
     )
     if (rows.length > 0) {
@@ -82,8 +87,8 @@ async function cancelOrder(sessionId) {
     await client.query('COMMIT')
     // After COMMIT, so the tabs that fetch again see the new rows
     if (rows.length > 0) {
-      notify('orders')
-      notify('books')
+      notifyUserAndAdmins('orders', rows[0].user_id)
+      notifyEveryone('books')
     }
   } catch (err) {
     await client.query('ROLLBACK')

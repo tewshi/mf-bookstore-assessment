@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { pool } from '../../lib/db.js'
-import { notify } from '../../lib/live.js'
+import { notifyEveryone } from '../../lib/live.js'
 
 // Mounted at /api/admin/events (see ../admin.js, which checks for an admin first)
 export const adminEvents = Router()
@@ -65,7 +65,7 @@ adminEvents.post('/', async (req, res) => {
     throw err
   }
   // The home page events and the admin tab fetch again
-  notify('events')
+  notifyEveryone('events')
   res.status(201).json({ id })
 })
 
@@ -87,7 +87,7 @@ adminEvents.put('/:id', async (req, res) => {
     [event.datetime, event.title, event.text, event.seats, req.params.id],
   )
   if (rowCount === 0) return res.status(404).json({ error: 'Event not found' })
-  notify('events')
+  notifyEveryone('events')
   res.json({ ok: true })
 })
 
@@ -96,6 +96,6 @@ adminEvents.put('/:id', async (req, res) => {
 adminEvents.delete('/:id', async (req, res) => {
   const { rowCount } = await pool.query('DELETE FROM events WHERE id = $1', [req.params.id])
   if (rowCount === 0) return res.status(404).json({ error: 'Event not found' })
-  notify('events')
+  notifyEveryone('events')
   res.json({ ok: true })
 })

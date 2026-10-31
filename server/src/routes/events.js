@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../lib/db.js'
 import { currentUser, requireUser } from '../lib/session.js'
-import { notify } from '../lib/live.js'
+import { notifyEveryone } from '../lib/live.js'
 
 // Mounted at /api/events
 export const events = Router()
@@ -73,7 +73,7 @@ events.post('/:id/signup', requireUser, async (req, res) => {
     )
     await client.query('COMMIT')
     // One seat fewer, for everyone looking at the events
-    notify('events')
+    notifyEveryone('events')
     res.status(201).json({ ok: true })
   } catch (err) {
     await client.query('ROLLBACK')
@@ -89,6 +89,6 @@ events.delete('/:id/signup', requireUser, async (req, res) => {
     req.user.id,
     req.params.id,
   ])
-  notify('events')
+  notifyEveryone('events')
   res.json({ ok: true })
 })
