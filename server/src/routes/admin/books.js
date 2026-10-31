@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../../lib/db.js'
 import { notifyEveryone } from '../../lib/live.js'
+import { sendBackInStock } from '../../lib/notifications.js'
 
 // Mounted at /api/admin/books (see ../admin.js, which checks for an admin first)
 export const adminBooks = Router()
@@ -95,15 +96,21 @@ adminBooks.post('/', async (req, res) => {
 adminBooks.put('/:id', async (req, res) => {
   const { book, error } = readBook(req.body)
   if (error) return res.status(400).json({ error })
+  // FROM books AS before: the same row a second time, as it was before
+  // this UPDATE, so RETURNING can say whether it was sold out
+  let updated
   try {
-    const { rowCount } = await pool.query(
+    const { rows } = await pool.query(
       `UPDATE books SET title = $1, author = $2, section = $3, isbn = $4, price = $5, image = $6,
          description = $7, format = $8, pages = $9, published = $10, stock = $11,
          staff_pick_quote = $12, staff_pick_by = $13
-       WHERE id = $14`,
+       FROM books AS before
+       WHERE books.id = $14 AND before.id = books.id
+       RETURNING books.id, books.title, books.stock, before.stock AS stock_before`,
       [...bookValues(book), req.params.id],
     )
-    if (rowCount === 0) return res.status(404).json({ error: 'Book not found' })
+    if (rows.length === 0) return res.status(404).json({ error: 'Book not found' })
+    updated = rows[0]
   } catch (err) {
     if (err.code === UNIQUE_VIOLATION) {
       return res.status(409).json({ error: 'Another book already has that ISBN' })
@@ -111,6 +118,8 @@ adminBooks.put('/:id', async (req, res) => {
     throw err
   }
   notifyEveryone('books')
+  // Sold out before, copies now: tell the people who wished for it
+  if (updated.stock_before === 0 && updated.stock > 0) await sendBackInStock([updated])
   res.json({ ok: true })
 })
 

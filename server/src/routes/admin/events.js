@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../../lib/db.js'
 import { notifyEveryone } from '../../lib/live.js'
+import { sendNotification } from '../../lib/notifications.js'
 
 // Mounted at /api/admin/events (see ../admin.js, which checks for an admin first)
 export const adminEvents = Router()
@@ -81,21 +82,44 @@ adminEvents.put('/:id', async (req, res) => {
   if (event.seats < rows[0].taken) {
     return res.status(400).json({ error: `${rows[0].taken} people already have seats` })
   }
-  const { rowCount } = await pool.query(
+  // RETURNING label: the date as the database wrote it, for the message
+  const { rows: updated } = await pool.query(
     `UPDATE events SET starts_at = $1, label = ${labelSql}, title = $2, text = $3, seats = $4
-     WHERE id = $5`,
+     WHERE id = $5 RETURNING title, label`,
     [event.datetime, event.title, event.text, event.seats, req.params.id],
   )
-  if (rowCount === 0) return res.status(404).json({ error: 'Event not found' })
+  if (updated.length === 0) return res.status(404).json({ error: 'Event not found' })
   notifyEveryone('events')
+  await sendNotification(
+    await seatHolders(req.params.id),
+    `"${updated[0].title}" was changed by the shop. It is now on ${updated[0].label}.`,
+    '/#events',
+  )
   res.json({ ok: true })
 })
 
 // DELETE /api/admin/events/test-event: remove an event. Its seat
 // reservations go with it (ON DELETE CASCADE in schema.sql).
 adminEvents.delete('/:id', async (req, res) => {
-  const { rowCount } = await pool.query('DELETE FROM events WHERE id = $1', [req.params.id])
-  if (rowCount === 0) return res.status(404).json({ error: 'Event not found' })
+  // Who had a seat, asked first: the DELETE removes their seats too
+  const people = await seatHolders(req.params.id)
+  const { rows } = await pool.query('DELETE FROM events WHERE id = $1 RETURNING title', [
+    req.params.id,
+  ])
+  if (rows.length === 0) return res.status(404).json({ error: 'Event not found' })
   notifyEveryone('events')
+  await sendNotification(
+    people,
+    `"${rows[0].title}" was cancelled, so your seat is gone. Sorry!`,
+    '/#events',
+  )
   res.json({ ok: true })
 })
+
+// The ids of everyone with a seat at this event
+async function seatHolders(eventId) {
+  const { rows } = await pool.query('SELECT user_id FROM event_signups WHERE event_id = $1', [
+    eventId,
+  ])
+  return rows.map((row) => row.user_id)
+}
