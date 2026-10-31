@@ -216,13 +216,14 @@ orders.post('/:id/pay', async (req, res) => {
 })
 
 // One person's orders, newest first, each with its books: paid ones and
-// pending ones (still waiting for Stripe), but not cancelled ones. With
+// pending ones (still waiting for Stripe) and refunded ones, but not cancelled ones. With
 // orderId, just that one order (still only if it is theirs), whatever its
 // status, so the success page can watch a pending order turn paid.
 // myRating is their review of each book, or null if none yet.
 async function findOrders(userId, orderId = null) {
   const { rows } = await pool.query(
     `SELECT orders.id, orders.total, orders.status, orders.card_last4, orders.created_at, orders.paid_at,
+            orders.refunded_at,
             order_items.book_id, order_items.quantity, order_items.price,
             books.title, books.author, books.image, reviews.rating AS my_rating
      FROM orders
@@ -247,6 +248,7 @@ async function findOrders(userId, orderId = null) {
         cardLast4: row.card_last4,
         createdAt: row.created_at,
         paidAt: row.paid_at,
+        refundedAt: row.refunded_at,
         items: [],
       }
       list.push(order)
