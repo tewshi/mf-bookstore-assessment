@@ -9,11 +9,11 @@ import { Pagination } from '../components/ui/Pagination'
 // Orders per page (each one is a card with its books inside)
 const perPage = 10
 
-// The /my-books page: everything the signed-in person has bought,
+// The /orders page: everything the signed-in person has bought,
 // one card per order, with a link to review each book. Unpaid orders
 // (pending) show "Pending payment" and a Pay now button instead, and get
 // no receipt or review links until the webhook marks them paid.
-export function MyBooks() {
+export function Orders() {
   const { data: session, isPending } = authClient.useSession()
   const userId = session?.user.id
 
@@ -56,11 +56,11 @@ export function MyBooks() {
 
   if (!session) {
     return (
-      <section id="my-books" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
+      <section id="orders" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
         <h1 className="mb-2 text-3xl font-bold">Sign in to see your orders</h1>
         <p className="mb-8 text-muted">Your orders and reviews are kept in your account.</p>
         <a
-          href="/signin/my-books"
+          href="/signin/orders"
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
@@ -70,7 +70,7 @@ export function MyBooks() {
   }
 
   return (
-    <section id="my-books" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-12">
+    <section id="orders" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-12">
       <h1 className="text-3xl font-bold sm:text-4xl">Orders</h1>
       <p className="mb-8 text-muted">
         Your orders, newest first. Tell other readers what you thought.
@@ -222,7 +222,7 @@ export function MyBooks() {
         total={orders?.length ?? 0}
         noun="orders"
         onChange={setPage}
-        scrollTo="my-books"
+        scrollTo="orders"
       />
     </section>
   )

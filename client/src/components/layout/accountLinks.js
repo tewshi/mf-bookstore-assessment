@@ -3,8 +3,8 @@ import { BookIcon, HeartIcon, ShieldIcon, UserIcon } from '../ui/Icons'
 // The links in the account menu (header dropdown and phone drawer).
 // page is the hash's first part when that link is open, for the highlight.
 const links = [
-  { href: '/my-books', page: 'my-books', label: 'Orders', Icon: BookIcon },
-  { href: '/saved', page: 'saved', label: 'Wishlist', Icon: HeartIcon },
+  { href: '/orders', page: 'orders', label: 'Orders', Icon: BookIcon },
+  { href: '/wishlist', page: 'wishlist', label: 'Wishlist', Icon: HeartIcon },
   { href: '/account', page: 'account', label: 'Account', Icon: UserIcon },
 ]
 

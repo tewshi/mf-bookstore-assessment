@@ -9,8 +9,8 @@ import { SignIn } from './pages/SignIn'
 import { Cart } from './pages/Cart'
 import { Checkout } from './pages/Checkout'
 import { Paid } from './pages/Paid'
-import { MyBooks } from './pages/MyBooks'
-import { Saved } from './pages/Saved'
+import { Orders } from './pages/Orders'
+import { Wishlist } from './pages/Wishlist'
 import { Receipt } from './pages/Receipt'
 import { Account } from './pages/Account'
 import { Admin } from './pages/admin/Admin'
@@ -27,11 +27,11 @@ const pageTitles = {
   cart: 'Your cart',
   checkout: 'Checkout',
   paid: 'Payment',
-  'my-books': 'Your orders',
+  orders: 'Your orders',
   order: 'Receipt',
   admin: 'Admin',
   account: 'Your account',
-  saved: 'Your wishlist',
+  wishlist: 'Your wishlist',
 }
 
 // The cart this browser saved last time, or an empty one. try/catch in
@@ -172,7 +172,7 @@ function App() {
     sendJson(wasSaved ? 'DELETE' : 'PUT', `/api/wishlist/${bookId}`).then(
       () => {
         if (!wasSaved) {
-          showToast({ text: 'Added to your wishlist', link: '/saved', linkText: 'View wishlist' })
+          showToast({ text: 'Added to your wishlist', link: '/wishlist', linkText: 'View wishlist' })
         }
       },
       () => {
@@ -238,8 +238,8 @@ function App() {
       // Where Stripe sends people back after paying, e.g. /paid/12
       return <Paid key={param} orderId={param} onPaid={onPaid} />
     }
-    if (page === 'my-books') {
-      return <MyBooks />
+    if (page === 'orders') {
+      return <Orders />
     }
     if (page === 'order') {
       // key: a fresh Receipt when going from one order to another
@@ -251,9 +251,9 @@ function App() {
     if (page === 'account') {
       return <Account />
     }
-    if (page === 'saved') {
+    if (page === 'wishlist') {
       return (
-        <Saved
+        <Wishlist
           books={books}
           signedIn={Boolean(userId)}
           savedIds={savedIds}

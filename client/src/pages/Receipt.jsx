@@ -32,7 +32,7 @@ export function Receipt({ orderId }) {
             : 'Sign in to see your receipts.'}
         </p>
         <a
-          href={session ? '/my-books' : '/signin/my-books'}
+          href={session ? '/orders' : '/signin/orders'}
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           {session ? 'Go to Orders' : 'Sign in'}
@@ -53,7 +53,7 @@ export function Receipt({ orderId }) {
   return (
     <section className="mx-auto max-w-2xl px-4 py-12 print:py-0">
       <div className="mb-6 flex items-center justify-between print:hidden">
-        <a href="/my-books" className="text-sm font-medium text-muted hover:text-accent">
+        <a href="/orders" className="text-sm font-medium text-muted hover:text-accent">
           &larr; Back to Orders
         </a>
         {/* window.print() opens the browser's print dialog (or "Save as PDF") */}

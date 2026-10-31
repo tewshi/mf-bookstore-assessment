@@ -29,7 +29,7 @@ if (isProduction) {
 
   // Pages have real addresses (/cart, /book/slow-maps), but there is only
   // one HTML file: React picks the page from the address. So any other GET
-  // gets index.html, e.g. after a refresh on /my-books. /api is left out,
+  // gets index.html, e.g. after a refresh on /orders. /api is left out,
   // so a wrong API address still answers 404 instead of a web page.
   app.get('/{*any}', (req, res, next) => {
     if (req.path.startsWith('/api/')) return next()

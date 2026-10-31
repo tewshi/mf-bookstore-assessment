@@ -45,7 +45,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - `server/src/routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, one per admin tab)
 - Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
-- `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `MyBooks`, `Saved`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
+- `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `Orders`, `Wishlist`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
 - `client/src/components/`: `layout/` (Header, menus, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal, and Select, SearchBox, Pagination for every list)
 - `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `usePages.js` (client-side paging: Orders 10, Wishlist 12, admin lists 10, staff picks and events 6; the book grid's 12 is `perPage` in `routes/books.js`; `Pagination` renders nothing for one page), `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`)
 - Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres
@@ -55,7 +55,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 
 - Plain SQL with `pg` and `$1` placeholders. No ORM.
 - Database columns are snake_case; the API returns the camelCase shape the React components already used (see `toBook` in `server/src/routes/books.js`).
-- Path routing in `App.jsx`, no router library: `history.pushState` via `navigate()` in `lib/navigate.js`, and `App` listens for `popstate`. A document click listener (`handleLinkClick`) sends our own `<a href="/...">` links through `navigate()`, so plain `<a>` tags are fine. The path splits at `/` into page/param: `/book/<id>`, `/signin/checkout` (sign in, then go to `/checkout`), `/cart`, `/checkout`, `/checkout/<id>` (Buy now reuses order <id> if the cart still matches; nothing links here since cancel_url became `/my-books`), `/paid/<id>` (Stripe's success_url), `/my-books`, `/saved`, `/account`, `/order/<id>`, `/admin/<tab>`. `#` is only for scrolling to a section: `/#books`, `/#staff-picks`, `/#events`, `/book/<id>#reviews`.
+- Path routing in `App.jsx`, no router library: `history.pushState` via `navigate()` in `lib/navigate.js`, and `App` listens for `popstate`. A document click listener (`handleLinkClick`) sends our own `<a href="/...">` links through `navigate()`, so plain `<a>` tags are fine. The path splits at `/` into page/param: `/book/<id>`, `/signin/checkout` (sign in, then go to `/checkout`), `/cart`, `/checkout`, `/checkout/<id>` (Buy now reuses order <id> if the cart still matches; nothing links here since cancel_url became `/orders`), `/paid/<id>` (Stripe's success_url), `/orders`, `/wishlist`, `/account`, `/order/<id>`, `/admin/<tab>`. `#` is only for scrolling to a section: `/#books`, `/#staff-picks`, `/#events`, `/book/<id>#reviews`.
 - Comments explain *why* in plain English for a student reader; match the density of the existing files.
 - Commits: small, one-line messages, one logical step each.
 
@@ -64,7 +64,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - Better Auth must be mounted **before** `express.json()`, or it can't read the request body.
 - The Stripe webhook also goes before `express.json()`, with `express.raw()`: the signature check needs the exact bytes.
 - The `whsec_` from `stripe listen` (local `.env`) differs from the dashboard endpoint's (Railway). The env var is `STRIPE_WEBHOOK_SECRET_KEY` (the student's name for it).
-- Reviews, recommendations and admin totals count only `status = 'paid'`. Orders (`/my-books`) lists paid and pending orders (pending: "Pending payment" + Pay now, which calls `POST /api/orders/:id/pay` to reopen the still-open Stripe session; no receipt or review links).
+- Reviews, recommendations and admin totals count only `status = 'paid'`. Orders (`/orders`) lists paid and pending orders (pending: "Pending payment" + Pay now, which calls `POST /api/orders/:id/pay` to reopen the still-open Stripe session; no receipt or review links).
 - Express 5 wildcard syntax: `app.all('/api/auth/{*any}', ...)`.
 - `getMigrations` is imported from `better-auth/db/migration` (not `better-auth/db`) in v1.7.
 - Postgres `numeric` comes back as a string: convert `price` with `Number()`.
@@ -72,7 +72,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - Better Auth rejects cookie-authenticated POSTs without an `Origin` header (CSRF check): add `-H 'Origin: http://localhost:5173'` when testing with curl.
 - In zsh, an unquoted `$VAR` holding several curl flags is NOT split into words; spell flags out or use a function.
 - oxlint's React rules flag `Date.now()` in render scope, `setState` straight inside an effect, and writing `window.location` in a component; use a ref, derive the value during render, or render a link instead.
-- In production, Express answers any non-`/api` GET with `client/dist/index.html` (after `express.static`), or a refresh on `/my-books` would 404. Vite does this by itself in dev.
+- In production, Express answers any non-`/api` GET with `client/dist/index.html` (after `express.static`), or a refresh on `/orders` would 404. Vite does this by itself in dev.
 - `pool.on('error')` is required: Neon/Railway close idle connections and an unhandled pool error crashes the process.
 - Better Auth throws at startup in production without `BETTER_AUTH_SECRET`. `lib/db.js` and `lib/auth.js` check the three env vars and name the missing one.
 

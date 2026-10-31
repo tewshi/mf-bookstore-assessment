@@ -158,7 +158,7 @@ orders.post('/', async (req, res) => {
       success_url: `${siteUrl}/paid/${orderId}`,
       // Back (without paying) returns to Orders, where this order shows
       // "Pending payment" and a Pay now button
-      cancel_url: `${siteUrl}/my-books`,
+      cancel_url: `${siteUrl}/orders`,
       // Unpaid sessions expire after 30 minutes (the shortest Stripe allows).
       // Stripe then sends checkout.session.expired and the books go back.
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,

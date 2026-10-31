@@ -6,9 +6,9 @@ import { Pagination } from '../components/ui/Pagination'
 // The same as the book grid on the home page: 3 rows of 4 on a laptop
 const perPage = 12
 
-// The /saved page: the books the signed-in person saved for later.
+// The /wishlist page: the books the signed-in person saved for later.
 // savedIds is newest first, so the list is too.
-export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
+export function Wishlist({ books, signedIn, savedIds, onToggleSave, onAdd }) {
   // Look each saved id up in books, skipping any that no longer exist.
   // Before the early returns below, because usePages is a hook.
   const savedBooks = savedIds
@@ -19,11 +19,11 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
 
   if (!signedIn) {
     return (
-      <section id="saved" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
+      <section id="wishlist" className="mx-auto max-w-md scroll-mt-16 px-4 py-24 text-center">
         <h1 className="mb-2 text-3xl font-bold">Sign in to see your wishlist</h1>
         <p className="mb-8 text-muted">Tap the heart on any book to keep it for later.</p>
         <a
-          href="/signin/saved"
+          href="/signin/wishlist"
           className="inline-block rounded-full bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-dark"
         >
           Sign in
@@ -37,7 +37,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
   }
 
   return (
-    <section id="saved" className="mx-auto max-w-page scroll-mt-16 px-4 py-12">
+    <section id="wishlist" className="mx-auto max-w-page scroll-mt-16 px-4 py-12">
       <h1 className="text-3xl font-bold sm:text-4xl">Wishlist</h1>
       <p className="mb-8 text-muted">Books you liked the look of. Tap a heart to remove one.</p>
 
@@ -84,7 +84,7 @@ export function Saved({ books, signedIn, savedIds, onToggleSave, onAdd }) {
         total={savedBooks.length}
         noun="saved books"
         onChange={setPage}
-        scrollTo="saved"
+        scrollTo="wishlist"
       />
     </section>
   )

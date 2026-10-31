@@ -69,7 +69,7 @@ export function Paid({ orderId, onPaid }) {
             ? 'There is no order with that number in your account.'
             : 'Sign in to see your order.'}
         </p>
-        <a href={session ? '/my-books' : '/signin/my-books'} className={button}>
+        <a href={session ? '/orders' : '/signin/orders'} className={button}>
           {session ? 'Go to Orders' : 'Sign in'}
         </a>
       </section>
@@ -88,7 +88,7 @@ export function Paid({ orderId, onPaid }) {
           where you can review what you bought.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          <a href="/my-books" className={button}>
+          <a href="/orders" className={button}>
             Go to Orders
           </a>
           <a href={`/order/${order.id}`} className={secondButton}>
