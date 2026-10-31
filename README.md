@@ -66,7 +66,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `auth.js`: Better Auth setup (email and password, plus a `role` field on users)
     - `session.js`: `currentUser()`, `requireUser` and `requireAdmin`, which find the signed-in person from the session cookie
     - `stripe.js`: the Stripe client, made with `STRIPE_SECRET_KEY`
-    - `live.js`: the open `/api/live` connections, and `notify(topic)`, which the routes call after they change something
+    - `live.js`: the open `/api/live` connections (with who opened each), and `notifyEveryone`, `notifyUser`, `notifyAdmins` and `notifyUserAndAdmins`, which the routes call after they change something
   - `db/schema.sql`: the shop's tables (see below)
   - `db/migrate.js`: creates Better Auth's tables, then runs `schema.sql`
   - `db/seed.js`: copies the arrays in `db/data/` (24 books, 7 events) into the database. Rows are updated in place, so orders, reviews and reservations survive a re-seed
@@ -109,7 +109,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `GET /api/admin/users` | everyone with an account: role, join date, paid orders and total spent. Admins |
 | `POST /api/admin/books`, `PUT` / `DELETE /api/admin/books/:id` | add, edit or delete a book (books that were ordered can't be deleted). Admins |
 | `GET /api/admin/events`, `POST /api/admin/events`, `PUT` / `DELETE /api/admin/events/:id` | all events, past ones too; add, edit or delete one. Admins |
-| `GET /api/live` | an event stream that stays open: a `data: <topic>` line whenever books, orders, events, wishlists, reviews or users change, and `data: ping` every 25 seconds. Never the data itself |
+| `GET /api/live` | an event stream that stays open: a `data: <topic>` line whenever something this person may see changes (public books, events and reviews; their own wishlist and orders; for admins, every order and the users), and `data: ping` every 25 seconds. Never the data itself |
 | `/api/auth/*` | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
 
 ## Page addresses
@@ -158,24 +158,32 @@ Only people who bought a book can review it: the server checks `order_items` bef
 Every list on the site updates by itself when someone changes it: stock when someone else checks out, an order turning paid when the webhook arrives, seats on the events, new reviews, and every admin tab. It uses Server-Sent Events (SSE), which browsers support with `EventSource`, so there is no extra package.
 
 1. **One connection per tab.** The first list on the page opens `GET /api/live` (`client/src/lib/useLive.js`), and every other list shares it: browsers allow only about 6 open requests per site.
-2. **The server remembers it.** `server/src/lib/live.js` keeps each open response in a `Set`, and takes it out when the tab closes.
-3. **A route changes something, then calls `notify()`.** For example, checkout calls `notify('orders')` and `notify('books')` after its `COMMIT`. Every open tab gets the lines `data: orders` and `data: books`. Sign-ups and profile changes go through Better Auth, so `databaseHooks` in `lib/auth.js` call `notify('users')`.
+2. **The server remembers it, and who it is.** `routes/live.js` looks up the session cookie like any other route, and `server/src/lib/live.js` keeps `{ res, userId, isAdmin }` for each open tab in a `Set`, and takes it out when the tab closes.
+3. **A route changes something, then tells the people it concerns.** There are four functions, so each call says who it is for:
+   - `notifyEveryone(topic)`: public data. Every tab, signed in or not.
+   - `notifyUser(topic, userId)`: one person's own data. Only their tabs and devices.
+   - `notifyUserAndAdmins(topic, userId)`: an order. The buyer's tabs, and every admin's.
+   - `notifyAdmins(topic)`: staff-only data. Every admin's tabs.
+
+   For example, checkout calls `notifyUserAndAdmins('orders', req.user.id)` and `notifyEveryone('books')` (the stock) after its `COMMIT`. Sign-ups and profile changes go through Better Auth, so `databaseHooks` in `lib/auth.js` send them.
 4. **Each list fetches again.** A list says what it listens for next to its `load()`: `useLive('orders', load)`. Only the topic travels over `/api/live`; the list fetches the data through its usual route, so the usual sign-in and admin checks still decide who sees what.
 
 The topics and who listens:
 
-| Topic | Sent by | Fetched again by |
-| --- | --- | --- |
-| `books` | checkout, cancelled orders, reviews, admin books | App's book list (grid, staff picks, book pages, cart, wishlist, admin books) |
-| `orders` | checkout, the webhook (paid or cancelled) | Orders, admin orders and users, recommendations |
-| `events` | seat sign-ups, admin events | home page events, Orders' "Your events", admin events |
-| `wishlist` | saving or un-saving a book | the hearts and the wishlist |
-| `reviews` | a new or changed review | the reviews under a book |
-| `users` | sign-up, a new name or picture | admin users, the names on reviews |
+| Topic | Sent to | Sent by | Fetched again by |
+| --- | --- | --- | --- |
+| `books` | everyone | checkout, paid and cancelled orders, reviews, admin books | App's book list (grid, staff picks, book pages, cart, wishlist, admin books), recommendations |
+| `orders` | the buyer and admins | checkout, the webhook (paid or cancelled) | Orders, the review form, admin orders and users |
+| `events` | everyone | seat sign-ups, admin events | home page events, Orders' "Your events", admin events |
+| `wishlist` | that person only | saving or un-saving a book | the hearts and the wishlist |
+| `reviews` | everyone | a new or changed review, a new name or picture | the reviews under a book |
+| `users` | admins | sign-up, a new name or picture | admin users |
+
+**Signing in or out.** The server decides what a tab hears when the tab connects, so `App` calls `liveSignedInAs(userId)` once the session is known, and `useLive.js` connects again whenever the person changes.
 
 **Keeping it alive.** The server sends `data: ping` every 25 seconds, so proxies (Railway's, Vite's) don't close a quiet connection. The page also uses the ping to notice a dead connection. When Express restarts, Vite's proxy can keep the browser's side open with nothing behind it, so if no ping arrives for a minute, `useLive.js` connects again. `EventSource` reconnects by itself after a network error, but gives up after an error page (Vite or Railway while the server restarts); then `useLive.js` tries again every 5 seconds. After any reconnect, every list fetches again, in case something changed meanwhile.
 
-**Limits.** Every tab hears every change: a heart saved by anyone makes each signed-in tab fetch its own wishlist again. That's fine for a shop this size. The connections are kept in memory, which works because the site runs as one server; changes made outside it (`npm run seed`, `make-admin`) aren't announced, and show up on the next fetch or Refresh.
+**Limits.** Who a tab is was decided when it connected: making someone an admin, or signing out on another device, takes effect when that tab connects again (a reload, or the next sign-in). It only ever hears topic names, so nothing private leaks meanwhile. The connections are kept in memory, which works because the site runs as one server; changes made outside it (`npm run seed`, `make-admin`) aren't announced, and show up on the next fetch or Refresh.
 
 ## Recommendations
 
