@@ -63,9 +63,6 @@ export function AdminUsers() {
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center">
         <SearchBox value={search} onChange={changeSearch} placeholder="Search name or email" />
         <Select label="Role" value={role} onChange={changeRole} options={roleOptions} />
-        <p className="text-sm text-muted">
-          {shown.length} of {users.length} users
-        </p>
         <RefreshButton onRefresh={load} />
       </div>
 

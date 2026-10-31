@@ -41,8 +41,8 @@ export function AdminEvents() {
   return (
     // id: where the page buttons scroll back to
     <div id="admin-events" className="scroll-mt-24">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted">{events.length} events</p>
+      {/* The count is on the Events tab (Admin.jsx) */}
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
         <div className="flex gap-2">
           <RefreshButton onRefresh={load} />
           <button

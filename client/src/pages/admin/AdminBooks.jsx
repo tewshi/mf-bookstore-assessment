@@ -60,8 +60,8 @@ export function AdminBooks({ books, onChanged }) {
   return (
     // id: where the page buttons scroll back to
     <div id="admin-books" className="scroll-mt-24">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted">{books.length} books</p>
+      {/* The count is on the Books tab (Admin.jsx) */}
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
         <div className="flex gap-2">
           {/* onChanged is App's loadBooks: the books are App's list */}
           <RefreshButton onRefresh={onChanged} />
