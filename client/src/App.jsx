@@ -70,12 +70,17 @@ function App() {
   const [books, setBooks] = useState(null)
   const [error, setError] = useState(null)
 
-  // Also called after someone posts a review, to refresh the star averages
+  // Also called after someone posts a review, to refresh the star averages,
+  // and by the Refresh buttons. It returns the promise so they can wait.
   function loadBooks() {
-    getJson('/api/books').then(setBooks, setError)
+    return getJson('/api/books').then(setBooks, setError)
   }
 
-  useEffect(loadBooks, [])
+  // Braces, not useEffect(loadBooks): an effect may only return a cleanup
+  // function, and loadBooks now returns a promise
+  useEffect(() => {
+    loadBooks()
+  }, [])
 
   // The cart: how many of each book, e.g. { 'slow-maps': 2 }. It lives
   // here because the header, the book pages and /cart all need it.
@@ -154,6 +159,12 @@ function App() {
 
   // Signed out: nothing is saved, whatever the last person's list was
   const savedIds = userId ? savedList : []
+
+  // The wishlist's Refresh button: the saved ids (maybe changed in another
+  // tab) and the books (for new prices and stock)
+  function refreshWishlist() {
+    return Promise.all([loadBooks(), getJson('/api/wishlist').then(setSavedList, () => {})])
+  }
 
   function toggleSaved(bookId) {
     if (!userId) {
@@ -259,6 +270,7 @@ function App() {
           savedIds={savedIds}
           onToggleSave={toggleSaved}
           onAdd={addToCart}
+          onRefresh={refreshWishlist}
         />
       )
     }

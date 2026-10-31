@@ -5,6 +5,7 @@ import { Stars } from '../components/books/StarRating'
 import { usePages } from '../lib/usePages'
 import { BookIcon } from '../components/ui/Icons'
 import { Pagination } from '../components/ui/Pagination'
+import { RefreshButton } from '../components/ui/RefreshButton'
 
 // Orders per page (each one is a card with its books inside)
 const perPage = 10
@@ -27,14 +28,21 @@ export function Orders() {
   const [payError, setPayError] = useState(null)
   const { page, setPage, pageItems } = usePages(orders ?? [], perPage)
 
+  // The orders and events, both at once. The Refresh button waits for
+  // the promise, e.g. to see a pending order turn paid.
+  function load() {
+    return Promise.all([
+      getJson('/api/orders').then(setOrders, setError),
+      getJson('/api/events').then(
+        (events) => setMyEvents(events.filter((e) => e.going)),
+        () => {},
+      ),
+    ])
+  }
+
   // Fetch again if a different person signs in
   useEffect(() => {
-    if (!userId) return
-    getJson('/api/orders').then(setOrders, setError)
-    getJson('/api/events').then(
-      (events) => setMyEvents(events.filter((e) => e.going)),
-      () => {},
-    )
+    if (userId) load()
   }, [userId])
 
   // Pay now: ask the server for the order's Stripe page and go there
@@ -71,7 +79,10 @@ export function Orders() {
 
   return (
     <section id="orders" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-12">
-      <h1 className="text-3xl font-bold sm:text-4xl">Orders</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold sm:text-4xl">Orders</h1>
+        <RefreshButton onRefresh={load} />
+      </div>
       <p className="mb-8 text-muted">
         Your orders, newest first. Tell other readers what you thought.
       </p>

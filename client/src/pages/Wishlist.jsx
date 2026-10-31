@@ -2,13 +2,14 @@ import { usePages } from '../lib/usePages'
 import { BookCard } from '../components/books/BookCard'
 import { CartIcon, HeartIcon } from '../components/ui/Icons'
 import { Pagination } from '../components/ui/Pagination'
+import { RefreshButton } from '../components/ui/RefreshButton'
 
 // The same as the book grid on the home page: 3 rows of 4 on a laptop
 const perPage = 12
 
 // The /wishlist page: the books the signed-in person saved for later.
-// savedIds is newest first, so the list is too.
-export function Wishlist({ books, signedIn, savedIds, onToggleSave, onAdd }) {
+// savedIds is newest first, so the list is too. onRefresh fetches both again.
+export function Wishlist({ books, signedIn, savedIds, onToggleSave, onAdd, onRefresh }) {
   // Look each saved id up in books, skipping any that no longer exist.
   // Before the early returns below, because usePages is a hook.
   const savedBooks = savedIds
@@ -38,7 +39,10 @@ export function Wishlist({ books, signedIn, savedIds, onToggleSave, onAdd }) {
 
   return (
     <section id="wishlist" className="mx-auto max-w-page scroll-mt-16 px-4 py-12">
-      <h1 className="text-3xl font-bold sm:text-4xl">Wishlist</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold sm:text-4xl">Wishlist</h1>
+        <RefreshButton onRefresh={onRefresh} />
+      </div>
       <p className="mb-8 text-muted">Books you liked the look of. Tap a heart to remove one.</p>
 
       {savedBooks.length === 0 ? (
