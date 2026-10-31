@@ -22,9 +22,11 @@ export function Reviews({ book, onReviewed }) {
 
   // Load again when someone signs in or out: canReview depends on who asks
   useEffect(load, [book.id, userId])
-  // Live: a new review, or a reviewer changed their name or picture
+  // Live: a new review, or a reviewer changed their name or picture.
+  // 'orders' only reaches this person: once their order is paid, the
+  // form to review the book appears.
   useLive('reviews', load)
-  useLive('users', load)
+  useLive('orders', load)
 
   // The section is there even while loading, so a /book/<id>#reviews
   // link has something to scroll to straight away

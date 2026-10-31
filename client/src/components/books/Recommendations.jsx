@@ -15,8 +15,9 @@ export function Recommendations({ book, books }) {
   }
 
   useEffect(load, [book.id])
-  // Live: they come from paid orders, so a newly paid one can change them
-  useLive('orders', load)
+  // Live: they come from paid orders, and the server sends 'books' to
+  // everyone when an order is paid ('orders' only goes to the buyer)
+  useLive('books', load)
 
   if (!alsoBought) return null
 

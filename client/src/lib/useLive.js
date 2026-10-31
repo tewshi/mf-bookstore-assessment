@@ -15,6 +15,9 @@ const listeners = new Map()
 let openedBefore = false
 // When the server last said anything. It sends "ping" every 25 seconds.
 let lastHeard = 0
+// Who the connection was opened for: a user id, null for nobody, or
+// undefined until App has told us (see liveSignedInAs below)
+let connectedAs
 
 function connect() {
   source = new EventSource('/api/live')
@@ -56,6 +59,20 @@ setInterval(() => {
     connect()
   }
 }, 10_000)
+
+// The server decides what a tab hears by who opened the connection (your
+// wishlist, your orders, an admin's users list). So when someone signs in
+// or out, connect again as the new person. App calls this whenever the
+// session is known. No refetch on this reconnect: the lists already fetch
+// again by themselves when the person changes.
+export function liveSignedInAs(userId) {
+  if (source && connectedAs !== undefined && connectedAs !== userId) {
+    source.close()
+    openedBefore = false
+    connect()
+  }
+  connectedAs = userId
+}
 
 // Calls onChange whenever the server says topic changed, while the
 // component is on the page, e.g. useLive('orders', load)

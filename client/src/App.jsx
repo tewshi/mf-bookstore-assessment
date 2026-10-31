@@ -17,7 +17,7 @@ import { Admin } from './pages/admin/Admin'
 import { NotFound } from './pages/NotFound'
 import { Footer } from './components/layout/Footer'
 import { Toast } from './components/ui/Toast'
-import { useLive } from './lib/useLive'
+import { liveSignedInAs, useLive } from './lib/useLive'
 
 // The browser tab's title for each page, by the first part of the path.
 // It also lists which pages exist: any other address is "not found".
@@ -150,8 +150,15 @@ function App() {
   }
 
   // Who is signed in. The wishlist below belongs to them.
-  const { data: session } = authClient.useSession()
+  const { data: session, isPending: sessionPending } = authClient.useSession()
   const userId = session?.user.id
+
+  // Live updates are sent per person, so tell useLive who this is once we
+  // know (not while the session is still loading), and again on sign-in
+  // or sign-out
+  useEffect(() => {
+    if (!sessionPending) liveSignedInAs(userId ?? null)
+  }, [userId, sessionPending])
 
   // Ids of the books the signed-in person saved (the hearts), e.g.
   // ['slow-maps']. Fetched again whenever someone signs in.
