@@ -13,7 +13,7 @@ cp server/.env.example server/.env   # then fill in the values
 npm run migrate -w server            # create the tables
 npm run seed -w server               # fill books and events
 npm run dev                          # Express on :3000, Vite on :5173
-stripe listen --forward-to localhost:3000/api/webhooks/stripe   # in a second terminal, for payments
+stripe listen --all-snapshot --forward-to localhost:3000/api/webhooks/stripe   # in a second terminal, for payments
 npm run make-admin -w server -- you@example.com   # optional: make your account an admin
 ```
 
@@ -37,7 +37,7 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
   - `src/pages/`: one file per page App can show: `Home` (`/`), `BookDetails` (`/book/<id>`), `SignIn` (`/signin` and `/signup`), `Cart` (`/cart`), `Checkout` (`/checkout`), `Paid` (`/paid/<id>`, where Stripe sends people back), `Orders` (`/orders`), `Wishlist` (`/wishlist`), `Account` (`/account`), `Receipt` (`/order/<id>`) and `NotFound` (any other address, or a book id that doesn't exist)
   - `src/pages/admin/`: the `/admin` page and its Orders, Books, Events and Users tabs
   - `src/components/`: the pieces the pages are built from, in four folders:
-    - `layout/`: on every page. `Header` is the top bar, `UserMenu` the avatar dropdown, `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button, `Footer`, and `accountLinks.js` the links in the account menu (Admin only for admins)
+    - `layout/`: on every page. `Header` is the top bar, `UserMenu` the avatar dropdown, `NotificationBell` the bell with the unread count (signed-in people only), `MobileMenu` the drawer behind the hamburger button on phones, `ThemeToggle` the light/dark button, `Footer`, and `accountLinks.js` the links in the account menu (Admin only for admins)
     - `books/`: `BookCard`, `BookGrid` (search, sort, section filter and pages, all asked of the API), `StarRating`, and `Reviews` and `Recommendations`, the sections under each book
     - `home/`: the other parts of the home page: `Hero`, `StaffPicks` and `Events`
     - `ui/`: small general pieces: `Icons` (the SVG icons), `Avatar`, `Toast` (the short message at the bottom, "Added to your cart"), `Reveal` (fades a section in), and the pieces every list shares: `Select` (the round dropdown), `SearchBox`, `Pagination` (Previous, page numbers, Next; hidden when there is only one page) and `RefreshButton` (fetches the list again, on the admin tabs, Orders and Wishlist)
@@ -60,12 +60,14 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
     - `wishlist.js`: `/api/wishlist`, the saved books
     - `events.js`: `/api/events` and seat reservations
     - `live.js`: `/api/live`, the open connection each tab listens on for live updates
+    - `notifications.js`: `/api/notifications`, the messages under the bell, and marking them read
     - `admin.js`: `/api/admin`, for admins only. It checks the role, then mounts `admin/orders.js`, `admin/books.js`, `admin/events.js` and `admin/users.js` (one per admin tab)
   - `src/lib/`: the setup the routes share
     - `db.js`: one `pg` connection pool, shared by everything
     - `auth.js`: Better Auth setup (email and password, plus a `role` field on users)
     - `session.js`: `currentUser()`, `requireUser` and `requireAdmin`, which find the signed-in person from the session cookie
     - `stripe.js`: the Stripe client, made with `STRIPE_SECRET_KEY`
+    - `notifications.js`: `sendNotification`, `sendToAdmins` and `sendBackInStock`, which save messages for the bell (see [Notifications](#notifications))
     - `live.js`: the open `/api/live` connections (with who opened each), and `notifyEveryone`, `notifyUser`, `notifyAdmins` and `notifyUserAndAdmins`, which the routes call after they change something
   - `db/schema.sql`: the shop's tables (see below)
   - `db/migrate.js`: creates Better Auth's tables, then runs `schema.sql`
@@ -78,12 +80,13 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 - `events`: one row per event, sorted by `starts_at`. `seats` is how many people fit.
 - `event_signups`: who reserved a seat at which event (one per person per event).
 - `wishlist`: the books each person saved for later (the hearts).
-- `orders`: one row per checkout: who is buying, the `total`, the `status` (`pending`, `paid` or `cancelled`), Stripe's `stripe_session_id`, and when it was placed (`created_at`) and paid (`paid_at`). `card_last4` is only set on the older demo orders from Assignment 3; Stripe keeps the card now.
+- `orders`: one row per checkout: who is buying, the `total`, the `status` (`pending`, `paid`, `cancelled` or `refunded`), Stripe's `stripe_session_id`, and when it was placed (`created_at`), paid (`paid_at`) and refunded (`refunded_at`). `card_last4` is only set on the older demo orders from Assignment 3; Stripe keeps the card now.
+- `notifications`: the messages under the bell: who it is for, the `text`, where clicking it goes (`link`), and `read_at` (null while unread).
 - `order_items`: the books in each order, with the quantity and the price at the time.
 - `reviews`: a rating (1 to 5) and text per person per book. `UNIQUE (user_id, book_id)` means writing again replaces your old review.
 - `user`, `session`, `account`, `verification`: created and managed by Better Auth. `user` holds name, email, the profile picture (`image`) and `role` (`customer` or `admin`); `account` holds the hashed password; `session` holds one row per signed-in browser.
 
-`stock`, `seats` and the Stripe columns on `orders` were added after their tables already existed, so `schema.sql` adds them with `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, which is safe to run again. `status` is added with `DEFAULT 'paid'`, so the old demo orders count as paid, and then its default is changed to `'pending'` for new ones.
+`stock`, `seats` and the Stripe columns on `orders` were added after their tables already existed, so `schema.sql` adds them with `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, which is safe to run again. `status` is added with `DEFAULT 'paid'`, so the old demo orders count as paid, and then its default is changed to `'pending'` for new ones. Adding `refunded` meant changing the `CHECK` on `status`, which can't be edited in place: `schema.sql` drops `orders_status_check` (`IF EXISTS`) and adds it again with the new list.
 
 ## API
 
@@ -105,10 +108,14 @@ The repo is an npm workspace with two packages, so one `npm install` at the root
 | `PUT /api/wishlist/:bookId`, `DELETE /api/wishlist/:bookId` | save or un-save a book. Signed in |
 | `GET /api/events` | upcoming events, soonest first, with `seatsLeft` and whether you are `going` |
 | `POST /api/events/:id/signup`, `DELETE /api/events/:id/signup` | reserve or give back a seat. Signed in |
-| `GET /api/admin/orders` | every order, with the customer. Admins |
+| `GET /api/admin/counts` | `{ orders, books, events, users }`, for the numbers on the admin tabs. Admins |
+| `GET /api/admin/orders` | every order, with the customer, and `refundable` (paid through Stripe). Admins |
+| `POST /api/admin/orders/:id/refund` | refund a paid order in full through Stripe, and put its books back. 409 for an order that isn't paid, or an old demo order with no Stripe payment. Admins |
 | `GET /api/admin/users` | everyone with an account: role, join date, paid orders and total spent. Admins |
 | `POST /api/admin/books`, `PUT` / `DELETE /api/admin/books/:id` | add, edit or delete a book (books that were ordered can't be deleted). Admins |
 | `GET /api/admin/events`, `POST /api/admin/events`, `PUT` / `DELETE /api/admin/events/:id` | all events, past ones too; add, edit or delete one. Admins |
+| `GET /api/notifications` | `{ unread, notifications }`: your newest 20 messages, and how many of all of them are unread. Signed in |
+| `POST /api/notifications/read`, `POST /api/notifications/:id/read` | mark all of them, or one, read. Signed in |
 | `GET /api/live` | an event stream that stays open: a `data: <topic>` line whenever something this person may see changes (public books, events and reviews; their own wishlist and orders; for admins, every order and the users), and `data: ping` every 25 seconds. Never the data itself |
 | `/api/auth/*` | Better Auth: `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
 
@@ -141,9 +148,12 @@ Stripe runs in test mode: the keys start with `sk_test_`, Stripe's page says "Sa
 6. **Pressing Back on Stripe's page** brings the customer back to Orders (`/orders`) without paying. The order stays `pending` and shows there with a Pay now button (step 7). Checkout opened as `/checkout/<id>` also sends that `orderId` along with the cart on Buy now, and the server (`reuseOrder` in `orders.js`) compares the cart with the order's saved items. The same books in the same quantities: it sends them back to the same Stripe page, so there is no second order. A different cart: it expires the old session (`stripe.checkout.sessions.expire`), so the webhook cancels the old order and puts its books back, and then it makes a new order as usual. The comparison happens on the server, so the browser can't claim a match that isn't there.
 7. **Paying later from Orders**: an unpaid order shows "Pending payment" there, with a **Pay now** button that calls `POST /api/orders/:id/pay`, which asks Stripe for the same session (`stripe.checkout.sessions.retrieve`) and, while it is still open, sends the customer back to its page. If it is already paid (the webhook is on its way) or expired, the button shows why instead. This route only reads from Stripe; the status still only changes in the webhook, and the 30-minute expiry still cancels the order and puts the books back.
 
+8. **Refunds**: on Admin → Orders, a paid order has a **Refund** button (two clicks: "Refund", then "Really refund €12.00?"). It calls `POST /api/admin/orders/:id/refund`, which looks up the order's payment through its checkout session and asks Stripe for a full refund (`stripe.refunds.create`). Once Stripe says yes, `refundOrder` in `webhook.js` sets `status = 'refunded'` and `refunded_at`, and puts the books back on the shelf, in one transaction. Only full refunds, and only orders paid through Stripe: the old demo orders have no Stripe payment to refund.
+9. **Refunds made in the Stripe dashboard** reach us too: Stripe sends `charge.refunded`. Its object is the charge, not the checkout session, so the webhook asks Stripe for the session that belongs to that payment (`stripe.checkout.sessions.list({ payment_intent })`) and calls the same `refundOrder`. A refund from our own button also sends this event; `refundOrder` only changes orders that are still `paid`, so the second time changes nothing. A partial refund in the dashboard is ignored (`charge.refunded` is only true once all of it is refunded).
+
 The webhook is mounted in `index.js` before `express.json()`, with `express.raw()`: the signature is worked out from the exact bytes Stripe sent, and `express.json()` would turn them into an object first.
 
-The Stripe webhook endpoint listens for four events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired`.
+The Stripe webhook endpoint listens for five events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired` and `charge.refunded`. Locally, `stripe listen --all-snapshot` forwards every event, so nothing needs choosing.
 
 ## Searching and pages
 
@@ -178,12 +188,32 @@ The topics and who listens:
 | `wishlist` | that person only | saving or un-saving a book | the hearts and the wishlist |
 | `reviews` | everyone | a new or changed review, a new name or picture | the reviews under a book |
 | `users` | admins | sign-up, a new name or picture | admin users |
+| `notifications` | that person only | a new message for them, or one marked read | the bell |
 
 **Signing in or out.** The server decides what a tab hears when the tab connects, so `App` calls `liveSignedInAs(userId)` once the session is known, and `useLive.js` connects again whenever the person changes.
 
 **Keeping it alive.** The server sends `data: ping` every 25 seconds, so proxies (Railway's, Vite's) don't close a quiet connection. The page also uses the ping to notice a dead connection. When Express restarts, Vite's proxy can keep the browser's side open with nothing behind it, so if no ping arrives for a minute, `useLive.js` connects again. `EventSource` reconnects by itself after a network error, but gives up after an error page (Vite or Railway while the server restarts); then `useLive.js` tries again every 5 seconds. After any reconnect, every list fetches again, in case something changed meanwhile.
 
 **Limits.** Who a tab is was decided when it connected: making someone an admin, or signing out on another device, takes effect when that tab connects again (a reload, or the next sign-in). It only ever hears topic names, so nothing private leaks meanwhile. The connections are kept in memory, which works because the site runs as one server; changes made outside it (`npm run seed`, `make-admin`) aren't announced, and show up on the next fetch or Refresh.
+
+## Notifications
+
+Signed-in people have a bell in the header. The number on it is how many messages are unread; clicking it shows the newest 20, and clicking a message marks it read and opens its link. "Mark all as read" clears the number.
+
+Each message is a row in the `notifications` table, saved by `server/src/lib/notifications.js` after the change it is about:
+
+| Message | For | Sent from |
+| --- | --- | --- |
+| Payment received for order #12 | the buyer | `markPaid` in `webhook.js` |
+| New order #12 from Ada, €24.00 | every admin | `markPaid` in `webhook.js` |
+| Order #12 was cancelled (not paid in time, or the payment failed) | the buyer | `cancelOrder` in `webhook.js` |
+| Order #12 was refunded | the buyer | `refundOrder` in `webhook.js` |
+| "A Winter Orchestra" from your wishlist is back in stock | everyone with it on their wishlist | when stock goes from 0 to more: an admin edit, a cancelled order or a refund |
+| An event you have a seat at was changed, or cancelled | everyone with a seat | `routes/admin/events.js` |
+
+After saving, `notifyUser('notifications', userId)` tells that person's open tabs, so the bell updates at once on every device they're signed in on (see [Live updates](#live-updates)). Marking a message read does the same, so the number goes down everywhere. A notification is an extra: if saving one fails, it is logged and the payment or edit that caused it still goes through.
+
+To know whether a book was sold out, the admin edit uses `UPDATE books ... FROM books AS before`: `before` is the same row as it was before the update, so `RETURNING before.stock` gives the old stock. The cancel and refund code works it out from `RETURNING`: the new stock minus the quantity put back.
 
 ## Recommendations
 
@@ -197,7 +227,7 @@ When nobody has bought the book yet, the list is empty, and the page shows "More
 
 ## Admin
 
-Admins see an Admin link in the account menu. `/admin` has four tabs: every order (with totals, a status filter and a name/email search), the books (add, edit, change stock, delete unordered ones; books with 3 or fewer copies are listed at the top as running low) the events (add, edit, delete) and the users (a read-only list with a role filter and a name/email search; roles change with `make-admin`). Every `/api/admin` route checks `role === 'admin'` on the server with `requireAdmin`; hiding the link is only for looks.
+Admins see an Admin link in the account menu. `/admin` has four tabs, each with how many there are on it (from `GET /api/admin/counts`, live): every order (with totals, a status filter, a name/email search, and a Refund button on paid ones), the books (add, edit, change stock, delete unordered ones; books with 3 or fewer copies are listed at the top as running low) the events (add, edit, delete) and the users (a read-only list with a role filter and a name/email search; roles change with `make-admin`). Every `/api/admin` route checks `role === 'admin'` on the server with `requireAdmin`; hiding the link is only for looks.
 
 `role` is an extra field on Better Auth's `user` table (`additionalFields` in `server/src/lib/auth.js`) with `input: false`, so nobody can give themselves a role when signing up. To make someone an admin:
 
@@ -241,4 +271,4 @@ The Postgres database is a second Railway service, `bookstore-pgdb`. The app's `
 
 The site and the API share one URL, so the session cookie needs no CORS setup.
 
-For payments in production, the app's Railway variables also hold `STRIPE_SECRET_KEY` (the same test key) and `STRIPE_WEBHOOK_SECRET_KEY`: the signing secret of the webhook endpoint in the Stripe dashboard, which points at `https://mayerfeld-bookstore-assessment.up.railway.app/api/webhooks/stripe`. That secret is different from the one `stripe listen` prints locally.
+For payments in production, the app's Railway variables also hold `STRIPE_SECRET_KEY` (the same test key) and `STRIPE_WEBHOOK_SECRET_KEY`: the signing secret of the webhook endpoint in the Stripe dashboard, which points at `https://mayerfeld-bookstore-assessment.up.railway.app/api/webhooks/stripe`. That secret is different from the one `stripe listen` prints locally. For refunds made in the Stripe dashboard to show up on the site, that endpoint also needs the `charge.refunded` event (Stripe dashboard → Developers → Webhooks → the endpoint → add the event).

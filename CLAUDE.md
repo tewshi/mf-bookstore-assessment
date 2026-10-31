@@ -5,7 +5,7 @@ Course project for a bookstore site, built up over weekly assignments. The stude
 - Assignment 1: plain HTML/CSS
 - Assignment 2: Vite + React + Tailwind (hardcoded data)
 - Assignment 3: Express API, Postgres, Better Auth, deployed on Railway
-- Assignment 4: Stripe Checkout (test mode), webhook marks orders paid
+- Assignment 4: Stripe Checkout (test mode), webhook marks orders paid; admin refunds; in-app notifications
 
 `README.md` documents the folder structure, the schema, the API and how login works. Keep it up to date when any of those change.
 
@@ -20,7 +20,7 @@ Course project for a bookstore site, built up over weekly assignments. The stude
 ```bash
 npm install                  # root: installs both workspaces
 npm run dev                  # node dev.js: Express on :3000 (API only) + Vite on :5173 (open this)
-stripe listen --forward-to localhost:3000/api/webhooks/stripe   # needed locally for payments to turn 'paid'
+stripe listen --all-snapshot --forward-to localhost:3000/api/webhooks/stripe   # needed locally for payments to turn 'paid' (new CLIs refuse to start without an events flag)
 npm run lint                 # oxlint on the client
 npm run build                # builds client/dist
 npm run migrate -w server    # creates all tables (safe to re-run)
@@ -37,16 +37,16 @@ There are no automated tests. Check a change with lint + build, then by running 
 npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No lockfile: the instructor asked for none, so `.npmrc` has `package-lock=false` and `.gitignore` lists `package-lock.json`. Don't add one back.
 
 - `server/src/index.js`: mounts Better Auth and the Stripe webhook (raw body), then `express.json()`, then `/api`, then serves `client/dist`, and last an error handler that answers `{ error }` as JSON (500, or the error's own status such as 400 for broken JSON)
-- `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client), `live.js` (SSE: open `/api/live` tabs with `userId`/`isAdmin`, and `notifyEveryone` / `notifyUser` / `notifyAdmins` / `notifyUserAndAdmins`; the route is `routes/live.js`)
+- `server/src/lib/`: setup shared by the routes. `db.js` (the single `pg` pool), `auth.js` (Better Auth config, email + password), `session.js` (`currentUser(req)`, `requireUser`, `requireAdmin` via Better Auth `getSession`), `stripe.js` (the client), `notifications.js` (`sendNotification(userIds, text, link)`, `sendToAdmins`, `sendBackInStock`: rows in `notifications`, then a live `notifications` topic to those people), `live.js` (SSE: open `/api/live` tabs with `userId`/`isAdmin`, and `notifyEveryone` / `notifyUser` / `notifyAdmins` / `notifyUserAndAdmins`; the route is `routes/live.js`)
 - `server/src/routes/api.js`: the `/api` router: health check, then mounts every router in `routes/`
 - `server/src/routes/books.js`: `/api/books` (full list, or a page with `?page=&q=&section=&sort=`), `/:id`, `/:id/recommendations`; `reviews.js`: `/api/books/:id/reviews` (`Router({ mergeParams: true })` to read `:id`)
 - `server/src/routes/orders.js`: `/api/orders` (pending order + stock decrement + Stripe Checkout Session in one transaction, paid history, `/:id` with status)
-- `server/src/routes/webhook.js`: `/api/webhooks/stripe`, the only code that sets `status = 'paid'` (or `cancelled` + stock back on failed/expired)
-- `server/src/routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, `users.js` (read only), one per admin tab)
+- `server/src/routes/webhook.js`: `/api/webhooks/stripe`, where every status change after checkout lives: `paid`, `cancelled` + stock back on failed/expired, and `refunded` + stock back (`refundOrder`, exported for the admin Refund button; also run by `charge.refunded` for dashboard refunds, found via `checkout.sessions.list({ payment_intent })`)
+- `server/src/routes/notifications.js` (the bell: list, mark read), `routes/wishlist.js`, `routes/events.js` (seat sign-up), `routes/admin.js` (`requireAdmin`, `GET /counts` for the tab badges, then mounts `routes/admin/orders.js`, `books.js`, `events.js`, `users.js` (read only), one per admin tab)
 - Better Auth `user.additionalFields.role` (`input: false`); `server/db/make-admin.js` sets it
 - `server/db/`: `schema.sql`, `migrate.js`, `seed.js`, and `data/` (the Week 2 arrays, used only by the seed)
 - `client/src/App.jsx`: shared state + path routing; `client/src/pages/`: one file per page it renders (`Home`, `BookDetails`, `SignIn`, `Cart`, `Checkout`, `Paid`, `Orders`, `Wishlist`, `Account`, `Receipt`, `NotFound`, `admin/`). `pageTitles` in App.jsx lists the pages and their tab titles; any other path, or an unknown book id, renders `NotFound`
-- `client/src/components/`: `layout/` (Header, menus, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal, and Select, SearchBox, Pagination, RefreshButton for every list)
+- `client/src/components/`: `layout/` (Header, menus, NotificationBell, Footer, `accountLinks.js`), `books/` (BookCard, BookGrid, StarRating, Reviews, Recommendations), `home/` (Hero, StaffPicks, Events), `ui/` (Icons, Avatar, Toast, Reveal, and Select, SearchBox, Pagination, RefreshButton for every list)
 - `client/src/lib/`: plain JS. `api.js` (`getJson()`, `sendJson()`, `postJson()`), `auth.js` (Better Auth React client), `cart.js`, `usePages.js` (client-side paging: Orders 10, Wishlist 12, admin lists 10, staff picks and events 6; the book grid's 12 is `perPage` in `routes/books.js`; `Pagination` renders nothing for one page), `resizeImage.js`, `navigate.js` (`navigate()` + `handleLinkClick`), `useLive.js` (`useLive(topic, load)`: one shared `EventSource` per tab)
 - Cart and theme choice are client-only (`localStorage`); orders, reviews, wishlist, stock and reservations are in Postgres
 - Dark mode: `.dark` overrides the `--color-*` tokens in `index.css`; use `text-on-accent` (not `text-white`) on `bg-accent`
@@ -64,7 +64,7 @@ npm workspaces: `client/` (React) and `server/` (Express, ESM, plain JS). No loc
 - Better Auth must be mounted **before** `express.json()`, or it can't read the request body.
 - The Stripe webhook also goes before `express.json()`, with `express.raw()`: the signature check needs the exact bytes.
 - The `whsec_` from `stripe listen` (local `.env`) differs from the dashboard endpoint's (Railway). The env var is `STRIPE_WEBHOOK_SECRET_KEY` (the student's name for it).
-- Reviews, recommendations and admin totals count only `status = 'paid'`. Orders (`/orders`) lists paid and pending orders (pending: "Pending payment" + Pay now, which calls `POST /api/orders/:id/pay` to reopen the still-open Stripe session; no receipt or review links).
+- Reviews, recommendations and admin totals count only `status = 'paid'` (refunded orders drop out). Statuses: pending, paid, cancelled, refunded; changing the list means dropping and re-adding `orders_status_check` in `schema.sql`. Old demo orders have no `stripe_session_id`, so they can't be refunded. Orders (`/orders`) lists paid and pending orders (pending: "Pending payment" + Pay now, which calls `POST /api/orders/:id/pay` to reopen the still-open Stripe session; no receipt or review links).
 - Express 5 wildcard syntax: `app.all('/api/auth/{*any}', ...)`.
 - `getMigrations` is imported from `better-auth/db/migration` (not `better-auth/db`) in v1.7.
 - Postgres `numeric` comes back as a string: convert `price` with `Number()`.
